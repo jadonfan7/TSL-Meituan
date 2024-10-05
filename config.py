@@ -206,7 +206,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=10e6,
+        default=3e7,
         help="Number of environment steps to train (default: 10e6)",
     )
     parser.add_argument(
@@ -226,7 +226,7 @@ def get_config():
     )
 
     # replay buffer parameters
-    parser.add_argument("--episode_length", type=int, default=5000, help="Max length for any episode")
+    parser.add_argument("--episode_length", type=int, default=1500, help="Max length for any episode")
 
     # network parameters
     parser.add_argument(

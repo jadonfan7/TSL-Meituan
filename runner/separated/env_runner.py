@@ -534,7 +534,7 @@ class EnvRunner(Runner):
     
     def game_success(self, step, map_env):
         flag = True
-        if step <= 100:
+        if step <= 2880:
             flag = False
         else:
             for order in map_env.orders:

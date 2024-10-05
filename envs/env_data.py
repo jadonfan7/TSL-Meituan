@@ -42,7 +42,7 @@ class Map:
         self.interval = 60
 
         courierid_set = set()
-        for _, row in self.order_data[:100].iterrows():
+        for _, row in self.order_data[:].iterrows():
             courier_id = row['courier_id']
             if courier_id not in courierid_set:
                 courierid_set.add(courier_id)
@@ -75,7 +75,7 @@ class Map:
         orders = [order for order in self.orders if order.status == "wait_to_pick"]
         self.available_couriers = [courier for courier in self.couriers if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and courier.state == 'active']
 
-        for index, row in self.order_data[self.current_index:100].iterrows():
+        for index, row in self.order_data[self.current_index:].iterrows():
             platform_order_time = row['platform_order_time']
 
             if platform_order_time is not None and platform_order_time <= self.clock:
