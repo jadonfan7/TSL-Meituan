@@ -17,7 +17,14 @@ class Map:
 
         self.current_index = 0
         
-        self.order_data = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = df[df['dispatch_time'] != 0]
+
+        df = df.sort_values(by=['dt', 'order_push_time'], ascending=[True, True])
+        
+        df = df[(df['platform_order_time'] >= 1665936000) & (df['platform_order_time'] <= 1666022371)]
+        self.order_data = df.reset_index(drop=True)
 
         lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
         lat_values_non_zero = lat_values[lat_values > 0].dropna()
