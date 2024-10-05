@@ -8,14 +8,13 @@ from pathlib import Path
 import torch
 
 # Get the parent directory of the current file
-parent_dir = os.path.abspath(os.path.join(os.getcwd(), "."))
+parent_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # Append the parent directory to sys.path, otherwise the following import will fail
 sys.path.append(parent_dir)
 
 from config import get_config
 from envs.env_wrappers import DummyVecEnv
-from envs.gridmap import GridMap
 
 
 def make_train_env(all_args):
@@ -49,8 +48,8 @@ def make_eval_env(all_args):
 
 def parse_args(args, parser):
     parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
-    parser.add_argument("--num_orders", type=int, default=5)
-    parser.add_argument("--num_couriers", type=int, default=5, help="number of couriers")
+    parser.add_argument("--num_orders", type=int, default=1)
+    parser.add_argument("--num_couriers", type=int, default=93, help="number of couriers")
 
     all_args = parser.parse_known_args(args)[0]
 
@@ -91,7 +90,6 @@ def main(args):
     run_dir = (
         Path(os.path.split(os.path.dirname(os.path.abspath(__file__)))[0] + "/results")
         / all_args.env_name
-        / all_args.scenario_name
         / all_args.algorithm_name
         / all_args.experiment_name
     )
@@ -119,9 +117,6 @@ def main(args):
     torch.cuda.manual_seed_all(all_args.seed)
     np.random.seed(all_args.seed)
 
-    # env init
-    # gridmap_env = GridMap()
-
     envs = make_train_env(all_args)
     eval_envs = make_eval_env(all_args) if all_args.use_eval else None
     num_agents = all_args.num_couriers
@@ -132,8 +127,7 @@ def main(args):
         "eval_envs": eval_envs,
         "num_agents": num_agents,
         "device": device,
-        "run_dir": run_dir,
-        # "gridmap": gridmap_env
+        "run_dir": run_dir
     }
 
 
@@ -147,7 +141,7 @@ def main(args):
     if all_args.use_eval and eval_envs is not envs:
         eval_envs.close()
 
-    runner.writter.export_scalars_to_json(str(runner.log_dir + "/summary.json"))
+    # runner.writter.export_scalars_to_json(str(runner.log_dir + "/summary.json"))
     runner.writter.close()
 
 

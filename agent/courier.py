@@ -1,41 +1,59 @@
 from agent.order import Order
-# from agent import Agent
+# from utils.distance import haversine
+from geopy.distance import geodesic
+import math
 
 class Courier:
-    def __init__(self, CourierID, position):
+    def __init__(self, CourierID, position, state='inactive'):
         self.courierid = CourierID
         # self.status = 'idle' # idle, picking_up, dropping_off
         self.position = position
         self.waybill = []
-        # self.path = []
         self.travel_distance = 0
         self.wait_to_pick = []
+        self.target_location = None
+        self.is_target_locked = False
+        self.speed = 0
+        self.state = state # inactive, active
+        self.capacity = 10
+        
 
     def __repr__(self):
-        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + self.courierid + ', position: ' + str(self.position) + ', travel_distance: ' + str(self.travel_distance) + ', wait_to_pick: ' + str(self.wait_to_pick)
+        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', position: ' + str(self.position) + ', travel_distance: ' + str(self.travel_distance)
+
         if self.waybill != []:
-            message += ', order: ' + str(self.waybill)
+            orderid = [o.orderid for o in self.waybill]
+            message += ', waybill: ' + str(orderid)
         else:
-            message += ', order: None'
+            message += ', waybill: None'
+        
+        if self.wait_to_pick != []:
+            orderid = [o.orderid for o in self.wait_to_pick]
+            message += ', wait_to_pick: ' + str(orderid)
+        else:
+            message += ', wait_to_pick: None'
+
+        message += ', head_to: ' + str(self.target_location)
+        message += ', speed: ' + str(self.speed)
+
         return message
 
     def pair_order(self, order):
         order.status = 'wait_pick'
         # self.status = 'picking_up'
-        self.wait_to_pick.append(order.orderid)
+        self.wait_to_pick.append(order)
+
 
     def pick_order(self, order):
-        self.waybill.append(order.orderid)
-        if order.orderid in self.wait_to_pick:
-            self.wait_to_pick.remove(order.orderid)
+        self.waybill.append(order)
+        self.wait_to_pick.remove(order)
         order.status = 'picked_up'
-        # Agent.reward += 10
+
         # self.status = 'dropping_off'
 
     def drop_order(self, order):
-        self.waybill.remove(order.orderid)
+        self.waybill.remove(order)
         order.status = 'dropped'
-        # Agent.reward += 10
 
         # if self.waybill==[]:
         #     self.status = 'idle'
@@ -43,44 +61,23 @@ class Courier:
     def reject_order(self, order):
         pass
 
-    def move(self, direction):
-        if direction == 'up':
-            if self.position[1] + 1 < 10:
-                self.position = (self.position[0], self.position[1] + 1)
-                self.travel_distance += 1
-        elif direction == 'down':
-            if self.position[1] > 0:
-                self.position = (self.position[0], self.position[1] - 1)
-                self.travel_distance += 1
-        elif direction == 'left':
-            if self.position[0] > 0:
-                self.position = (self.position[0] - 1, self.position[1])
-                self.travel_distance += 1
-        elif direction == 'right':
-            if self.position[0] + 1 < 10:
-                self.position = (self.position[0] + 1, self.position[1])
-                self.travel_distance += 1
+    def move(self, interval):
+        if self.speed != 0:
+            travel_distance = interval * self.speed
+            distance_to_target = geodesic(self.target_location, self.position).meters
+            
+            if travel_distance >= distance_to_target:
+                self.position = self.target_location
+                self.is_target_locked = False
+                self.travel_distance += distance_to_target
+                
+            else:
+                ratio = travel_distance / distance_to_target
+
+                new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
+                new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
+                
+                self.position = (new_latitude, new_longitude)
+
+                self.travel_distance += travel_distance
         
-
-    # def assign_path(self, path1, path2):
-    #     self.path = (path1 + path2)
-
-    # def count_distance(self):
-    #     assert self.status != 'idle'
-    #     self.position = self.path.pop(0)
-    #     self.travel_distance += 1
-
-if __name__ == '__main__':
-    c = Courier('1', (0,0))
-    print(c)
-    p = Order('001', (0,0), (1,0))
-    print(p)
-    c.pair_order(p)
-    print(c)
-    print(p)
-    c.pick_order(p)
-    print(c)
-    print(p)
-    c.drop_order(p)
-    print(c)
-    print(p)

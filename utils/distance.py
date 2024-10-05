@@ -5,7 +5,8 @@ def manhattan(p1:tuple, p2:tuple) -> float: #  L1 distanc
     dist = abs(p1[0]-p2[0]) + abs(p1[1]-p2[1])
     return float(dist)
 
-def haversine(lat1, lon1, lat2, lon2):
+def haversine(loc1, loc2):
+    lat1, lon1, lat2, lon2 = loc1[1], loc1[0], loc2[1], loc2[0]
     lat1 = lat1/10**6
     lat2 = lat2/10**6
     lon1 = lon1/10**6

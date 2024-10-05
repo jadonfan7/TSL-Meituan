@@ -1,17 +1,21 @@
 class Order:
-    def __init__(self, OrderID,  pick_up_point, drop_off_point, prebook=0, prepare_time=5, estimate_arrive_time=50):
+    def __init__(self, OrderID,  pick_up_point, drop_off_point, estimate_arrived_time):
         self.orderid = OrderID
-        self.prebook = prebook
         self.status = 'wait_pair' # wait_pair, wait_pick, picked_up, dropped
-        self.prepare_time = prepare_time
-        self.estimate_arrive_time = estimate_arrive_time
+        # self.prepare_time = prepare_time
         self.pick_up_point = pick_up_point
         self.drop_off_point = drop_off_point
-        # self.ETA = ETA
+        self.ETA = estimate_arrived_time
+        self.pair_time = None
+        self.is_late = 0
+        self.ETA_usage = 0
 
     def __repr__(self):
-        return 'cls: ' + type(self).__name__  + ', order_id: ' + str(self.orderid) + ', status: ' + self.status + ', pick_up_point: ' + str(self.pick_up_point) + ', drop_off_point: ' + str(self.drop_off_point)
+        message = 'cls: ' + type(self).__name__  + ', order_id: ' + str(self.orderid) + ', status: ' + self.status + ', pick_up_point: ' + str(self.pick_up_point) + ', drop_off_point: ' + str(self.drop_off_point) + ', pair_time: ' + str(self.pair_time)
+        if self.status == 'dropped':
+            if self.is_late:
+                message += ', is_late: ' + str(self.is_late) 
+            else:
+                message += ', ETA_usage: ' + str(self.ETA_usage)
 
-if __name__ == '__main__':
-    p = Order("001",(0,0),(0,1))
-    print(p)
+        return message
