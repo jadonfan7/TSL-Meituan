@@ -2,6 +2,9 @@ import numpy as np
 from envs.env_data import Map
 from envs.observationspace import ObservationSpace
 
+from envs.multi_discrete import MultiDiscrete
+from gym.spaces import Box
+
 import random
 
 class EnvCore(object):
@@ -12,10 +15,22 @@ class EnvCore(object):
         self.map = Map()
         self.num_agent = self.map.num_couriers
         self.num_speeds = 7 # 0-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7]
+        
         self.action_space = []
         self.obs_dim = self.map.couriers[0].capacity * 5 + 2 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, (num_waybill+num_wait_to_pick) * 2(distance_between_each_order + time_window)
-
+        
+        self.observation_space = []
         self.epsilon = 0.05
+        
+        for _ in range(self.num_agent):
+
+            order_dim = self.map.couriers[0].capacity
+            speed_dim = self.num_speeds
+
+            action_space = MultiDiscrete([[0, order_dim - 1], [1, speed_dim]])
+            self.action_space.append(action_space)
+
+            self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
                  
     def reset(self):
         self.map.reset()
@@ -50,9 +65,10 @@ class EnvCore(object):
 
         self.num_agent = self.map.num_couriers
         # self.obs_dim = self.map.num_orders * 6 + 2
+        
 
         # return obs_n, reward_n, done_n, info_n, share_obs
-        return obs_n, reward_n, done_n, info_n
+        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
@@ -138,14 +154,6 @@ class EnvCore(object):
             'courier': agent,
             'order': self.map.orders
         }
-    
-    # def update_action_space(self):
-    #     self.action_space = []
-    #     for agent_idx in range(self.num_agent):
-    #         order_dim = len(self.agents[agent_idx].waybill) + len(self.agents[agent_idx].wait_to_pick)
-    #         speed_dim = self.num_speeds
-    #         if order_dim == 0:
-    #             action_space = MultiDiscrete([[0, 0], [0, speed_dim]]) # [0, 0] just for the requirement of the form
-    #         else:
-    #             action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim]])
-    #         self.action_space.append(action_space)
+        
+    def seed(self, seed):
+        pass
