@@ -18,10 +18,10 @@ class Map:
         self.current_index = 0
         
         
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
-        df = df[df['dispatch_time'] != 0]
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = df[(df['dispatch_time'] > 0) & (df['dt'] == 20221017)]
 
-        df = df.sort_values(by=['dt', 'order_push_time'], ascending=[True, True])
+        df = df.sort_values(by=['platform_order_time'], ascending=[True])
         
         df = df[(df['platform_order_time'] >= 1665936000) & (df['platform_order_time'] <= 1666022371)]
         self.order_data = df.reset_index(drop=True)
@@ -49,7 +49,7 @@ class Map:
         self.interval = 60
 
         courierid_set = set()
-        for _, row in self.order_data[:].iterrows():
+        for _, row in self.order_data[:120].iterrows():
             courier_id = row['courier_id']
             if courier_id not in courierid_set:
                 courierid_set.add(courier_id)
@@ -57,7 +57,7 @@ class Map:
                 courier = Courier(courier_id, courier_location)
                 self.couriers.append(courier)
 
-        self.step()
+        self.step(first_time=1)
 
     def reset(self):
         self.orders = []
@@ -72,52 +72,76 @@ class Map:
             message += repr(p) + '\n'
         return message                
 
-    def step(self):
-        self.clock += self.interval
+    def step(self, first_time=0):
+        
+        if not first_time:
+            self.clock += self.interval
 
-        count = 0
+        # count = 0
 
         # orders = []
         # couriers = []
         orders = [order for order in self.orders if order.status == "wait_to_pick"]
         self.available_couriers = [courier for courier in self.couriers if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and courier.state == 'active']
 
-        for index, row in self.order_data[self.current_index:].iterrows():
-            platform_order_time = row['platform_order_time']
+        
+        # for index, row in self.order_data[self.current_index:].iterrows():
+        #     platform_order_time = row['platform_order_time']
 
-            if platform_order_time is not None and platform_order_time <= self.clock:
-                order_id = row['order_id']
+        #     if platform_order_time is not None and platform_order_time <= self.clock:
+        #         order_id = row['order_id']
 
-                if order_id not in self.orders_id and row['is_courier_grabbed'] == 1 and row['estimate_arrived_time'] - row['order_push_time'] > 0:
+        #         if order_id not in self.orders_id and row['is_courier_grabbed'] == 1 and row['estimate_arrived_time'] - row['order_push_time'] > 0:
 
-                    self.orders_id.add(order_id)
-                    pickup_point = (row['grab_lat'] / 1e6, row['grab_lng'] / 1e6)
-                    dropoff_point = (row['recipient_lat'] / 1e6, row['recipient_lng'] / 1e6)
-                    # prepare_time = row['estimate_meal_prepare_time']
-                    estimate_arrived_time = row['estimate_arrived_time'] - row['order_push_time']
+        #             self.orders_id.add(order_id)
+        #             pickup_point = (row['grab_lat'] / 1e6, row['grab_lng'] / 1e6)
+        #             dropoff_point = (row['recipient_lat'] / 1e6, row['recipient_lng'] / 1e6)
+        #             # prepare_time = row['estimate_meal_prepare_time']
+        #             estimate_arrived_time = row['estimate_arrived_time'] - row['order_push_time']
                     
-                    order = Order(order_id, pickup_point, dropoff_point, estimate_arrived_time)
-                    orders.append(order)
+        #             order = Order(order_id, pickup_point, dropoff_point, estimate_arrived_time)
+        #             orders.append(order)
                 
-                target_courier_id = row['courier_id']
-                courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
-                courier.state = 'active'
-                self.available_couriers.append(courier)
+        #         target_courier_id = row['courier_id']
+        #         courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
+        #         courier.state = 'active'
+        #         self.available_couriers.append(courier)
                 
 
-                # if courier_id not in self.couriers_id:
-                #     self.couriers_id.add(courier_id)
-                #     courier_location = (row['sender_lat'], row['sender_lng'])
+        #         # if courier_id not in self.couriers_id:
+        #         #     self.couriers_id.add(courier_id)
+        #         #     courier_location = (row['sender_lat'], row['sender_lng'])
 
-                #     courier = Courier(courier_id, courier_location)
-                #     couriers.append(courier)
-            else:
-                count = index
-                break
-
+        #         #     courier = Courier(courier_id, courier_location)
+        #         #     couriers.append(courier)
+        #     else:
+        #         count = index
+        #         break
+        
+        while(self.current_index <= 100 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+            dt = self.order_data.iloc[self.current_index]
+            order_id = dt['order_id']
+            
+            if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['order_push_time'] > 0:
+                
+                self.orders_id.add(order_id)
+                pickup_point = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
+                dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
+                estimate_arrived_time = dt['estimate_arrived_time'] - dt['order_push_time']
+                
+                order = Order(order_id, pickup_point, dropoff_point, estimate_arrived_time)
+                orders.append(order)
+            
+            target_courier_id = dt['courier_id']
+            courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
+            courier.state = 'active'
+            self.available_couriers.append(courier)
+            
+            self.current_index += 1
+            
         
         if orders != []:
-            self.current_index = count
+            # self.current_index = count
             self.orders += orders
             # self.couriers += couriers
             self._equitable_allocation(orders)   
@@ -129,7 +153,7 @@ class Map:
 
 
     def _equitable_allocation(self, orders):
-        allocation = [0] * len(orders)
+        # allocation = [0] * len(orders)
         speed_upper_bound = 4
 
         for i, p in enumerate(orders):
@@ -145,7 +169,7 @@ class Map:
                     assigned_courier = courier
             
             if assigned_courier is not None:
-                allocation[i] = assigned_courier.courierid
+                # allocation[i] = assigned_courier.courierid
                 # 插入订单到骑手的waybill
                 assigned_courier.wait_to_pick.append(p)
                 p.status = 'wait_pick'
@@ -154,8 +178,8 @@ class Map:
                 if assigned_courier.position == p.pick_up_point:  # picking up
                     assigned_courier.pick_order(p)
 
-                if assigned_courier.position == p.drop_off_point:  # dropping off
-                    assigned_courier.drop_order(p)
+                    if assigned_courier.position == p.drop_off_point:  # dropping off
+                        assigned_courier.drop_order(p)
 
         # return allocation
 
@@ -166,18 +190,17 @@ class Map:
         nearest_courier = None
 
         for courier in self.available_couriers:
-            # if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) <= courier.capacity:
-            dist = geodesic(courier.position, order.pick_up_point).meters
-            if min_dist > dist:
-                min_dist = dist
-                nearest_courier = courier
-            if dist < 1500: # paper from Hai Wang, but the average distance in the data is 608m
-                nearby_couriers.append(courier)
+            if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
+                dist = geodesic(courier.position, order.pick_up_point).meters
+                if min_dist > dist:
+                    min_dist = dist
+                    nearest_courier = courier
+                if dist < 1500: # paper from Hai Wang, but the average distance in the data is 608m
+                    nearby_couriers.append(courier)
                 
         if nearby_couriers == []:
             nearby_couriers.append(nearest_courier)
 
-        
         return nearby_couriers
 
     def _cal_speed(self, order, courier):

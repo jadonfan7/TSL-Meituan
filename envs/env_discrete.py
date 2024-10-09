@@ -62,7 +62,7 @@ class DiscreteActionEnv(object):
         self.signal_obs_dim = self.env_core.obs_dim
         self.action_space = self.env_core.action_space
 
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        return np.stack(obs), np.array(rews), np.array(dones), infos
         # return np.stack(obs), np.stack(rews), np.stack(dones), infos, np.stack(share_obs)
 
 

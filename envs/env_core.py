@@ -13,7 +13,7 @@ class EnvCore(object):
         self.num_agent = self.map.num_couriers
         self.num_speeds = 7 # 0-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7]
         self.action_space = []
-        self.obs_dim = self.map.couriers[0].capacity * 6 + 2 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, (num_waybill+num_wait_to_pick) * 2(distance_between_each_order + time_window)
+        self.obs_dim = self.map.couriers[0].capacity * 5 + 2 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, (num_waybill+num_wait_to_pick) * 2(distance_between_each_order + time_window)
 
         self.epsilon = 0.05
                  

@@ -160,15 +160,15 @@ class Runner(object):
             )
             self.policy[agent_id].critic.load_state_dict(policy_critic_state_dict)
 
-    def log_train(self, train_infos, total_num_steps):
-        for agent_id in range(self.num_agents):
-            for k, v in train_infos[agent_id].items():
-                agent_k = "agent%i/" % agent_id + k
-                # if self.use_wandb:
-                #     pass
-                # wandb.log({agent_k: v}, step=total_num_steps)
-                # else:
-                self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)
+    # def log_train(self, train_infos, total_num_steps):
+    #     for agent_id in range(self.num_agents):
+    #         for k, v in train_infos[agent_id].items():
+    #             agent_k = "agent%i/" % agent_id + k
+    #             # if self.use_wandb:
+    #             #     pass
+    #             # wandb.log({agent_k: v}, step=total_num_steps)
+    #             # else:
+    #             self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)
 
     def log_env(self, episode, step, env_index):
         step_info = "-" * 25 + "\n"
@@ -178,7 +178,9 @@ class Runner(object):
 
         count_overspeed = 0
         num_active_couriers = 0
+        dist = 0
         for c in self.envs.envs_discrete[env_index].map.couriers:
+            dist += c.travel_distance
             if c.state == 'active':
                 step_info += f"{c}\n"
                 num_active_couriers += 1
@@ -189,8 +191,7 @@ class Runner(object):
         for o in self.envs.envs_discrete[env_index].map.orders:
             step_info += f"{o}\n"
 
-        step_info += f"The rate of overspeed {count_overspeed / num_active_couriers}"
-
-        step_info += "\n"
+        step_info += f"The average travel distance per courier is {dist / len(self.envs.envs_discrete[env_index].map.couriers)}\n"
+        step_info += f"The rate of overspeed {count_overspeed / num_active_couriers}\n"
 
         logger.info(step_info)

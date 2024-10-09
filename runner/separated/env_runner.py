@@ -18,7 +18,6 @@ class EnvRunner(Runner):
         super(EnvRunner, self).__init__(config)
 
     def run(self):
-        # self.warmup()
 
         start = time.time()
         # episodes = int(self.num_env_steps) // self.episode_length
@@ -33,7 +32,7 @@ class EnvRunner(Runner):
         for episode in range(episodes):
             print(f"THE START OF EPISODE {episode+1}")
 
-            episode_distance_sum = 0
+            courier_distance_per_episode = 0
 
             episode_reward_sum = 0
 
@@ -127,9 +126,12 @@ class EnvRunner(Runner):
             
             # Evaluation over periods
             for i in range(self.envs.num_envs):
+                courier_count = 0
                 for c in self.envs.envs_discrete[i].map.couriers:
                     if c.state == 'active':
-                        episode_distance_sum += c.travel_distance
+                        courier_count += 1
+                        courier_distance_per_episode += c.travel_distance
+                courier_distance_per_episode /= courier_count
 
                 for o in self.envs.envs_discrete[i].map.orders:
                     if o.status == 'dropped':
@@ -137,21 +139,25 @@ class EnvRunner(Runner):
                         if o.is_late == 1:
                             late_orders += 1
                         else:
-                            ETA_usage += o.ETA_usage                             
-
-            episode_distance_sum /= self.envs.num_envs
-            distance.append(episode_distance_sum)
-            print(f"Total Distance for Episode {episode+1}: {episode_distance_sum}")
-        
-
+                            ETA_usage += o.ETA_usage   
+                            
             episode_rewards.append(episode_reward_sum)
             print(f"Total Reward for Episode {episode+1}: {episode_reward_sum}")
+            self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
+ 
+                                                     
+            courier_distance_per_episode /= self.envs.num_envs
+            distance.append(courier_distance_per_episode)
+            print(f"Average Travel Distance per Courierfor: {courier_distance_per_episode}")
+            self.writter.add_scalar('Total Distance', courier_distance_per_episode, episode + 1)
 
             overspeed = count_overspeed / num_active_couriers
             print(f"Rate of Overspeed for Episode {episode+1}: {overspeed}")
             rate_of_overspeed.append(overspeed)
+            self.writter.add_scalar('Overspeed Rate', overspeed, episode + 1)
 
-            message = f"Rate of Overspeed for Episode {episode+1}: {overspeed}\n" + f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n" + f"Rate of Overspeed for Episode {episode+1}: {overspeed}\n"
+
+            message = f"Average Courier's Travel Distance for Episode {episode+1}: {courier_distance_per_episode}\n" + f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n" + f"Rate of Overspeed for Episode {episode+1}: {overspeed}\n"
             logger.info(message)
 
             if count_dropped_orders == 0:
@@ -159,6 +165,8 @@ class EnvRunner(Runner):
                 rate_of_late_order.append(-1)
                 rate_of_ETA_usage.append(-1)
                 logger.info("No order is dropped in this episode\n")
+                self.writter.add_scalar('Late Orders Rate', -1, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate', -1, episode + 1)
             else:
                 late_rate = late_orders / count_dropped_orders
                 print(f"Rate of Late Orders for Episode {episode+1}: {late_rate}")
@@ -169,6 +177,10 @@ class EnvRunner(Runner):
                 print(f"Rate of ETA Usage for Episode {episode+1}: {ETA_usage_rate}")
                 rate_of_ETA_usage.append(ETA_usage_rate)
                 logger.info(f"Rate of ETA Usage for Episode {episode+1}: {ETA_usage_rate}\n")
+                
+                self.writter.add_scalar('Late Orders Rate', late_rate, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate', ETA_usage_rate, episode + 1)
+
             
             print("\n")
 
@@ -201,11 +213,13 @@ class EnvRunner(Runner):
                     )
                 )
 
-                self.log_train(train_infos, total_num_steps)
+                # self.log_train(train_infos, total_num_steps)
 
             # eval
             if episode % self.eval_interval == 0 and self.use_eval:
                 self.eval(total_num_steps)
+        
+        self.writter.close()
         
 
         # draw the evaluation graph
@@ -215,7 +229,7 @@ class EnvRunner(Runner):
         plt.ylabel('Total Distances')
         plt.title('Distance over Episodes')
         plt.grid(True)
-        plt.savefig('evaluation/Distance.png')
+        plt.savefig('Distance.png')
 
         plt.figure(figsize=(10, 6))
         plt.plot(episode_rewards)
@@ -223,7 +237,7 @@ class EnvRunner(Runner):
         plt.ylabel('Total Rewards')
         plt.title('Reward over Episodes')
         plt.grid(True)
-        plt.savefig('evaluation/reward_curve.png')
+        plt.savefig('reward_curve.png')
 
         plt.figure(figsize=(10, 6))
         plt.plot(rate_of_overspeed)
@@ -231,7 +245,7 @@ class EnvRunner(Runner):
         plt.ylabel('Rate of Overspeed')
         plt.title('rate of overspeed over Episodes')
         plt.grid(True)
-        plt.savefig('evaluation/rate_of_overspeed.png')
+        plt.savefig('rate_of_overspeed.png')
 
         plt.figure(figsize=(10, 6))
         plt.plot(rate_of_late_order)
@@ -239,7 +253,7 @@ class EnvRunner(Runner):
         plt.ylabel('Rate of Late Orders')
         plt.title('rate of late orders over Episodes')
         plt.grid(True)
-        plt.savefig('evaluation/rate_of_late_orders.png')
+        plt.savefig('rate_of_late_orders.png')
         
         plt.figure(figsize=(10, 6))
         plt.plot(rate_of_ETA_usage)
@@ -247,22 +261,7 @@ class EnvRunner(Runner):
         plt.ylabel('Rate of ETA Usage')
         plt.title('rate of ETA usage over Episodes')
         plt.grid(True)
-        plt.savefig('evaluation/rate_of_ETA_usage.png')
-
-    # def warmup(self):
-    #     # reset env
-    #     obs = self.envs.reset()  # shape = [env_num, agent_num, obs_dim]
-
-    #     share_obs = []
-    #     for o in obs:
-    #         share_obs.append(list(chain(*o)))
-    #     share_obs = np.array(share_obs)  # shape = [env_num, agent_num * obs_dim]
-
-    #     for agent_id in range(self.num_agents):
-    #         if not self.use_centralized_V:
-    #             share_obs = np.array(list(obs[:, agent_id]))
-    #         self.buffer[agent_id].share_obs[0] = share_obs.copy()
-    #         self.buffer[agent_id].obs[0] = np.array(list(obs[:, agent_id])).copy()
+        plt.savefig('rate_of_ETA_usage.png')
 
     @torch.no_grad()
     def collect(self, step):
@@ -534,7 +533,7 @@ class EnvRunner(Runner):
     
     def game_success(self, step, map_env):
         flag = True
-        if step <= 2880:
+        if step <= 10:
             flag = False
         else:
             for order in map_env.orders:

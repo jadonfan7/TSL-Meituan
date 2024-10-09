@@ -49,7 +49,7 @@ def make_eval_env(all_args):
 def parse_args(args, parser):
     parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_orders", type=int, default=1)
-    parser.add_argument("--num_couriers", type=int, default=3623, help="number of couriers")
+    parser.add_argument("--num_couriers", type=int, default=88, help="number of couriers") # 3623
 
     all_args = parser.parse_known_args(args)[0]
 
@@ -89,9 +89,9 @@ def main(args):
     # run dir
     run_dir = (
         Path(os.path.split(os.path.dirname(os.path.abspath(__file__)))[0] + "/results")
-        / all_args.env_name
-        / all_args.algorithm_name
-        / all_args.experiment_name
+        # / all_args.env_name
+        # / all_args.algorithm_name
+        # / all_args.experiment_name
     )
     if not run_dir.exists():
         os.makedirs(str(run_dir))
