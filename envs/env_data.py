@@ -118,7 +118,7 @@ class Map:
         #         count = index
         #         break
         
-        while(self.current_index <= 100 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+        while(self.current_index < 100 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
             dt = self.order_data.iloc[self.current_index]
             order_id = dt['order_id']
             
