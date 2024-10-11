@@ -48,14 +48,15 @@ class Map:
 
         self.interval = 60
 
-        courierid_set = set()
-        for _, row in self.order_data[:120].iterrows():
-            courier_id = row['courier_id']
-            if courier_id not in courierid_set:
-                courierid_set.add(courier_id)
-                courier_location = (row['sender_lat'] / 1e6, row['sender_lng'] / 1e6)
-                courier = Courier(courier_id, courier_location)
-                self.couriers.append(courier)
+        self.add_new_couriers = 0
+        # courierid_set = set()
+        # for _, row in self.order_data[:120].iterrows():
+        #     courier_id = row['courier_id']
+        #     if courier_id not in courierid_set:
+        #         courierid_set.add(courier_id)
+        #         courier_location = (row['sender_lat'] / 1e6, row['sender_lng'] / 1e6)
+        #         courier = Courier(courier_id, courier_location)
+        #         self.couriers.append(courier)
 
         self.step(first_time=1)
 
@@ -74,6 +75,8 @@ class Map:
 
     def step(self, first_time=0):
         
+        self.add_new_couriers = 0
+        
         if not first_time:
             self.clock += self.interval
 
@@ -82,43 +85,9 @@ class Map:
         # orders = []
         # couriers = []
         orders = [order for order in self.orders if order.status == "wait_to_pick"]
-        self.available_couriers = [courier for courier in self.couriers if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and courier.state == 'active']
+        # self.available_couriers = [courier for courier in self.couriers if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and courier.state == 'active']
 
-        
-        # for index, row in self.order_data[self.current_index:].iterrows():
-        #     platform_order_time = row['platform_order_time']
-
-        #     if platform_order_time is not None and platform_order_time <= self.clock:
-        #         order_id = row['order_id']
-
-        #         if order_id not in self.orders_id and row['is_courier_grabbed'] == 1 and row['estimate_arrived_time'] - row['order_push_time'] > 0:
-
-        #             self.orders_id.add(order_id)
-        #             pickup_point = (row['grab_lat'] / 1e6, row['grab_lng'] / 1e6)
-        #             dropoff_point = (row['recipient_lat'] / 1e6, row['recipient_lng'] / 1e6)
-        #             # prepare_time = row['estimate_meal_prepare_time']
-        #             estimate_arrived_time = row['estimate_arrived_time'] - row['order_push_time']
-                    
-        #             order = Order(order_id, pickup_point, dropoff_point, estimate_arrived_time)
-        #             orders.append(order)
-                
-        #         target_courier_id = row['courier_id']
-        #         courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
-        #         courier.state = 'active'
-        #         self.available_couriers.append(courier)
-                
-
-        #         # if courier_id not in self.couriers_id:
-        #         #     self.couriers_id.add(courier_id)
-        #         #     courier_location = (row['sender_lat'], row['sender_lng'])
-
-        #         #     courier = Courier(courier_id, courier_location)
-        #         #     couriers.append(courier)
-        #     else:
-        #         count = index
-        #         break
-        
-        while(self.current_index < 100 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+        while(self.current_index < 120 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
             dt = self.order_data.iloc[self.current_index]
             order_id = dt['order_id']
             
@@ -131,11 +100,22 @@ class Map:
                 
                 order = Order(order_id, pickup_point, dropoff_point, estimate_arrived_time)
                 orders.append(order)
+
+                courier_id = dt['courier_id']
+                if courier_id not in self.couriers_id:
+                    self.couriers_id.add(courier_id)
+                    courier_location = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
+                    courier = Courier(courier_id, courier_location)
+                    courier.state = 'active'
+                    self.couriers.append(courier)
+                    self.available_couriers.append(courier)
+                    self.add_new_couriers += 1
+
             
-            target_courier_id = dt['courier_id']
-            courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
-            courier.state = 'active'
-            self.available_couriers.append(courier)
+            # target_courier_id = dt['courier_id']
+            # courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
+            # courier.state = 'active'
+            # self.available_couriers.append(courier)
             
             self.current_index += 1
             
@@ -150,6 +130,7 @@ class Map:
 
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
+        # return add_courier_num
 
 
     def _equitable_allocation(self, orders):

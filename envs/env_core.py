@@ -46,7 +46,7 @@ class EnvCore(object):
 
         # set action for each agent
         for i, agent in enumerate(self.map.couriers):
-            self.action_dim = len(agent.waybill) + len(agent.wait_to_pick) + self.num_speeds
+            # self.action_dim = len(agent.waybill) + len(agent.wait_to_pick) + self.num_speeds
 
             reward = 0
             reward = self._set_action(action_n[i], agent)
@@ -61,9 +61,7 @@ class EnvCore(object):
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
         
-        # share_obs = ObservationSpace(self.map).get_obs()     
-
-        self.num_agent = self.map.num_couriers
+        # self.num_agent = self.map.num_couriers
         # self.obs_dim = self.map.num_orders * 6 + 2
         
 
@@ -157,3 +155,19 @@ class EnvCore(object):
         
     def seed(self, seed):
         pass
+    
+    def get_map(self):
+        return self.map
+
+    def adjust(self):
+        for _ in range(self.map.add_new_couriers):
+
+            order_dim = self.map.couriers[0].capacity
+            speed_dim = self.num_speeds
+
+            action_space = MultiDiscrete([[0, order_dim - 1], [1, speed_dim]])
+            self.action_space.append(action_space)
+
+            self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
+        
+        return self.action_space, self.observation_space

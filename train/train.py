@@ -14,42 +14,46 @@ parent_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(parent_dir)
 
 from config import get_config
-from envs.env_wrappers import DummyVecEnv
+from envs.env_wrappers import SubprocVecEnv
 
 
-def make_train_env(all_args):
+def make_train_env(all_args, device):
     def get_env_fn(rank):
         def init_env():
-            from envs.env_discrete import DiscreteActionEnv
-
-            env = DiscreteActionEnv()
+            # from envs.env_discrete import DiscreteActionEnv
+            from envs.env_core import EnvCore
+            env = EnvCore()
+            # env = DiscreteActionEnv()
 
             env.seed(all_args.seed + rank * 1000)
             return env
 
         return init_env
 
-    return DummyVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
+    return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)], device)
 
 
-def make_eval_env(all_args):
+def make_eval_env(all_args, device):
     def get_env_fn(rank):
         def init_env():
             
-            from envs.env_discrete import DiscreteActionEnv
-            env = DiscreteActionEnv()
+            # from envs.env_discrete import DiscreteActionEnv
+            # env = DiscreteActionEnv()
+            from envs.env_core import EnvCore
+            env = EnvCore()
+
             env.seed(all_args.seed + rank * 1000)
             return env
 
         return init_env
 
-    return DummyVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)])
+    return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)], device)
 
 
 def parse_args(args, parser):
     parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_orders", type=int, default=1)
-    parser.add_argument("--num_couriers", type=int, default=88, help="number of couriers") # 3623
+    parser.add_argument("--num_couriers", type=int, default=1, help="number of couriers") # 3623
 
     all_args = parser.parse_known_args(args)[0]
 
@@ -117,8 +121,8 @@ def main(args):
     torch.cuda.manual_seed_all(all_args.seed)
     np.random.seed(all_args.seed)
 
-    envs = make_train_env(all_args)
-    eval_envs = make_eval_env(all_args) if all_args.use_eval else None
+    envs = make_train_env(all_args, device)
+    eval_envs = make_eval_env(all_args, device) if all_args.use_eval else None
     num_agents = all_args.num_couriers
 
     config = {

@@ -179,7 +179,7 @@ class Runner(object):
         count_overspeed = 0
         num_active_couriers = 0
         dist = 0
-        for c in self.envs.envs_discrete[env_index].map.couriers:
+        for c in self.envs.envs_discrete[env_index].couriers:
             dist += c.travel_distance
             if c.state == 'active':
                 step_info += f"{c}\n"
@@ -188,10 +188,32 @@ class Runner(object):
                     count_overspeed += 1
 
         step_info += "Orders:\n"
-        for o in self.envs.envs_discrete[env_index].map.orders:
+        for o in self.envs.envs_discrete[env_index].orders:
             step_info += f"{o}\n"
 
-        step_info += f"The average travel distance per courier is {dist / len(self.envs.envs_discrete[env_index].map.couriers)}\n"
+        step_info += f"The average travel distance per courier is {dist / len(self.envs.envs_discrete[env_index].couriers)}\n"
         step_info += f"The rate of overspeed {count_overspeed / num_active_couriers}\n"
 
         logger.info(step_info)
+        
+    def add_new_agent(self, num):
+        for agent_id in range(num):
+            po = Policy(
+                self.all_args,
+                self.envs.observation_space[self.num_agents + agent_id],
+                # share_observation_space[0], # add [0]
+                self.envs.action_space[self.num_agents + agent_id],
+                device=self.device,
+            )
+            self.policy.append(po)
+            
+        for agent_id in range(num):
+            tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
+            bu = SeparatedReplayBuffer(
+                self.all_args,
+                self.envs.observation_space[self.num_agents + agent_id],
+                # share_observation_space[0], # add [0]
+                self.envs.action_space[self.num_agents + agent_id],
+            )
+            self.buffer.append(bu)
+            self.trainer.append(tr)

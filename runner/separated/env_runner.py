@@ -49,8 +49,7 @@ class EnvRunner(Runner):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
  
             
-            for i in range(self.envs.num_envs):
-                self.envs.envs_discrete[i].env_core.reset()
+            self.envs.reset()
 
             for step in range(self.episode_length):
                 # print("-"*25)
@@ -62,18 +61,18 @@ class EnvRunner(Runner):
                     # print(f"ENVIRONMENT {i+1}")
 
                     # print("Couriers:")
-                    # for c in self.envs.envs_discrete[i].map.couriers:
+                    # for c in self.envs.envs_discrete[i].couriers:
                     #     if c.state == 'active':
                     #         print(c)
                     # print("Orders:")
-                    # for o in self.envs.envs_discrete[i].map.orders:
+                    # for o in self.envs.envs_discrete[i].orders:
                     #     print(o)  
                     # print("\n")
                     self.log_env(episode, step, i)
 
-                    if self.game_success(step, self.envs.envs_discrete[i].map):
-                        dead_count += 1
-                        continue
+                    # if self.game_success(step, self.envs.envs_discrete[i].map):
+                    #     dead_count += 1
+                    #     continue
 
                 if dead_count == 5:
                     break
@@ -96,7 +95,7 @@ class EnvRunner(Runner):
                 episode_reward_sum += rewards.sum() / self.envs.num_envs
 
                 for i in range(self.envs.num_envs):
-                    for c in self.envs.envs_discrete[i].map.couriers:
+                    for c in self.envs.envs_discrete[i].couriers:
                         if c.state == 'active':
                             num_active_couriers += 1
                             if c.speed > 4:
@@ -119,21 +118,23 @@ class EnvRunner(Runner):
                 # insert data into buffer
                 self.insert(data)
 
-                for i in range(self.envs.num_envs):
-                    self.envs.envs_discrete[i].map.step()
+
+                self.envs.env_step()
+                add_courier_num = self.envs.envs_discrete[0].num_couriers - self.num_agents
+                self.add_new_agent(add_courier_num)
                                 
-                self.num_agents = self.envs.envs_discrete[0].map.num_couriers
+                self.num_agents = self.envs.envs_discrete[0].num_couriers
             
             # Evaluation over periods
             for i in range(self.envs.num_envs):
                 courier_count = 0
-                for c in self.envs.envs_discrete[i].map.couriers:
+                for c in self.envs.envs_discrete[i].couriers:
                     if c.state == 'active':
                         courier_count += 1
                         courier_distance_per_episode += c.travel_distance
                 courier_distance_per_episode /= courier_count
 
-                for o in self.envs.envs_discrete[i].map.orders:
+                for o in self.envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
                         count_dropped_orders += 1
                         if o.is_late == 1:
@@ -148,7 +149,7 @@ class EnvRunner(Runner):
                                                      
             courier_distance_per_episode /= self.envs.num_envs
             distance.append(courier_distance_per_episode)
-            print(f"Average Travel Distance per Courierfor: {courier_distance_per_episode}")
+            print(f"Average Travel Distance per Courier: {courier_distance_per_episode}")
             self.writter.add_scalar('Total Distance', courier_distance_per_episode, episode + 1)
 
             overspeed = count_overspeed / num_active_couriers
@@ -181,7 +182,6 @@ class EnvRunner(Runner):
                 self.writter.add_scalar('Late Orders Rate', late_rate, episode + 1)
                 self.writter.add_scalar('ETA Usage Rate', ETA_usage_rate, episode + 1)
 
-            
             print("\n")
 
             
@@ -445,99 +445,14 @@ class EnvRunner(Runner):
             print("eval average episode rewards of agent%i: " % agent_id + str(eval_average_episode_rewards))
 
         self.log_train(eval_train_infos, total_num_steps)
-
-    # @torch.no_grad()
-    # def render(self):
-    #     all_frames = []
-    #     for episode in range(self.all_args.render_episodes):
-    #         episode_rewards = []
-    #         obs = self.envs.reset()
-    #         if self.all_args.save_gifs:
-    #             image = self.envs.render("rgb_array")[0][0]
-    #             all_frames.append(image)
-
-    #         rnn_states = np.zeros(
-    #             (
-    #                 self.n_rollout_threads,
-    #                 self.num_agents,
-    #                 self.recurrent_N,
-    #                 self.hidden_size,
-    #             ),
-    #             dtype=np.float32,
-    #         )
-    #         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
-
-    #         for step in range(self.episode_length):
-    #             calc_start = time.time()
-
-    #             temp_actions_env = []
-    #             for agent_id in range(self.num_agents):
-    #                 # if not self.use_centralized_V:
-    #                 #     share_obs = np.array(list(obs[:, agent_id]))
-    #                 self.trainer[agent_id].prep_rollout()
-    #                 action, rnn_state = self.trainer[agent_id].policy.act(
-    #                     np.array(list(obs[:, agent_id])),
-    #                     rnn_states[:, agent_id],
-    #                     masks[:, agent_id],
-    #                     deterministic=True,
-    #                 )
-
-    #                 action = action.detach().cpu().numpy()
-    #                 # rearrange action
-    #                 if self.envs.action_space[agent_id].__class__.__name__ == "MultiDiscrete":
-    #                     for i in range(self.envs.action_space[agent_id].shape):
-    #                         uc_action_env = np.eye(self.envs.action_space[agent_id].high[i] + 1)[action[:, i]]
-    #                         if i == 0:
-    #                             action_env = uc_action_env
-    #                         else:
-    #                             action_env = np.concatenate((action_env, uc_action_env), axis=1)
-    #                 elif self.envs.action_space[agent_id].__class__.__name__ == "Discrete":
-    #                     action_env = np.squeeze(np.eye(self.envs.action_space[agent_id].n)[action], 1)
-    #                 else:
-    #                     raise NotImplementedError
-
-    #                 temp_actions_env.append(action_env)
-    #                 rnn_states[:, agent_id] = _t2n(rnn_state)
-
-    #             # [envs, agents, dim]
-    #             actions_env = []
-    #             for i in range(self.n_rollout_threads):
-    #                 one_hot_action_env = []
-    #                 for temp_action_env in temp_actions_env:
-    #                     one_hot_action_env.append(temp_action_env[i])
-    #                 actions_env.append(one_hot_action_env)
-
-    #             # Obser reward and next obs
-    #             obs, rewards, dones, infos = self.envs.step(actions_env)
-    #             episode_rewards.append(rewards)
-
-    #             rnn_states[dones == True] = np.zeros(
-    #                 ((dones == True).sum(), self.recurrent_N, self.hidden_size),
-    #                 dtype=np.float32,
-    #             )
-    #             masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
-    #             masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
-
-    #             if self.all_args.save_gifs:
-    #                 image = self.envs.render("rgb_array")[0][0]
-    #                 all_frames.append(image)
-    #                 calc_end = time.time()
-    #                 elapsed = calc_end - calc_start
-    #                 if elapsed < self.all_args.ifi:
-    #                     time.sleep(self.all_args.ifi - elapsed)
-
-    #         episode_rewards = np.array(episode_rewards)
-    #         for agent_id in range(self.num_agents):
-    #             average_episode_rewards = np.mean(np.sum(episode_rewards[:, :, agent_id], axis=0))
-    #             print("eval average episode rewards of agent%i: " % agent_id + str(average_episode_rewards))
     
-    def game_success(self, step, map_env):
-        flag = True
-        if step <= 10:
-            flag = False
-        else:
-            for order in map_env.orders:
-                if order.status != 'dropped':
-                    flag = False
+    # def game_success(self, step, map_env):
+    #     flag = True
+    #     if step <= 10:
+    #         flag = False
+    #     else:
+    #         for order in map_env.orders:
+    #             if order.status != 'dropped':
+    #                 flag = False
         
-        return flag
+    #     return flag
