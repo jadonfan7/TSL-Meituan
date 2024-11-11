@@ -13,8 +13,6 @@ class Map:
         self.orders = []
         self.couriers = []
 
-        self.available_couriers = []
-
         self.current_index = 0
         
         
@@ -48,16 +46,6 @@ class Map:
 
         self.interval = 60
 
-        self.add_new_couriers = 0
-        # courierid_set = set()
-        # for _, row in self.order_data[:120].iterrows():
-        #     courier_id = row['courier_id']
-        #     if courier_id not in courierid_set:
-        #         courierid_set.add(courier_id)
-        #         courier_location = (row['sender_lat'] / 1e6, row['sender_lng'] / 1e6)
-        #         courier = Courier(courier_id, courier_location)
-        #         self.couriers.append(courier)
-
         self.step(first_time=1)
 
     def reset(self):
@@ -80,12 +68,7 @@ class Map:
         if not first_time:
             self.clock += self.interval
 
-        # count = 0
-
-        # orders = []
-        # couriers = []
         orders = [order for order in self.orders if order.status == "wait_to_pick"]
-        # self.available_couriers = [courier for courier in self.couriers if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and courier.state == 'active']
 
         while(self.current_index < 120 and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
             dt = self.order_data.iloc[self.current_index]
@@ -108,33 +91,23 @@ class Map:
                     courier = Courier(courier_id, courier_location)
                     courier.state = 'active'
                     self.couriers.append(courier)
-                    self.available_couriers.append(courier)
-                    self.add_new_couriers += 1
 
-            
-            # target_courier_id = dt['courier_id']
-            # courier = next((c for c in self.couriers if c.courierid == target_courier_id), None)
-            # courier.state = 'active'
-            # self.available_couriers.append(courier)
-            
+                        
             self.current_index += 1
             
         
         if orders != []:
-            # self.current_index = count
             self.orders += orders
             # self.couriers += couriers
             self._equitable_allocation(orders)   
             
-            # gorubi_solver(self.available_couriers, orders, self.clock)
+            # gorubi_solver(self.couriers, orders, self.clock)
 
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
-        # return add_courier_num
 
 
     def _equitable_allocation(self, orders):
-        # allocation = [0] * len(orders)
         speed_upper_bound = 4
 
         for i, p in enumerate(orders):
@@ -150,7 +123,6 @@ class Map:
                     assigned_courier = courier
             
             if assigned_courier is not None:
-                # allocation[i] = assigned_courier.courierid
                 # 插入订单到骑手的waybill
                 assigned_courier.wait_to_pick.append(p)
                 p.status = 'wait_pick'
@@ -161,8 +133,6 @@ class Map:
 
                     if assigned_courier.position == p.drop_off_point:  # dropping off
                         assigned_courier.drop_order(p)
-
-        # return allocation
 
     def _get_nearby_couriers(self, order):
         nearby_couriers = []
