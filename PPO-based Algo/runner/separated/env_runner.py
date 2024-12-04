@@ -37,12 +37,26 @@ class EnvRunner(Runner):
         avg_speed_total = []
         income_total = []
         
-        algo1_distance = []
-        algo2_distance = []
+        algo1_eval_distance = []
+        algo2_eval_distance = []
         algo1_eval_episode_rewards = []
         algo2_eval_episode_rewards = []
-        algo1_rate_of_overspeed = []
-        algo2_rate_of_overspeed = []
+        algo1_eval_speed = []
+        algo2_eval_speed = []
+        algo1_eval_overspeed_rate = []
+        algo2_eval_overspeed_rate = []
+        algo1_eval_reject_rate = []
+        algo2_eval_reject_rate = []
+        algo1_eval_reject = []
+        algo2_eval_reject = []
+        algo1_eval_order_price = []
+        algo2_eval_order_price = []
+        algo1_eval_income = []
+        algo2_eval_income = []
+        algo1_eval_finish = []
+        algo2_eval_finish = []
+        algo1_eval_leisure = [] 
+        algo2_eval_leisure = []
         algo1_rate_of_late_order = []
         algo2_rate_of_late_order = []
         algo1_rate_of_ETA_usage = []
@@ -67,9 +81,15 @@ class EnvRunner(Runner):
             count_reject_orders = 0
             max_reject_num = 0
 
-            late_orders = 0
-            ETA_usage = 0
-            count_dropped_orders = 0
+            late_orders0 = 0
+            late_orders1 = 0
+            
+            ETA_usage0 = 0
+            ETA_usage1 = 0
+
+            count_dropped_orders0 = 0
+            count_dropped_orders1 = 0
+
             
             order0_price = 0
             order1_price = 0
@@ -204,11 +224,18 @@ class EnvRunner(Runner):
                 
                 for o in self.envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
-                        count_dropped_orders += 1
-                        if o.is_late == 1:
-                            late_orders += 1
+                        if o.pair_courier.courier_type == 0:
+                            count_dropped_orders0 += 1
+                            if o.is_late == 1:
+                                late_orders0 += 1
+                            else:
+                                ETA_usage0 += o.ETA_usage 
                         else:
-                            ETA_usage += o.ETA_usage   
+                            count_dropped_orders1 += 1
+                            if o.is_late == 1:
+                                late_orders1 += 1
+                            else:
+                                ETA_usage1 += o.ETA_usage 
                         
                     if o.reject_count > 0:
                         count_reject_orders += 1
@@ -225,7 +252,7 @@ class EnvRunner(Runner):
                             order1_price += o.price
                             order1_num += 1              
                             
-            print(f"There are {courier0_num / self.envs.num_envs} Courier0, {courier1_num / self.envs.num_envs} Courier1 with {courier1_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} Orders waiting to be paired")                
+            print(f"\nThere are {courier0_num / self.envs.num_envs} Courier0, {courier1_num / self.envs.num_envs} Courier1 with {courier1_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} Orders waiting to be paired")                
             episode_rewards.append(episode_reward_sum)
             print(f"Total Reward for Episode {episode+1}: {episode_reward_sum}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
@@ -236,9 +263,9 @@ class EnvRunner(Runner):
             distance = round(distance, 2)
             distance_total.append([distance0, distance1, distance])
             print(f"Average Travel Distance per Courier0: {distance0} meters, Courier1: {distance1} meters, Total: {distance} meters")
+            self.writter.add_scalar('Total Distance/Total', distance, episode + 1)
             self.writter.add_scalar('Total Distance/Courier0', distance0, episode + 1)
             self.writter.add_scalar('Total Distance/Courier1', distance1, episode + 1)
-            self.writter.add_scalar('Total Distance/Courier', distance, episode + 1)
             
             avg0_speed = round(courier0_avg_speed / courier0_num, 2)
             avg1_speed = round(courier1_avg_speed / courier1_num, 2)
@@ -260,9 +287,9 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Overspeed Rate/Courier0', overspeed0, episode + 1)
             self.writter.add_scalar('Overspeed Rate/Courier1', overspeed1, episode + 1)
             
-            reject_rate_per_episode = round(count_reject_orders / len(self.envs.envs_discrete[0].orders), 2)
+            reject_rate_per_episode = round(count_reject_orders / self.envs.num_envs / len(self.envs.envs_discrete[0].orders), 2)
             reject_rate.append(reject_rate_per_episode)
-            print(f"The rejection rate is {reject_rate_per_episode}")
+            print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
             self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
             
             reject0 = round(courier0_reject_num / courier0_num, 2)
@@ -313,30 +340,54 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average Leisure Time/Courier1', avg1_leisure, episode + 1)
             
             
-            message = f"There are {courier0_num / self.envs.num_envs} Courier0, {courier1_num / self.envs.num_envs} Courier1, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n" + f"Average Travel Distance for Episode {episode+1}: Courier0 - {distance0} meters, Courier1 - {distance1} meters, Total - {distance} meters\n" + f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n" + f"The average speed for Episode {episode+1}: Courier0 - {avg0_speed} m/s, Courier1 - {avg1_speed} m/s, Total - {avg_speed} m/s\n" + f"Rate of Overspeed for Episode {episode+1}: Courier0 - {overspeed0}, Courier1 - {overspeed1}, Total - {overspeed}\n" + f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode}\n" + f"The average rejection number for Episode {episode+1}: Courier0 - {reject0}, Courier1 - {reject1}, Total - {reject}\n" + f"The average price for Episode {episode+1}: Courier0 - {price_per_order0} yuan with {order0_num} orders, Courier1 - {price_per_order1} yuan with {order1_num} orders, Total - {order_price} yuan\n" + f"The average income for Episode {episode+1}: Courier0 - {income0} yuan, Courier1 - {income1} yuan, Total - {income} yuan\n" + f"The average finish number for Episode {episode+1}: Courier0 - {finish0}, Courier1 - {finish1}, Total - {finish}\n" + f"The average leisure time for Episode {episode+1}: Courier0 - {avg0_leisure} minutes, Courier1 - {avg1_leisure} minutes, Total - {avg_leisure} minutes\n"
+            message = (
+                f"There are {courier0_num / self.envs.num_envs} Courier0, {courier1_num / self.envs.num_envs} Courier1, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n"
+                f"Average Travel Distance for Episode {episode+1}: Courier0 - {distance0} meters, Courier1 - {distance1} meters, Total - {distance} meters\n"
+                f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n"
+                f"The average speed for Episode {episode+1}: Courier0 - {avg0_speed} m/s, Courier1 - {avg1_speed} m/s, Total - {avg_speed} m/s\n"
+                f"Rate of Overspeed for Episode {episode+1}: Courier0 - {overspeed0}, Courier1 - {overspeed1}, Total - {overspeed}\n"
+                f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
+                f"The average rejection number for Episode {episode+1}: Courier0 - {reject0}, Courier1 - {reject1}, Total - {reject}\n"
+                f"The average price for Episode {episode+1}: Courier0 - {price_per_order0} yuan with {order0_num} orders, Courier1 - {price_per_order1} yuan with {order1_num} orders, Total - {order_price} yuan\n"
+                f"The average income for Episode {episode+1}: Courier0 - {income0} yuan, Courier1 - {income1} yuan, Total - {income} yuan\n"
+                f"The average finish number for Episode {episode+1}: Courier0 - {finish0}, Courier1 - {finish1}, Total - {finish}\n"
+                f"The average leisure time for Episode {episode+1}: Courier0 - {avg0_leisure} minutes, Courier1 - {avg1_leisure} minutes, Total - {avg_leisure} minutes\n"
+            )
 
-            if count_dropped_orders == 0:
+            if count_dropped_orders0 + count_dropped_orders1 == 0:
                 print("No order is dropped in this episode")
-                rate_of_late_order.append(-1)
-                rate_of_ETA_usage.append(-1)
+                rate_of_late_order.append([-1, -1, -1])
+                rate_of_ETA_usage.append([-1, -1, -1])
                 message += "No order is dropped in this episode\n"
                 logger.success(message)
-                self.writter.add_scalar('Late Orders Rate', -1, episode + 1)
-                self.writter.add_scalar('ETA Usage Rate', -1, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Total', -1, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Courier0', -1, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Courier1', -1, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Total', -1, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Courier0', -1, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Courier1', -1, episode + 1)
             else:
-                late_rate = round(late_orders / count_dropped_orders, 2)
-                print(f"Rate of Late Orders for Episode {episode+1}: {late_rate}")
-                rate_of_late_order.append(late_rate)
+                late_rate0 = round(late_orders0 / count_dropped_orders0, 2)
+                late_rate1 = round(late_orders1 / count_dropped_orders1, 2)
+                late_rate = round((late_orders0 + late_orders1) / (count_dropped_orders0 + count_dropped_orders1), 2)
+                print(f"Rate of Late Orders for Episode {episode+1}: Courier0 - {late_rate0}, Courier1 - {late_rate1}, Total - {late_rate}")
+                rate_of_late_order.append([late_rate0, late_rate1, late_rate])
 
-                ETA_usage_rate = round(ETA_usage / count_dropped_orders,2)
-                print(f"Rate of ETA Usage for Episode {episode+1}: {ETA_usage_rate}")
-                rate_of_ETA_usage.append(ETA_usage_rate)
+                ETA_usage_rate0 = round(ETA_usage0 / count_dropped_orders0,2)
+                ETA_usage_rate1 = round(ETA_usage1 / count_dropped_orders1,2)
+                ETA_usage_rate = round((ETA_usage0 + ETA_usage1) / (count_dropped_orders0 + count_dropped_orders1),2)
+                print(f"Rate of ETA Usage for Episode {episode+1}: Courier0 - {ETA_usage_rate0}, Courier1 - {ETA_usage_rate1}, Total - {ETA_usage_rate}")
+                rate_of_ETA_usage.append([ETA_usage_rate0, ETA_usage_rate1, ETA_usage_rate])
                 
-                message += f"Rate of Late Orders for Episode {episode+1}: {late_rate}\n" + f"Rate of ETA Usage for Episode {episode+1}: {ETA_usage_rate}\n"
+                message += f"Rate of Late Orders for Episode {episode+1}: Courier0 - {late_rate0}, Courier1 - {late_rate1}, Total - {late_rate}\n" + f"Rate of ETA Usage for Episode {episode+1}: Courier0 - {ETA_usage_rate0}, Courier1 - {ETA_usage_rate1}, Total - {ETA_usage_rate}\n"
                 logger.success(message)
                 
-                self.writter.add_scalar('Late Orders Rate', late_rate, episode + 1)
-                self.writter.add_scalar('ETA Usage Rate', ETA_usage_rate, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Total', late_rate, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Courier0', late_rate0, episode + 1)
+                self.writter.add_scalar('Late Orders Rate/Courier1', late_rate1, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Total', ETA_usage_rate, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Courier0', ETA_usage_rate0, episode + 1)
+                self.writter.add_scalar('ETA Usage Rate/Courier1', ETA_usage_rate1, episode + 1)
 
             print("\n")
                         
@@ -373,30 +424,131 @@ class EnvRunner(Runner):
             # eval
             if episode % self.eval_interval == 0 and self.use_eval:
                 self.eval_num += 1
-                
-                (   
+                                
+                (
                     algo1_eval_episode_rewards_sum,
                     algo2_eval_episode_rewards_sum,
-                    algo1_courier_distance_per_episode,
-                    algo2_courier_distance_per_episode,
+                    
+                    algo1_distance0,
+                    algo1_distance1,
+                    algo1_distance,
+                    
+                    algo2_distance0,
+                    algo2_distance1,
+                    algo2_distance,
+                    
+                    algo1_avg0_speed,
+                    algo1_avg1_speed,
+                    algo1_avg_speed,
+                    
+                    algo2_avg0_speed,
+                    algo2_avg1_speed,
+                    algo2_avg_speed,
+                    
+                    algo1_overspeed0,
+                    algo1_overspeed1,
                     algo1_overspeed,
+                    
+                    algo2_overspeed0,
+                    algo2_overspeed1,
                     algo2_overspeed,
+                    
+                    algo1_reject_rate_per_episode,
+                    algo2_reject_rate_per_episode,
+                    
+                    algo1_reject0,
+                    algo1_reject1,
+                    algo1_reject,
+                    
+                    algo2_reject0,
+                    algo2_reject1,
+                    algo2_reject,
+                    
+                    algo1_price_per_order0,
+                    algo1_price_per_order1,
+                    algo1_price_per_order,
+                    
+                    algo2_price_per_order0,
+                    algo2_price_per_order1,
+                    algo2_price_per_order,
+                    
+                    algo1_income0,
+                    algo1_income1,
+                    algo1_income,
+                    
+                    algo2_income0,
+                    algo2_income1,
+                    algo2_income,
+                    
+                    algo1_finish0,
+                    algo1_finish1,
+                    algo1_finish,
+                    
+                    algo2_finish0,
+                    algo2_finish1,
+                    algo2_finish,
+                    
+                    algo1_avg0_leisure,
+                    algo1_avg1_leisure,
+                    algo1_avg_leisure,
+
+                    algo2_avg0_leisure,
+                    algo2_avg1_leisure,
+                    algo2_avg_leisure,
+                    
+                    algo1_late_rate0,
+                    algo1_late_rate1,
                     algo1_late_rate,
+                    
+                    algo2_late_rate0,
+                    algo2_late_rate1,
                     algo2_late_rate,
+                    
+                    algo1_ETA_usage_rate0,
+                    algo1_ETA_usage_rate1,
                     algo1_ETA_usage_rate,
-                    algo2_ETA_usage_rate,
+                    
+                    algo2_ETA_usage_rate0,
+                    algo2_ETA_usage_rate1,
+                    algo2_ETA_usage_rate
                 ) = self.eval(total_num_steps)
 
-                algo1_distance.append(algo1_courier_distance_per_episode)
-                algo2_distance.append(algo2_courier_distance_per_episode)
+                algo1_eval_distance.append([algo1_distance0, algo1_distance1, algo1_distance])
+                algo2_eval_distance.append([algo2_distance0, algo2_distance1, algo2_distance])
+                
                 algo1_eval_episode_rewards.append(algo1_eval_episode_rewards_sum)
                 algo2_eval_episode_rewards.append(algo2_eval_episode_rewards_sum)
-                algo1_rate_of_overspeed.append(algo1_overspeed)
-                algo2_rate_of_overspeed.append(algo2_overspeed)
-                algo1_rate_of_late_order.append(algo1_late_rate)
-                algo2_rate_of_late_order.append(algo2_late_rate)
-                algo1_rate_of_ETA_usage.append(algo1_ETA_usage_rate)
-                algo2_rate_of_ETA_usage.append(algo2_ETA_usage_rate)
+                
+                algo1_eval_speed.append([algo1_avg0_speed, algo1_avg1_speed, algo1_avg_speed])
+                algo2_eval_speed.append([algo2_avg0_speed, algo2_avg1_speed, algo2_avg_speed])
+                
+                algo1_eval_overspeed_rate.append([algo1_overspeed0, algo1_overspeed1, algo1_overspeed])
+                algo2_eval_overspeed_rate.append([algo2_overspeed0, algo2_overspeed1, algo2_overspeed])
+                
+                algo1_eval_reject_rate.append(algo1_reject_rate_per_episode)
+                algo2_eval_reject_rate.append(algo2_reject_rate_per_episode)
+                                
+                algo1_eval_reject.append([algo1_reject0, algo1_reject1, algo1_reject])
+                algo2_eval_reject.append([algo2_reject0, algo2_reject1, algo2_reject])
+                
+                algo1_eval_order_price.append([algo1_price_per_order0, algo1_price_per_order1, algo1_price_per_order])
+                algo2_eval_order_price.append([algo2_price_per_order0, algo2_price_per_order1, algo2_price_per_order])
+                
+                algo1_eval_income.append([algo1_income0, algo1_income1, algo1_income])
+                algo2_eval_income.append([algo2_income0, algo2_income1, algo2_income])
+                
+                algo1_eval_finish.append([algo1_finish0, algo1_finish1, algo1_finish])
+                algo2_eval_finish.append([algo2_finish0, algo2_finish1, algo2_finish])
+                
+                algo1_eval_leisure.append([algo1_avg0_leisure, algo1_avg1_leisure, algo1_avg_leisure])
+                algo2_eval_leisure.append([algo2_avg0_leisure, algo2_avg1_leisure, algo2_avg_leisure])
+                
+                algo1_rate_of_late_order.append([algo1_late_rate0, algo1_late_rate1, algo1_late_rate])
+                algo2_rate_of_late_order.append([algo2_late_rate0, algo2_late_rate1, algo2_late_rate])
+                
+                algo1_rate_of_ETA_usage.append([algo1_ETA_usage_rate0, algo1_ETA_usage_rate1, algo1_ETA_usage_rate])
+                algo2_rate_of_ETA_usage.append([algo2_ETA_usage_rate0, algo2_ETA_usage_rate1, algo2_ETA_usage_rate])
+
         
         self.writter.close()
         
@@ -507,73 +659,201 @@ class EnvRunner(Runner):
         plt.title('Train: average finish per courier')
         plt.grid(True)
         plt.savefig('Train_avg_finish_per_courier.png')
-
+        
+        order0_late = [l[0] for l in rate_of_late_order]
+        order1_late = [l[1] for l in rate_of_late_order]
+        order_late = [l[2] for l in rate_of_late_order]
         plt.figure(figsize=(10, 6))
-        plt.plot(rate_of_late_order)
+        plt.plot(order0_late, label="Courier 0", color='blue')
+        plt.plot(order1_late, label="Courier 1", color='orange')
+        plt.plot(order_late, label="Courier", color='green')
         plt.xlabel('Episodes')
         plt.ylabel('Rate of Late Orders')
         plt.title('Train: rate of late orders over Episodes')
         plt.grid(True)
         plt.savefig('Train_rate_of_late_orders.png')
         
+        order0_ETA = [e[0] for e in rate_of_ETA_usage]
+        order1_ETA = [e[1] for e in rate_of_ETA_usage]
+        order_ETA = [e[2] for e in rate_of_ETA_usage]
         plt.figure(figsize=(10, 6))
-        plt.plot(rate_of_ETA_usage)
+        plt.plot(order0_ETA, label="Courier 0", color='blue')
+        plt.plot(order1_ETA, label="Courier 1", color='orange')
+        plt.plot(order_ETA, label="Courier", color='green')
         plt.xlabel('Episodes')
         plt.ylabel('Rate of ETA Usage')
         plt.title('Train: rate of ETA usage over Episodes')
         plt.grid(True)
         plt.savefig('Train_rate_of_ETA_usage.png')
         
+        
+        #--------------------------
         # draw the Evaluation graph
-        plt.figure(figsize=(10, 6))
-        plt.plot(len(algo1_distance), algo1_distance, label='Algo1 Distance', color='blue', marker='o')
-        plt.plot(len(algo2_distance), algo2_distance, label='Algo2 Distance', color='green', marker='x')
+        
+        episodes = list(range(1, len(algo1_eval_distance) + 1))
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_distance], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_distance], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_distance], label='Algo1 Total Distance', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_distance], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_distance], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_distance], label='Algo2 Total Distance', color='green', linestyle='-', marker='^')
         plt.xlabel('Episodes')
-        plt.ylabel('Total Distances')
-        plt.title('Eval: Distance between two algos')
+        plt.ylabel('Distances')
+        plt.title('Eval: Distance Comparison')
         plt.grid(True)
         plt.legend()
-        plt.savefig('Eval_Distance_Algo1_Algo2.png')
+        plt.savefig('Eval_Distance.png')
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(len(algo1_eval_episode_rewards), algo1_eval_episode_rewards, label='Algo1 Reward', color='blue', marker='o')
-        plt.plot(len(algo2_eval_episode_rewards), algo2_eval_episode_rewards, label='Algo2 Reward', color='green', marker='x')
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, algo1_eval_episode_rewards, label='Algo1 Reward', color='blue', marker='o')
+        plt.plot(episodes, algo2_eval_episode_rewards, label='Algo2 Reward', color='green', marker='x')
         plt.xlabel('Episodes')
         plt.ylabel('Total Reward')
         plt.title('Eval: Reward over Episodes')
         plt.grid(True)
         plt.legend()
-        plt.savefig('Eval_Reward_Algo1_Algo2.png')
+        plt.savefig('Eval_Reward.png')
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(len(algo1_rate_of_overspeed), algo1_rate_of_overspeed, label='Algo1 Overspeed Rate', color='blue', marker='o')
-        plt.plot(len(algo2_rate_of_overspeed), algo2_rate_of_overspeed, label='Algo2 Overspeed Rate', color='green', marker='x')
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_speed], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_speed], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_speed], label='Algo1 average speed', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_speed], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_speed], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_speed], label='Algo2 average speed', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Average Speed')
+        plt.title('Eval: Average Speed Comparison')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_Average_Speed.png')
+        
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_overspeed_rate], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_overspeed_rate], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_overspeed_rate], label='Algo1 Overspeed Rate', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_overspeed_rate], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_overspeed_rate], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_overspeed_rate], label='Algo2 Overspeed Rate', color='green', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Overspeed Rate')
         plt.title('Eval: Overspeed Rate over Episodes')
         plt.grid(True)
         plt.legend()
-        plt.savefig('Eval_Overspeed_Rate_Algo1_Algo2.png')
+        plt.savefig('Eval_Overspeed_Rate.png')
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(len(algo1_rate_of_late_order), algo1_rate_of_late_order, label='Algo1 Late Order Rate', color='blue', marker='o')
-        plt.plot(len(algo2_rate_of_late_order), algo2_rate_of_late_order, label='Algo2 Late Order Rate', color='green', marker='x')
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_reject_rate], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_reject_rate], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_reject_rate], label='Algo1 Reject Rate', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_reject_rate], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_reject_rate], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_reject_rate], label='Algo2 Reject Rate', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Reject Rate')
+        plt.title('Eval: Reject Rate over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_Reject_Rate.png')
+
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_reject], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_reject], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_reject], label='Algo1 Courier Reject Number', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_reject], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_reject], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_reject], label='Algo2 Courier Reject Number', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Courier Reject Number')
+        plt.title('Eval: Courier Reject Number over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_Courier_Reject_Number.png')
+
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_order_price], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_order_price], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_order_price], label='Algo1 Average Order Price', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_order_price], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_order_price], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_order_price], label='Algo2 Average Order Price', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Average Order Price')
+        plt.title('Eval: Average Order Price over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_order_price.png')
+
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_income], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_income], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_income], label='Algo1 Courier Average Income', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_income], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_income], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_income], label='Algo2 Courier Average Income', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Courier Average Income')
+        plt.title('Eval: Courier Average Income over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_courier_avg_income.png')
+        
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_finish], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_finish], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_finish], label='Algo1 Average Finished Orders per Courier', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_finish], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_finish], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_finish], label='Algo2 Average Finished Orders per Courier', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Average Finished Orders per Courier')
+        plt.title('Eval: Average Finished Orders per Courier over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_order_finished.png')
+
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_eval_leisure], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_eval_leisure], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_eval_leisure], label='Algo1 Average Leisure Time', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_eval_leisure], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_eval_leisure], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_eval_leisure], label='Algo2 Average Leisure Time', color='green', linestyle='-', marker='^')
+        plt.xlabel('Episodes')
+        plt.ylabel('Average Leisure Time')
+        plt.title('Eval: Average Leisure Time over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_leisure_time.png')
+
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_rate_of_late_order], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_rate_of_late_order], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_rate_of_late_order], label='Algo1 Late Order Rate', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_rate_of_late_order], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_rate_of_late_order], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_rate_of_late_order], label='Algo2 Late Order Rate', color='green', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Late Order Rate')
         plt.title('Eval: Late Order Rate over Episodes')
         plt.grid(True)
         plt.legend()
-        plt.savefig('Eval_Late_Order_Rate_Algo1_Algo2.png')
+        plt.savefig('Eval_Late_Order_Rate.png')
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(len(algo1_rate_of_ETA_usage), algo1_rate_of_ETA_usage, label='Algo1 ETA Usage Rate', color='blue', marker='o')
-        plt.plot(len(algo2_rate_of_ETA_usage), algo2_rate_of_ETA_usage, label='Algo2 ETA Usage Rate', color='green', marker='x')
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[0] for x in algo1_rate_of_ETA_usage], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo1_rate_of_ETA_usage], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo1_rate_of_ETA_usage], label='Algo1 Late Order Rate', color='blue', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo2_rate_of_ETA_usage], label='Algo2 Courier0', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo2_rate_of_ETA_usage], label='Algo2 Courier1', color='green', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo2_rate_of_ETA_usage], label='Algo2 Late Order Rate', color='green', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('ETA Usage Rate')
         plt.title('Eval: ETA Usage Rate over Episodes')
         plt.grid(True)
         plt.legend()
-        plt.savefig('Eval_ETA_Usage_Rate_Algo1_Algo2.png')
+        plt.savefig('Eval_ETA_Usage_Rate.png')
 
     @torch.no_grad()
     def collect(self, step, available_actions):
@@ -687,26 +967,86 @@ class EnvRunner(Runner):
         
         eval_obs = self.eval_envs.reset(10)
         
+        algo1_courier0_num = 0
+        algo1_courier1_num = 0
+        algo1_courier1_on = 0
+        algo2_courier0_num = 0
+        algo2_courier1_num = 0
+        algo2_courier1_on = 0
+        
         algo1_eval_episode_rewards_sum = 0
         algo2_eval_episode_rewards_sum = 0        
         
-        algo1_courier_distance_per_episode = 0
-        algo2_courier_distance_per_episode = 0
+        algo1_courier0_distance_per_episode = 0
+        algo1_courier1_distance_per_episode = 0
+        algo2_courier0_distance_per_episode = 0
+        algo2_courier1_distance_per_episode = 0
 
-        algo1_count_overspeed = 0
-        algo2_count_overspeed = 0
+        algo1_count_overspeed0 = 0
+        algo1_count_overspeed1 = 0
+        algo2_count_overspeed0 = 0
+        algo2_count_overspeed1 = 0
         
-        algo1_num_active_couriers = 0
-        algo2_num_active_couriers = 0
+        algo1_num_active_couriers0 = 0
+        algo1_num_active_couriers1 = 0
+        algo2_num_active_couriers0 = 0
+        algo2_num_active_couriers1 = 0
+        
+        algo1_count_reject_orders = 0
+        algo1_max_reject_num = 0
+        algo2_count_reject_orders = 0
+        algo2_max_reject_num = 0
 
-        algo1_late_orders = 0
-        algo2_late_orders = 0
+        algo1_late_orders0 = 0
+        algo1_late_orders1 = 0
+        algo2_late_orders0 = 0
+        algo2_late_orders1 = 0
         
-        algo1_ETA_usage = 0
-        algo2_ETA_usage = 0
+        algo1_ETA_usage0 = 0
+        algo1_ETA_usage1 = 0
+        algo2_ETA_usage0 = 0
+        algo2_ETA_usage1 = 0
         
-        algo1_count_dropped_orders = 0
-        algo2_count_dropped_orders = 0
+        algo1_count_dropped_orders0 = 0
+        algo1_count_dropped_orders1 = 0
+        algo2_count_dropped_orders0 = 0
+        algo2_count_dropped_orders1 = 0
+        
+        algo1_order0_price = 0
+        algo1_order1_price = 0
+        algo1_order0_num = 0
+        algo1_order1_num = 0
+        algo1_order_wait = 0
+        algo2_order0_price = 0
+        algo2_order1_price = 0
+        algo2_order0_num = 0
+        algo2_order1_num = 0
+        algo2_order_wait = 0
+        
+        algo1_courier0_reject_num = 0
+        algo1_courier1_reject_num = 0
+        algo2_courier0_reject_num = 0
+        algo2_courier1_reject_num = 0
+        
+        algo1_courier0_finish_num = 0
+        algo1_courier1_finish_num = 0
+        algo2_courier0_finish_num = 0
+        algo2_courier1_finish_num = 0
+        
+        algo1_courier0_leisure_time = 0
+        algo1_courier1_leisure_time = 0
+        algo2_courier0_leisure_time = 0
+        algo2_courier1_leisure_time = 0
+        
+        algo1_courier0_avg_speed = 0
+        algo1_courier1_avg_speed = 0
+        algo2_courier0_avg_speed = 0
+        algo2_courier1_avg_speed = 0
+        
+        algo1_courier0_income = 0
+        algo1_courier1_income = 0
+        algo2_courier0_income = 0
+        algo2_courier1_income = 0
         
         self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
 
@@ -798,15 +1138,25 @@ class EnvRunner(Runner):
                 if i == 0:
                     for c in self.eval_envs.envs_discrete[i].couriers:
                         if c.state == 'active':
-                            algo1_num_active_couriers += 1
-                            if c.speed > 4:
-                                algo1_count_overspeed += 1
+                            if c.courier_type == 0:
+                                algo1_num_active_couriers0 += 1
+                                if c.speed > 4:
+                                    algo1_count_overspeed0 += 1
+                            else:
+                                algo1_num_active_couriers1 += 1
+                                if c.speed > 4:
+                                    algo1_count_overspeed1 += 1
                 elif i == 1:
                     for c in self.eval_envs.envs_discrete[i].couriers:
                         if c.state == 'active':
-                            algo2_num_active_couriers += 1
-                            if c.speed > 4:
-                                algo2_count_overspeed += 1
+                            if c.courier_type == 0:
+                                algo2_num_active_couriers0 += 1
+                                if c.speed > 4:
+                                    algo2_count_overspeed0 += 1
+                            else:
+                                algo2_num_active_couriers1 += 1
+                                if c.speed > 4:
+                                    algo2_count_overspeed1 += 1
                                 
             eval_obs = self.eval_envs.eval_env_step()
             
@@ -829,94 +1179,365 @@ class EnvRunner(Runner):
 
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):
-            courier_count = 0
             if i == 0:
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.travel_distance != 0:
-                        courier_count += 1
-                        algo1_courier_distance_per_episode += c.travel_distance
-                algo1_courier_distance_per_episode /= courier_count
+                        if c.courier_type == 0:
+                            algo1_courier0_num += 1
+                            algo1_courier0_distance_per_episode += c.travel_distance
+                            algo1_courier0_reject_num += c.reject_order_num
+                            algo1_courier0_finish_num += c.finish_order_num
+                            algo1_courier0_leisure_time += c.leisure_time
+                            algo1_courier0_avg_speed += c.avg_speed
+                            algo1_courier0_income += c.income
+                        else:
+                            algo1_courier1_num += 1
+                            algo1_courier1_distance_per_episode += c.travel_distance
+                            algo1_courier1_reject_num += c.reject_order_num
+                            algo1_courier1_finish_num += c.finish_order_num
+                            algo1_courier1_leisure_time += c.leisure_time
+                            algo1_courier1_avg_speed += c.avg_speed
+                            algo1_courier1_income += c.income
                 
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
-                        algo1_count_dropped_orders += 1
-                        if o.is_late == 1:
-                            algo1_late_orders += 1
+                        if o.pair_courier.courier_type == 0:
+                            algo1_count_dropped_orders0 += 1
+                            if o.is_late == 1:
+                                algo1_late_orders0 += 1
+                            else:
+                                algo1_ETA_usage0 += o.ETA_usage
                         else:
-                            algo1_ETA_usage += o.ETA_usage 
+                            algo1_count_dropped_orders1 += 1
+                            if o.is_late == 1:
+                                algo1_late_orders1 += 1
+                            else:
+                                algo1_ETA_usage1 += o.ETA_usage
+                            
+                    if o.reject_count > 0:
+                        algo1_count_reject_orders += 1
+                        if algo1_max_reject_num <= o.reject_count:
+                            algo1_max_reject_num = o.reject_count
+                    
+                    if o.status == 'wait_pair':
+                        algo1_order_wait += 1
+                    else:
+                        if o.pair_courier.courier_type == 0:
+                            algo1_order0_price += o.price
+                            algo1_order0_num += 1
+                        else:
+                            algo1_order1_price += o.price
+                            algo1_order1_num += 1             
+                    
             elif i == 1:
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.travel_distance != 0:
-                        courier_count += 1
-                        algo2_courier_distance_per_episode += c.travel_distance
-                algo2_courier_distance_per_episode /= courier_count
-
+                        if c.courier_type == 0:
+                            algo2_courier0_num += 1
+                            algo2_courier0_distance_per_episode += c.travel_distance
+                            algo2_courier0_reject_num += c.reject_order_num
+                            algo2_courier0_finish_num += c.finish_order_num
+                            algo2_courier0_leisure_time += c.leisure_time
+                            algo2_courier0_avg_speed += c.avg_speed
+                            algo2_courier0_income += c.income
+                        else:
+                            algo2_courier1_num += 1
+                            algo2_courier1_distance_per_episode += c.travel_distance
+                            algo2_courier1_reject_num += c.reject_order_num
+                            algo2_courier1_finish_num += c.finish_order_num
+                            algo2_courier1_leisure_time += c.leisure_time
+                            algo2_courier1_avg_speed += c.avg_speed
+                            algo2_courier1_income += c.income
+                
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
-                        algo2_count_dropped_orders += 1
-                        if o.is_late == 1:
-                            algo2_late_orders += 1
+                        if o.pair_courier.courier_type == 0:
+                            algo2_count_dropped_orders0 += 1
+                            if o.is_late == 1:
+                                algo2_late_orders0 += 1
+                            else:
+                                algo2_ETA_usage0 += o.ETA_usage
                         else:
-                            algo2_ETA_usage += o.ETA_usage 
+                            algo2_count_dropped_orders1 += 1
+                            if o.is_late == 1:
+                                algo2_late_orders1 += 1
+                            else:
+                                algo2_ETA_usage1 += o.ETA_usage
+                            
+                    if o.reject_count > 0:
+                        algo2_count_reject_orders += 1
+                        if algo2_max_reject_num <= o.reject_count:
+                            algo2_max_reject_num = o.reject_count
+                    
+                    if o.status == 'wait_pair':
+                        algo2_order_wait += 1
+                    else:
+                        if o.pair_courier.courier_type == 0:
+                            algo2_order0_price += o.price
+                            algo2_order0_num += 1
+                        else:
+                            algo2_order1_price += o.price
+                            algo2_order1_num += 1     
+                            
+        print(f"\nIn Algo1 there are {algo1_courier0_num} Courier0, {algo1_courier1_num} Courier1 with {algo1_courier1_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired")
+        print(f"In Algo2 there are {algo2_courier0_num} Courier0, {algo2_courier1_num} Courier1 with {algo2_courier1_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired")       
         
-        print(f"\nTotal Reward for Evaluation Between Two Algos: Algo1: {algo1_eval_episode_rewards_sum}, Algo2: {algo2_eval_episode_rewards_sum}")
+        print(f"Total Reward for Evaluation Between Two Algos:\nAlgo1: {algo1_eval_episode_rewards_sum}\n Algo2: {algo2_eval_episode_rewards_sum}")
         self.writter.add_scalar('Eval Reward/Algo1', algo1_eval_episode_rewards_sum, self.eval_num)
         self.writter.add_scalar('Eval Reward/Algo2', algo2_eval_episode_rewards_sum, self.eval_num)
         
-        print(f"Average Travel Distance per Courier Between Two Algos: Algo1: {algo1_courier_distance_per_episode}, Algo2: {algo2_courier_distance_per_episode}")
-        self.writter.add_scalar('Eval Travel Distance/Algo1', algo1_courier_distance_per_episode, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2', algo2_courier_distance_per_episode, self.eval_num)
+        algo1_distance0 = round(algo1_courier0_distance_per_episode / algo1_courier0_num, 2)
+        algo1_distance1 = round(algo1_courier1_distance_per_episode / algo1_courier1_num, 2)
+        algo1_distance = (algo1_courier0_distance_per_episode + algo1_courier1_distance_per_episode)/ (algo1_distance0 + algo1_distance1)
+        algo1_distance = round(algo1_distance, 2)
+        algo2_distance0 = round(algo2_courier0_distance_per_episode / algo2_courier0_num, 2)
+        algo2_distance1 = round(algo2_courier1_distance_per_episode / algo2_courier1_num, 2)
+        algo2_distance = (algo2_courier0_distance_per_episode + algo2_courier1_distance_per_episode)/ (algo2_distance0 + algo2_distance1)
+        algo2_distance = round(algo2_distance, 2)
+        print("Average Travel Distance per Courier Between Two Algos:")
+        print(f"Algo1: Courier0 - {algo1_distance0} meters, Courier1 - {algo1_distance1} meters, Total - {algo1_distance} meters")
+        print(f"Algo2: Courier0 - {algo2_distance0} meters, Courier1 - {algo2_distance1} meters, Total - {algo2_distance}")
+        self.writter.add_scalar('Eval Travel Distance/Algo1_Courier0', algo1_distance0, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo1_Courier1', algo1_distance1, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo1_Total', algo1_distance, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo2_Courier0', algo2_distance0, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo2_Courier1', algo2_distance1, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo2_Total', algo2_distance, self.eval_num)
         
-        algo1_overspeed = algo1_count_overspeed / algo1_num_active_couriers
-        algo2_overspeed = algo2_count_overspeed / algo2_num_active_couriers
-        print(f"Rate of Overspeed for Evaluation Between Two Algos: Algo1: {algo1_overspeed}, Algo2: {algo2_overspeed}")
-        self.writter.add_scalar('Eval Overspeed Rate/Algo1', algo1_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo2', algo2_overspeed, self.eval_num)
+        algo1_avg0_speed = round(algo1_courier0_avg_speed / algo1_courier0_num, 2)
+        algo1_avg1_speed = round(algo1_courier1_avg_speed / algo1_courier1_num, 2)
+        algo1_avg_speed = (algo1_courier0_avg_speed + algo1_courier1_avg_speed) / (algo1_courier0_num + algo1_courier1_num)
+        algo1_avg_speed = round(algo2_avg_speed, 2)
+        algo2_avg0_speed = round(algo2_courier0_avg_speed / algo2_courier0_num, 2)
+        algo2_avg1_speed = round(algo2_courier1_avg_speed / algo2_courier1_num, 2)
+        algo2_avg_speed = (algo2_courier0_avg_speed + algo2_courier1_avg_speed) / (algo2_courier0_num + algo2_courier1_num)
+        algo2_avg_speed = round(algo2_avg_speed, 2)
+        print("Average Speed per Courier Between Two Algos:")
+        print(f"Algo1: Courier0 average speed is {algo1_avg0_speed} m/s, Courier1 average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s")
+        print(f"Algo2: Courier0 average speed is {algo2_avg0_speed} m/s, Courier1 average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s")
+        self.writter.add_scalar('Average Speed/Algo1_Total', algo1_avg_speed, self.eval_num)
+        self.writter.add_scalar('Average Speed/Algo1_Courier0', algo1_avg0_speed, self.eval_num)
+        self.writter.add_scalar('Average Speed/Algo1_Courier1', algo1_avg1_speed, self.eval_num)
+        self.writter.add_scalar('Average Speed/Algo2_Total', algo2_avg_speed, self.eval_num)
+        self.writter.add_scalar('Average Speed/Algo2_Courier0', algo2_avg0_speed, self.eval_num)
+        self.writter.add_scalar('Average Speed/Algo2_Courier1', algo2_avg1_speed, self.eval_num)
 
-        message = f"Total Reward for Evaluation Between Two Algos: Algo1: {algo1_eval_episode_rewards_sum}, Algo2: {algo2_eval_episode_rewards_sum}\n" + f"Average Travel Distance per Courier Between Two Algos: Algo1: {algo1_courier_distance_per_episode}, Algo2: {algo2_courier_distance_per_episode}\n" + f"Rate of Overspeed for Evaluation Between Two Algos: Algo1: {algo1_overspeed}, Algo2: {algo2_overspeed}\n"
+        algo1_overspeed0 = algo1_count_overspeed0 / algo1_num_active_couriers0
+        algo1_overspeed1 = algo1_count_overspeed1 / algo1_num_active_couriers1
+        algo1_overspeed = (algo1_count_overspeed0 + algo1_count_overspeed1) / (algo1_num_active_couriers0 + algo1_num_active_couriers1)
+        algo2_overspeed0 = algo2_count_overspeed0 / algo2_num_active_couriers0
+        algo2_overspeed1 = algo2_count_overspeed1 / algo2_num_active_couriers1
+        algo2_overspeed = (algo2_count_overspeed0 + algo2_count_overspeed1) / (algo2_num_active_couriers0 + algo2_num_active_couriers1)
+        print("Rate of Overspeed for Evaluation Between Two Algos:")
+        print(f"Algo1: Courier0 - {algo1_overspeed0}, Courier1 - {algo1_overspeed1}, Total rate - {algo1_overspeed}")
+        print(f"Algo2: Courier0 - {algo2_overspeed0}, Courier1 - {algo2_overspeed1}, Total rate - {algo2_overspeed}")
+        self.writter.add_scalar('Eval Overspeed Rate/Algo1_Total', algo1_overspeed, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo1_Courier0', algo1_overspeed0, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo1_Courier1', algo1_overspeed1, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo2_Total', algo2_overspeed, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo2_Courier0', algo2_overspeed0, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo2_Courier1', algo2_overspeed1, self.eval_num)
+
+        algo1_reject_rate_per_episode = round(algo1_count_reject_orders / len(self.eval_envs.envs_discrete[0].orders), 2)
+        algo2_reject_rate_per_episode = round(algo2_count_reject_orders / len(self.eval_envs.envs_discrete[1].orders), 2)
+        print("Reject Rate for Evaluation Between Two Algos:")
+        print(f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most")
+        print(f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most")
+        self.writter.add_scalar('Reject rate/Algo1', algo1_reject_rate_per_episode, self.eval_num)
+        self.writter.add_scalar('Reject rate/Algo2', algo2_reject_rate_per_episode, self.eval_num)
         
-        if algo1_count_dropped_orders == 0:
+        algo1_reject0 = round(algo1_courier0_reject_num / algo1_courier0_num, 2)
+        algo1_reject1 = round(algo1_courier1_reject_num / algo1_courier1_num, 2)
+        algo1_reject = (algo1_courier1_reject_num + algo1_courier1_reject_num) / (algo1_courier0_num + algo1_courier1_num)
+        algo1_reject = round(algo1_reject, 2)
+        algo2_reject0 = round(algo2_courier0_reject_num / algo2_courier0_num, 2)
+        algo2_reject1 = round(algo2_courier1_reject_num / algo2_courier1_num, 2)
+        algo2_reject = (algo2_courier1_reject_num + algo2_courier1_reject_num) / (algo2_courier0_num + algo2_courier1_num)
+        algo2_reject = round(algo2_reject, 2)
+        print("Average Reject Numbers per Courier for Evaluation Between Two Algos:")
+        print(f"Algo1: Courier0 rejects average {algo1_reject0} orders, Courier1 rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}")
+        print(f"Algo2: Courier0 rejects average {algo2_reject0} orders, Courier1 rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}")
+        self.writter.add_scalar('Eval Average Rejection/Algo1_Total', algo1_reject, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo1_Courier0', algo1_reject0, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo1_Courier1', algo1_reject1, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo2_Total', algo2_reject, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo2_Courier0', algo2_reject0, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo2_Courier1', algo2_reject1, self.eval_num)
+
+        algo1_price_per_order0 = round(algo1_order0_price / algo1_order0_num, 2)
+        algo1_price_per_order1 = round(algo1_order1_price / algo1_order1_num, 2)
+        algo1_price_per_order = round((algo1_order0_price + algo1_order1_price) / (algo1_order0_num + algo1_order1_num), 2)
+        algo2_price_per_order0 = round(algo2_order0_price / algo2_order0_num, 2)
+        algo2_price_per_order1 = round(algo2_order1_price / algo2_order1_num, 2)
+        algo2_price_per_order = round((algo2_order0_price + algo2_order1_price) / (algo2_order0_num + algo2_order1_num), 2)
+        print("Average Price per order for Evaluation Between Two Algos:")
+        print(f"Algo1: The average price of Courier0's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Courier1's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}")
+        print(f"Algo2: The average price of Courier0's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Courier1's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}")
+        self.writter.add_scalar('Average Price/Algo1_Total', algo1_price_per_order, self.eval_num)
+        self.writter.add_scalar('Average Price/Algo1_Courier0', algo1_price_per_order0, self.eval_num)
+        self.writter.add_scalar('Average Price/Algo1_Courier1', algo1_price_per_order1, self.eval_num)
+        self.writter.add_scalar('Average Price/Algo2_Total', algo2_price_per_order, self.eval_num)
+        self.writter.add_scalar('Average Price/Algo2_Courier0', algo2_price_per_order0, self.eval_num)
+        self.writter.add_scalar('Average Price/Algo2_Courier1', algo2_price_per_order1, self.eval_num)
+
+        algo1_income0 = round(algo1_courier0_income / algo1_courier0_num, 2)
+        algo1_income1 = round(algo1_courier1_income / algo1_courier1_num, 2)
+        algo1_income = round((algo1_courier0_income + algo1_courier1_income) / (algo1_courier0_num + algo1_courier1_num), 2)
+        algo2_income0 = round(algo2_courier0_income / algo2_courier0_num, 2)
+        algo2_income1 = round(algo2_courier1_income / algo2_courier1_num, 2)
+        algo2_income = round((algo2_courier0_income + algo2_courier1_income) / (algo2_courier0_num + algo2_courier1_num), 2)
+        print("Average Income per Courier for Evaluation Between Two Algos:")
+        print(f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}")
+        print(f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}")
+        self.writter.add_scalar('Average Income/Algo1_Total', algo1_income, self.eval_num)
+        self.writter.add_scalar('Average Income/Algo1_Courier0', algo1_income0, self.eval_num)
+        self.writter.add_scalar('Average Income/Algo1_Courier1', algo1_income1, self.eval_num)
+        self.writter.add_scalar('Average Income/Algo2_Total', algo2_income, self.eval_num)
+        self.writter.add_scalar('Average Income/Algo2_Courier0', algo2_income0, self.eval_num)
+        self.writter.add_scalar('Average Income/Algo2_Courier1', algo2_income1, self.eval_num)
+
+        algo1_finish0 = round(algo1_courier0_finish_num / algo1_courier0_num, 2)
+        algo1_finish1 = round(algo1_courier1_finish_num / algo1_courier1_num, 2)
+        algo1_finish = round((algo1_courier0_finish_num + algo1_courier1_finish_num) / (algo1_courier0_num + algo1_courier1_num), 2)
+        algo2_finish0 = round(algo2_courier0_finish_num / algo2_courier0_num, 2)
+        algo2_finish1 = round(algo2_courier1_finish_num / algo2_courier1_num, 2)
+        algo2_finish = round((algo2_courier0_finish_num + algo2_courier1_finish_num) / (algo2_courier0_num + algo2_courier1_num), 2)
+        print("Average Order finished per courier for Evaluation Between Two Algos:")
+        print(f"Algo1: Courier0 finishes average {algo1_finish0} orders while Courier1 finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}")
+        print(f"Algo2: Courier0 finishes average {algo2_finish0} orders while Courier1 finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}")
+        self.writter.add_scalar('Average Finish/Algo1_Total', algo1_finish, self.eval_num)
+        self.writter.add_scalar('Average Finish/Algo1_Courier0', algo1_finish0, self.eval_num)
+        self.writter.add_scalar('Average Finish/Algo1_Courier1', algo1_finish1, self.eval_num)
+        self.writter.add_scalar('Average Finish/Algo2_Total', algo2_finish, self.eval_num)
+        self.writter.add_scalar('Average Finish/Algo2_Courier0', algo2_finish0, self.eval_num)
+        self.writter.add_scalar('Average Finish/Algo2_Courier1', algo2_finish1, self.eval_num)
+
+        algo1_avg0_leisure = round(algo1_courier0_leisure_time / algo1_courier0_num / 60, 2)
+        algo1_avg1_leisure = round(algo1_courier1_leisure_time / algo1_courier1_num / 60, 2)
+        algo1_avg_leisure = round((algo1_courier0_leisure_time + algo1_courier1_leisure_time) / (algo1_courier0_num + algo1_courier1_num) / 60, 2)
+        algo2_avg0_leisure = round(algo2_courier0_leisure_time / algo2_courier0_num / 60, 2)
+        algo2_avg1_leisure = round(algo2_courier1_leisure_time / algo2_courier1_num / 60, 2)
+        algo2_avg_leisure = round((algo2_courier0_leisure_time + algo2_courier1_leisure_time) / (algo2_courier0_num + algo2_courier1_num) / 60, 2)
+        print("Average leisure time per courier for Evaluation Between Two Algos:")
+        print(f"Algo1: Courier0 leisure time is {algo1_avg0_leisure} minutes, Courier1 leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes")
+        print(f"Algo2: Courier0 leisure time is {algo2_avg0_leisure} minutes, Courier1 leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes")
+        self.writter.add_scalar('Average Leisure Time/Algo1_Total', algo1_avg_leisure, self.eval_num)
+        self.writter.add_scalar('Average Leisure Time/Algo1_Courier0', algo1_avg0_leisure, self.eval_num)
+        self.writter.add_scalar('Average Leisure Time/Algo1_Courier1', algo1_avg1_leisure, self.eval_num)
+        self.writter.add_scalar('Average Leisure Time/Algo2_Total', algo2_avg_leisure, self.eval_num)
+        self.writter.add_scalar('Average Leisure Time/Algo2_Courier0', algo2_avg0_leisure, self.eval_num)
+        self.writter.add_scalar('Average Leisure Time/Algo2_Courier1', algo2_avg1_leisure, self.eval_num)
+
+        message = (
+            f"In Algo1 there are {algo1_courier0_num} Courier0, {algo1_courier1_num} Courier1 with {algo1_courier1_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired\n"
+            f"In Algo2 there are {algo2_courier0_num} Courier0, {algo2_courier1_num} Courier1 with {algo2_courier1_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired\n"
+            f"Total Reward for Evaluation Between Two Algos:\n"
+            f"Algo1: {algo1_eval_episode_rewards_sum}\n"
+            f"Algo2: {algo2_eval_episode_rewards_sum}\n"
+            f"Average Travel Distance per Courier Between Two Algos:\n"
+            f"Algo1: Courier0 - {algo1_distance0} meters, Courier1 - {algo1_distance1} meters, Total - {algo1_distance} meters\n"
+            f"Algo2: Courier0 - {algo2_distance0} meters, Courier1 - {algo2_distance1} meters, Total - {algo2_distance}\n"
+            "Average Speed per Courier Between Two Algos:\n"
+            f"Algo1: Courier0 average speed is {algo1_avg0_speed} m/s, Courier1 average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s\n"
+            f"Algo2: Courier0 average speed is {algo2_avg0_speed} m/s, Courier1 average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s\n"
+            "Rate of Overspeed for Evaluation Between Two Algos:\n"
+            f"Algo1: Courier0 - {algo1_overspeed0}, Courier1 - {algo1_overspeed1}, Total rate - {algo1_overspeed}\n"
+            f"Algo2: Courier0 - {algo2_overspeed0}, Courier1 - {algo2_overspeed1}, Total rate - {algo2_overspeed}\n"
+            "Reject Rate for Evaluation Between Two Algos:\n"
+            f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
+            f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
+            "Average Reject Numbers per Courier for Evaluation Between Two Algos:\n"
+            f"Algo1: Courier0 rejects average {algo1_reject0} orders, Courier1 rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}\n"
+            f"Algo2: Courier0 rejects average {algo2_reject0} orders, Courier1 rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}\n"
+            "Average Price per order for Evaluation Between Two Algos:\n"
+            f"Algo1: The average price of Courier0's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Courier1's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_order_price}\n"
+            f"Algo2: The average price of Courier0's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Courier1's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_order_price}\n"
+            "Average Income per Courier for Evaluation Between Two Algos:\n"
+            f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}\n"
+            f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}\n"
+            "Average Order finished per courier for Evaluation Between Two Algos:\n"
+            f"Algo1: Courier0 finishes average {algo1_finish0} orders while Courier1 finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}\n"
+            f"Algo2: Courier0 finishes average {algo2_finish0} orders while Courier1 finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}\n"
+            "Average leisure time per courier for Evaluation Between Two Algos:\n"
+            f"Algo1: Courier0 leisure time is {algo1_avg0_leisure} minutes, Courier1 leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes\n"
+            f"Algo2: Courier0 leisure time is {algo2_avg0_leisure} minutes, Courier1 leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes\n"
+        )
+        
+        if algo1_count_dropped_orders0 + algo1_count_dropped_orders1 == 0:
             print("No order is dropped in Algo1")
             algo1_late_rate = -1
+            algo1_late_rate0 = -1
+            algo1_late_rate1 = -1
             algo1_ETA_usage_rate = -1
-            
-            self.writter.add_scalar('Eval Late Order Rate/Algo1', algo1_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1', algo1_ETA_usage_rate, self.eval_num)
+            algo1_ETA_usage_rate0 = -1
+            algo1_ETA_usage_rate1 = -1
+
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Total', algo1_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier0', algo1_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier1', algo1_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Total', algo1_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier0', algo1_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier1', algo1_ETA_usage_rate1, self.eval_num)
             
             message += "No order is dropped in Algo1\n"
         else:
-            algo1_late_rate = algo1_late_orders / algo1_count_dropped_orders
-            print(f"Rate of Late Orders for Evaluation in Algo1: {algo1_late_rate}")
+            algo1_late_rate0 = algo1_late_orders0 / algo1_count_dropped_orders0
+            algo1_late_rate1 = algo1_late_orders1 / algo1_count_dropped_orders1
+            algo1_late_rate = (algo1_late_orders0 + algo1_late_orders1) / (algo1_count_dropped_orders0 +algo1_count_dropped_orders1)
+            print(f"Rate of Late Orders for Evaluation in Algo1: Courier0 - {algo1_late_rate0}, Courier1 - {algo1_late_rate1}, Total - {algo1_late_rate}")
 
-            algo1_ETA_usage_rate = algo1_ETA_usage / algo1_count_dropped_orders
-            print(f"Rate of ETA Usage for Evaluation in Algo1: {algo1_ETA_usage_rate}")
+            algo1_ETA_usage_rate0 = algo1_ETA_usage0 / algo1_count_dropped_orders0
+            algo1_ETA_usage_rate1 = algo1_ETA_usage1 / algo1_count_dropped_orders1
+            algo1_ETA_usage_rate = (algo1_ETA_usage0 + algo1_ETA_usage1) / (algo1_count_dropped_orders0 +algo1_count_dropped_orders1)
+            print(f"Rate of ETA Usage for Evaluation in Algo1: Courier0 - {algo1_ETA_usage_rate0}, Courier1 - {algo1_ETA_usage_rate1}, Total - {algo1_ETA_usage_rate}")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo1', algo1_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1', algo1_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo1_Total', algo1_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo1_Courier0', algo1_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo1_Courier1', algo1_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo1_Total', algo1_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo1_Courier0', algo1_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo1_Courier1', algo1_ETA_usage_rate1, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo1: {algo1_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo1: {algo1_ETA_usage_rate}\n"
+            message += f"Rate of Late Orders for Evaluation in Algo1: Courier0 - {algo1_late_rate0}, Courier1 - {algo1_late_rate1}, Total - {algo1_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo1: Courier0 - {algo1_ETA_usage_rate0}, Courier1 - {algo1_ETA_usage_rate1}, Total - {algo1_ETA_usage_rate}\n"
 
         
-        if algo2_count_dropped_orders == 0:
+        if algo2_count_dropped_orders0 + algo2_count_dropped_orders1 == 0:
             print("No order is dropped in Algo2")
             algo2_late_rate = -1
+            algo2_late_rate0 = -1
+            algo2_late_rate1 = -1
             algo2_ETA_usage_rate = -1
-            
-            self.writter.add_scalar('Eval Late Order Rate/Algo2', algo2_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2', algo2_ETA_usage_rate, self.eval_num)
+            algo2_ETA_usage_rate0 = -1
+            algo2_ETA_usage_rate1 = -1
+
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Total', algo2_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier0', algo2_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier1', algo2_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Total', algo2_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier0', algo2_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier1', algo2_ETA_usage_rate1, self.eval_num)
 
             message += "No order is dropped in Algo2\n"
-        else:
-            algo2_late_rate = algo1_late_orders / algo2_count_dropped_orders
-            print(f"Rate of Late Orders for Evaluation in Algo2: {algo2_late_rate}")
-
-            algo2_ETA_usage_rate = algo1_ETA_usage / algo2_count_dropped_orders
-            print(f"Rate of ETA Usage for Evaluation in Algo2: {algo2_ETA_usage_rate}")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo2', algo2_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2', algo2_ETA_usage_rate, self.eval_num)
-           
-            message += f"Rate of Late Orders for Evaluation in Algo2: {algo2_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo2: {algo2_ETA_usage_rate}\n"
+        else:
+            algo2_late_rate0 = algo2_late_orders0 / algo2_count_dropped_orders0
+            algo2_late_rate1 = algo2_late_orders1 / algo2_count_dropped_orders1
+            algo2_late_rate = (algo2_late_orders0 + algo2_late_orders1) / (algo2_count_dropped_orders0 + algo2_count_dropped_orders1)
+            print(f"Rate of Late Orders for Evaluation in Algo2: Courier0 - {algo2_late_rate0}, Courier1 - {algo2_late_rate1}, Total - {algo2_late_rate}")
+
+            algo2_ETA_usage_rate0 = algo2_ETA_usage0 / algo2_count_dropped_orders0
+            algo2_ETA_usage_rate1 = algo2_ETA_usage1 / algo2_count_dropped_orders1
+            algo2_ETA_usage_rate = (algo2_ETA_usage0 + algo2_ETA_usage1) / (algo2_count_dropped_orders0 + algo2_count_dropped_orders1)
+            print(f"Rate of ETA Usage for Evaluation in Algo2: Courier0 - {algo2_ETA_usage_rate0}, Courier1 - {algo2_ETA_usage_rate1}, Total - {algo2_ETA_usage_rate}")
+
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Total', algo2_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier0', algo2_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo2_Courier1', algo2_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Total', algo2_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier0', algo2_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo2_Courier1', algo2_ETA_usage_rate1, self.eval_num)
+
+            message += f"Rate of Late Orders for Evaluation in Algo2: Courier0 - {algo2_late_rate0}, Courier1 - {algo2_late_rate1}, Total - {algo2_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo2: Courier0 - {algo2_ETA_usage_rate0}, Courier1 - {algo2_ETA_usage_rate1}, Total - {algo2_ETA_usage_rate}\n"
         
         logger.success(message)
             
@@ -925,13 +1546,88 @@ class EnvRunner(Runner):
         return (
             algo1_eval_episode_rewards_sum,
             algo2_eval_episode_rewards_sum,
-            algo1_courier_distance_per_episode,
-            algo2_courier_distance_per_episode,
+            
+            algo1_distance0,
+            algo1_distance1,
+            algo1_distance,
+            
+            algo2_distance0,
+            algo2_distance1,
+            algo2_distance,
+            
+            algo1_avg0_speed,
+            algo1_avg1_speed,
+            algo1_avg_speed,
+            
+            algo2_avg0_speed,
+            algo2_avg1_speed,
+            algo2_avg_speed,
+            
+            algo1_overspeed0,
+            algo1_overspeed1,
             algo1_overspeed,
+            
+            algo2_overspeed0,
+            algo2_overspeed1,
             algo2_overspeed,
+            
+            algo1_reject_rate_per_episode,
+            algo2_reject_rate_per_episode,
+            
+            algo1_reject0,
+            algo1_reject1,
+            algo1_reject,
+            
+            algo2_reject0,
+            algo2_reject1,
+            algo2_reject,
+            
+            algo1_price_per_order0,
+            algo1_price_per_order1,
+            algo1_price_per_order,
+            
+            algo2_price_per_order0,
+            algo2_price_per_order1,
+            algo2_price_per_order,
+            
+            algo1_income0,
+            algo1_income1,
+            algo1_income,
+            
+            algo2_income0,
+            algo2_income1,
+            algo2_income,
+            
+            algo1_finish0,
+            algo1_finish1,
+            algo1_finish,
+            
+            algo2_finish0,
+            algo2_finish1,
+            algo2_finish,
+            
+            algo1_avg0_leisure,
+            algo1_avg1_leisure,
+            algo1_avg_leisure,
+
+            algo2_avg0_leisure,
+            algo2_avg1_leisure,
+            algo2_avg_leisure,
+            
+            algo1_late_rate0,
+            algo1_late_rate1,
             algo1_late_rate,
+            
+            algo2_late_rate0,
+            algo2_late_rate1,
             algo2_late_rate,
+            
+            algo1_ETA_usage_rate0,
+            algo1_ETA_usage_rate1,
             algo1_ETA_usage_rate,
+            
+            algo2_ETA_usage_rate0,
+            algo2_ETA_usage_rate1,
             algo2_ETA_usage_rate
         )
         
