@@ -115,16 +115,13 @@ class Map:
         if not first_time:
             self.clock += self.interval
 
-        orders = [order for order in self.orders if order.status == "wait_to_pick"]
+        orders = [order for order in self.orders if order.status == "wait_pair"]
 
         while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
             dt = self.order_data.iloc[self.current_index]
             order_id = dt['order_id']
             
-            if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:
-                
-                self.orders_id.add(order_id)
-                
+            if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
                 is_prebook = dt['is_prebook']
                 is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                 order_create_time = dt['platform_order_time']
@@ -166,9 +163,7 @@ class Map:
                 courier.income += 26.4 / 3600 * self.interval # 26.4 is the least salary per hour in Beijing
 
         if orders != []:
-            # self.current_index = count
-            self.orders += orders
-            # self.couriers += couriers
+            
             if self.algo_index == 0:
                 self._equitable_allocation(orders)   
             # else:
@@ -184,48 +179,48 @@ class Map:
         self.num_couriers = len(self.couriers)
         
     def _accept_or_reject(self, order, courier):
-                
-        avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-        reward = courier.speed - avg_speed_fair
-        fairness = abs(avg_speed_fair - avg_speed)
         
-        num_waybill = len(courier.waybill + courier.wait_to_pick)
-        potential_overspeed_risk = 1 if max_speed > 4 else 0
-        rejection_history_count = order.reject_count
-        is_in_the_same_da_and_poi = order.is_in_the_same_da_and_poi
-        is_prebooked = order.is_prebooked
-        pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
-        drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
-        estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
-        estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
-        order_push_time = self.clock - order.order_create_time
+        return True if random.random() < 0.9 else False
+        # avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+        # reward = courier.speed - avg_speed_fair
+        # fairness = abs(avg_speed_fair - avg_speed)
+        
+        # num_waybill = len(courier.waybill + courier.wait_to_pick)
+        # potential_overspeed_risk = 1 if max_speed > 4 else 0
+        # rejection_history_count = order.reject_count
+        # is_in_the_same_da_and_poi = order.is_in_the_same_da_and_poi
+        # is_prebooked = order.is_prebooked
+        # pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
+        # drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
+        # estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
+        # estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
+        # order_push_time = self.clock - order.order_create_time
 
-        feature_names = [
-            'reward', 'fairness', 'num_waybill', 'potential_overspeed_risk', 
-            'rejection history count', 'is_in_the_same_da_and_poi', 'is_prebooked', 
-            'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
-            'estimate_meal_prepare_time', 'order_push_time'
-        ]
+        # feature_names = [
+        #     'reward', 'fairness', 'num_waybill', 'potential_overspeed_risk', 
+        #     'rejection history count', 'is_in_the_same_da_and_poi', 'is_prebooked', 
+        #     'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
+        #     'estimate_meal_prepare_time', 'order_push_time'
+        # ]
         
-        X = (reward, fairness, num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, is_prebooked, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
+        # X = (reward, fairness, num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, is_prebooked, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
         
-        X_df = pd.DataFrame([X], columns=feature_names)
+        # X_df = pd.DataFrame([X], columns=feature_names)
 
-        best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/best_logreg_model.joblib')
-        y_pred_new = best_logreg.predict(X_df)
+        # best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/best_logreg_model.joblib')
+        # y_pred_new = best_logreg.predict(X_df)
         
-        if y_pred_new[0] == False:
-            order.reject_count += 1
-            courier.reject_order_num += 1
+        # if y_pred_new[0] == False:
+        #     order.reject_count += 1
+        #     courier.reject_order_num += 1
 
-        return y_pred_new[0]
+        # return y_pred_new[0]
         
     def _greedy_allocation(self, orders):
         
-        min_dist = math.inf
-        nearest_courier = None
-        
         for order in orders:
+            min_dist = math.inf
+            nearest_courier = None
             for courier in self.couriers:
                 if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
                     dist = geodesic(courier.position, order.pick_up_point).meters
@@ -237,8 +232,11 @@ class Map:
                 
                 decision = self._accept_or_reject(order, nearest_courier)
                 if decision == True:
-                    order.price = self._wage_response_model(order, courier)
+                    order.price = self._wage_response_model(order, nearest_courier)
                     # courier.income += order.price
+                    
+                    self.orders_id.add(order.orderid)
+                    self.orders.append(order)
 
                     nearest_courier.wait_to_pick.append(order)
                     order.pair_courier = nearest_courier
@@ -252,8 +250,11 @@ class Map:
                             nearest_courier.drop_order(order)
                             
             else:
-                order.price = self._wage_response_model(order, courier)
+                order.price = self._wage_response_model(order, nearest_courier)
                 # courier.income += order.price
+                
+                self.orders_id.add(order.orderid)
+                self.orders.append(order)
                 
                 nearest_courier.wait_to_pick.append(order)
                 order.pair_courier = nearest_courier
@@ -308,6 +309,9 @@ class Map:
                     order.price = self._wage_response_model(order, courier)
                     # courier.income += order.price
 
+                    self.orders_id.add(order.orderid)
+                    self.orders.append(order)
+                    
                     courier.wait_to_pick.append(order)
                     order.pair_courier = courier
                     order.status = 'wait_pick'
@@ -322,6 +326,9 @@ class Map:
             else:
                 order.price = self._wage_response_model(order, courier)
                 # courier.income += order.price
+                
+                self.orders_id.add(order.orderid)
+                self.orders.append(order)
                 
                 courier.wait_to_pick.append(order)
                 order.pair_courier = courier
@@ -366,36 +373,42 @@ class Map:
             
             if assigned_courier is not None:
                 if (assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num < 10):
-                    decision = self._accept_or_reject(p, courier)
+                    decision = self._accept_or_reject(p, assigned_courier)
                     if decision == True:
-                        p.price = self._wage_response_model(p, courier)
+                        p.price = self._wage_response_model(p, assigned_courier)
                         # courier.income += p.price
 
-                        courier.wait_to_pick.append(p)
-                        p.pair_courier = courier
+                        self.orders_id.add(p.orderid)
+                        self.orders.append(p)
+                        
+                        assigned_courier.wait_to_pick.append(p)
+                        p.pair_courier = assigned_courier
                         p.status = 'wait_pick'
                         p.pair_time = self.clock
                         
-                        if courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                            courier.pick_order(p)
+                        if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
+                            assigned_courier.pick_order(p)
 
-                            if courier.position == p.drop_off_point:  # dropping off
-                                courier.drop_order(p)
+                            if assigned_courier.position == p.drop_off_point:  # dropping off
+                                assigned_courier.drop_order(p)
                                 
                 else:
-                    p.price = self._wage_response_model(p, courier)
+                    p.price = self._wage_response_model(p, assigned_courier)
                     # courier.income += p.price
                     
-                    courier.wait_to_pick.append(p)
-                    p.pair_courier = courier
+                    self.orders_id.add(p.orderid)
+                    self.orders.append(p)
+                    
+                    assigned_courier.wait_to_pick.append(p)
+                    p.pair_courier = assigned_courier
                     p.status = 'wait_pick'
                     p.pair_time = self.clock
                     
-                    if courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                        courier.pick_order(p)
+                    if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
+                        assigned_courier.pick_order(p)
 
-                        if courier.position == p.drop_off_point:  # dropping off
-                            courier.drop_order(p)
+                        if assigned_courier.position == p.drop_off_point:  # dropping off
+                            assigned_courier.drop_order(p)
                             
     def _get_nearby_couriers(self, order, dist_range=1500):
         nearby_couriers = []

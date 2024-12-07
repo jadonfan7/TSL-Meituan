@@ -88,9 +88,9 @@ class EnvCore(object):
 
             if agent.speed > 4:
                 if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 50
-                else:
                     reward -= (agent.speed - 4) ** 2 * 100
+                else:
+                    reward -= (agent.speed - 4) ** 2 * 50
                 # reward -= 100
 
             if order_index < waybill_length:
@@ -127,9 +127,9 @@ class EnvCore(object):
                     
                 if self.map.clock > order.ETA:
                     if agent.courier_type == 0:
-                        reward -= 300 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
-                    else:
                         reward -= 200 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
+                    else:
+                        reward -= 300 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
                         
                     agent.income += order.price * 0.6
                     order.is_late = 1
@@ -138,7 +138,7 @@ class EnvCore(object):
                     if agent.courier_type == 0:
                         reward += 300 * order.ETA_usage
                     else:
-                        reward += 200 * order.ETA_usage
+                        reward += 150 * order.ETA_usage
                         
                     agent.income += order.price
                     

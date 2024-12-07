@@ -6,8 +6,8 @@ from loguru import logger
 
 from utils.separated_buffer import SeparatedReplayBuffer
 
-from ippo.algorithms.algorithm.ippo import IPPO as TrainAlgo
-from ippo.algorithms.algorithm.IPPO_Policy import R_IPPOPolicy as Policy
+from algorithms.algorithm.ippo import IPPO as TrainAlgo
+from algorithms.algorithm.IPPO_Policy import R_IPPOPolicy as Policy
 
 
 def _t2n(x):
