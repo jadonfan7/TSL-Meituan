@@ -30,7 +30,7 @@ class Courier:
         self.income = 0
                 
     def __repr__(self):
-        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', type: ' + str(self.courier_type) + ', position: ' + str(self.position) + ', travel_distance: ' + str(self.travel_distance) + ', income: ' + str(self.income) + ', total_leisure_time: ' + str(self.total_leisure_time)
+        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', type: ' + str(self.courier_type) + ', state: ' + self.state + ', position: ' + str(self.position) + ', travel_distance: ' + str(round(self.travel_distance, 2)) + ', income: ' + str(round(self.income, 2)) + ', total_leisure_time: ' + str(self.total_leisure_time)
 
         if self.waybill != []:
             orderid = [o.orderid for o in self.waybill]

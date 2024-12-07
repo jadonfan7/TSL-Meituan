@@ -38,20 +38,33 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
         
-        config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        } # 5 min
+        # config_mapping = {
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
+        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
+        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
+        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
+        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
+        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
+        # } # 5 min
 
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
+            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
+            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
+            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
+            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
+            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
+        } # 10 min
 
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -115,23 +128,28 @@ class Map:
         if not first_time:
             self.clock += self.interval
 
-        orders = [order for order in self.orders if order.status == "wait_pair"]
+        orders_failed = [order for order in self.orders if order.status == "wait_pair"]
+        orders_new = []
 
         while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
             dt = self.order_data.iloc[self.current_index]
             order_id = dt['order_id']
             
-            if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
+            # if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:      
+            if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
+          
+                self.orders_id.add(order_id)
+                
                 is_prebook = dt['is_prebook']
                 is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                 order_create_time = dt['platform_order_time']
-                pickup_point = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
+                pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                 dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                 meal_prepare_time = dt['estimate_meal_prepare_time']
                 estimate_arrived_time = dt['estimate_arrived_time']
                 
                 order = Order(order_id, is_prebook, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
-                orders.append(order)
+                orders_new.append(order)
 
                 courier_id = dt['courier_id']
                 if courier_id not in self.couriers_id:
@@ -162,17 +180,21 @@ class Map:
             if courier.start_time != self.clock and courier.courier_type == 0:
                 courier.income += 26.4 / 3600 * self.interval # 26.4 is the least salary per hour in Beijing
 
-        if orders != []:
+
+        orders_pair = orders_failed + orders_new
+        if orders_pair != []:
             
+            self.orders += orders_new
+
             if self.algo_index == 0:
-                self._equitable_allocation(orders)   
+                self._equitable_allocation(orders_pair)   
             # else:
             #     nearby_couriers = None
             #     for i, p in enumerate(orders):
             #         nearby_couriers = self._get_nearby_couriers(p, 1500)
             #     gorubi_solver(nearby_couriers, orders, self.clock)
             else:
-                self._greedy_allocation(orders)
+                self._greedy_allocation(orders_pair)
         
         
         self.num_orders = len(self.orders)
@@ -180,7 +202,9 @@ class Map:
         
     def _accept_or_reject(self, order, courier):
         
-        return True if random.random() < 0.9 else False
+        decision = True if random.random() < 0.9 else False
+        
+        return decision
         # avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
         # reward = courier.speed - avg_speed_fair
         # fairness = abs(avg_speed_fair - avg_speed)
@@ -235,9 +259,6 @@ class Map:
                     order.price = self._wage_response_model(order, nearest_courier)
                     # courier.income += order.price
                     
-                    self.orders_id.add(order.orderid)
-                    self.orders.append(order)
-
                     nearest_courier.wait_to_pick.append(order)
                     order.pair_courier = nearest_courier
                     order.status = 'wait_pick'
@@ -248,14 +269,14 @@ class Map:
 
                         if nearest_courier.position == order.drop_off_point:  # dropping off
                             nearest_courier.drop_order(order)
+                else:
+                    order.reject_count += 1
+                    courier.reject_order_num += 1
                             
             else:
                 order.price = self._wage_response_model(order, nearest_courier)
                 # courier.income += order.price
-                
-                self.orders_id.add(order.orderid)
-                self.orders.append(order)
-                
+                                
                 nearest_courier.wait_to_pick.append(order)
                 order.pair_courier = nearest_courier
                 order.status = 'wait_pick'
@@ -308,9 +329,6 @@ class Map:
                 if decision == True:
                     order.price = self._wage_response_model(order, courier)
                     # courier.income += order.price
-
-                    self.orders_id.add(order.orderid)
-                    self.orders.append(order)
                     
                     courier.wait_to_pick.append(order)
                     order.pair_courier = courier
@@ -322,14 +340,13 @@ class Map:
 
                         if courier.position == order.drop_off_point:  # dropping off
                             courier.drop_order(order)
-                            
+                else:
+                    order.reject_count += 1
+                    courier.reject_order_num += 1
             else:
                 order.price = self._wage_response_model(order, courier)
                 # courier.income += order.price
-                
-                self.orders_id.add(order.orderid)
-                self.orders.append(order)
-                
+                                
                 courier.wait_to_pick.append(order)
                 order.pair_courier = courier
                 order.status = 'wait_pick'
@@ -377,9 +394,6 @@ class Map:
                     if decision == True:
                         p.price = self._wage_response_model(p, assigned_courier)
                         # courier.income += p.price
-
-                        self.orders_id.add(p.orderid)
-                        self.orders.append(p)
                         
                         assigned_courier.wait_to_pick.append(p)
                         p.pair_courier = assigned_courier
@@ -391,14 +405,14 @@ class Map:
 
                             if assigned_courier.position == p.drop_off_point:  # dropping off
                                 assigned_courier.drop_order(p)
+                    else:
+                        p.reject_count += 1
+                        assigned_courier.reject_order_num += 1
                                 
                 else:
                     p.price = self._wage_response_model(p, assigned_courier)
                     # courier.income += p.price
-                    
-                    self.orders_id.add(p.orderid)
-                    self.orders.append(p)
-                    
+                                        
                     assigned_courier.wait_to_pick.append(p)
                     p.pair_courier = assigned_courier
                     p.status = 'wait_pick'

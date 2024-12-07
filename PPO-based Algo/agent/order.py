@@ -22,7 +22,7 @@ class Order:
         self.pair_courier = None
 
     def __repr__(self):
-        message = 'cls: ' + type(self).__name__  + ', order_id: ' + str(self.orderid) + ', price: ' + str(self.price) + ', status: ' + self.status + ', pick_up_point: ' + str(self.pick_up_point) + ', drop_off_point: ' + str(self.drop_off_point) + ", reject_count: " + str(self.reject_count) 
+        message = 'cls: ' + type(self).__name__  + ', order_id: ' + str(self.orderid) + ', price: ' + str(round(self.price, 2)) + ', status: ' + self.status + ', pick_up_point: ' + str(self.pick_up_point) + ', drop_off_point: ' + str(self.drop_off_point) + ", reject_count: " + str(self.reject_count) 
         
         if self.pair_time is not None:
             message += ', pair_time: ' + str(self.pair_time) + ', pair_courier: ' + str(self.pair_courier.courierid)
@@ -31,6 +31,6 @@ class Order:
             if self.is_late:
                 message += ', is_late: ' + str(self.is_late) 
             else:
-                message += ', ETA_usage: ' + str(self.ETA_usage)
+                message += ', ETA_usage: ' + str(round(self.ETA_usage, 2))
 
         return message

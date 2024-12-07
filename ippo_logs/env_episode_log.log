@@ -1,9 +1,0 @@
-2024-12-05 09:05:53.718 | SUCCESS  | runner.separated.env_runner:run:181 - 
-Average Courier's Travel Distance for Episode 1: 14.114784130052694
-Total Reward for Episode 1: -1660.0
-Rate of Overspeed for Episode 1: 0.26153846153846155
-No order is dropped in this episode
-
-2024-12-05 09:05:55.059 | SUCCESS  | runner.separated.env_runner:run:228 - 
- Scenario MyEnv Algo mappo Exp TSL updates 0/1000000 episodes, total num timesteps 15/15000000.0, FPS 3.
-

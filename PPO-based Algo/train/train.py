@@ -29,7 +29,6 @@ def make_train_env(all_args, device):
 
     return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_rollout_threads)], device)
 
-
 def make_eval_env(all_args, device):
     def get_env_fn(rank):
         def init_env():
@@ -44,7 +43,6 @@ def make_eval_env(all_args, device):
 
     return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)], device)
 
-
 def parse_args(args, parser):
     parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_orders", type=int, default=1)
@@ -52,7 +50,6 @@ def parse_args(args, parser):
     all_args = parser.parse_known_args(args)[0]
 
     return all_args
-
 
 def main(args):
     parser = get_config()

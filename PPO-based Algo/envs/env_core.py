@@ -124,6 +124,7 @@ class EnvCore(object):
         for order in agent.waybill:
             if agent.position == order.drop_off_point:  # dropping off
                 agent.drop_order(order)
+                agent.finish_order_num += 1
                     
                 if self.map.clock > order.ETA:
                     if agent.courier_type == 0:
@@ -143,7 +144,7 @@ class EnvCore(object):
                     agent.income += order.price
                     
         if agent.waybill == [] and agent.wait_to_pick == []:
-            agent.is_leisure == 1
+            agent.is_leisure = 1
         else:
             agent.is_leisure = 0
             agent.leisure_time = self.map.clock

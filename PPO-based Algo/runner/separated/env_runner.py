@@ -63,7 +63,7 @@ class EnvRunner(Runner):
         algo2_rate_of_ETA_usage = []
 
         for episode in range(episodes):
-            print(f"THE START OF EPISODE {episode+1}")
+            # print(f"THE START OF EPISODE {episode+1}")
 
             courier0_distance_per_episode = 0
             courier1_distance_per_episode = 0
@@ -122,20 +122,19 @@ class EnvRunner(Runner):
             for step in range(self.episode_length):
                 # print("-"*25)
                 # print(f"THIS IS STEP {step}")
-            
                 # dead_count = 0 # end the code
 
                 for i in range(self.envs.num_envs):
-                    # print(f"ENVIRONMENT {i+1}")
+                #     print(f"ENVIRONMENT {i+1}")
 
-                    # print("Couriers:")
-                    # for c in self.envs.envs_discrete[i].couriers:
-                    #     if c.state == 'active':
-                    #         print(c)
-                    # print("Orders:")
-                    # for o in self.envs.envs_discrete[i].orders:
-                    #     print(o)  
-                    # print("\n")
+                #     print("Couriers:")
+                #     for c in self.envs.envs_discrete[i].couriers:
+                #         if c.state == 'active':
+                #             print(c)
+                #     print("Orders:")
+                #     for o in self.envs.envs_discrete[i].orders:
+                #         print(o)  
+                #     print("\n")
                     self.log_env(episode, step, i)
 
                     # if self.game_success(step, self.envs.envs_discrete[i].map):
@@ -287,7 +286,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Overspeed Rate/Courier0', overspeed0, episode + 1)
             self.writter.add_scalar('Overspeed Rate/Courier1', overspeed1, episode + 1)
             
-            reject_rate_per_episode = round(count_reject_orders / self.envs.num_envs / len(self.envs.envs_discrete[0].orders), 2)
+            reject_rate_per_episode = round(count_reject_orders / self.envs.num_envs / len(self.envs.envs_discrete[0].orders), 2) # reject once or twice or more
             reject_rate.append(reject_rate_per_episode)
             print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
             self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
@@ -1197,7 +1196,7 @@ class EnvRunner(Runner):
                             algo1_courier0_distance_per_episode += c.travel_distance
                             algo1_courier0_reject_num += c.reject_order_num
                             algo1_courier0_finish_num += c.finish_order_num
-                            algo1_courier0_leisure_time += c.leisure_time
+                            algo1_courier0_leisure_time += c.total_leisure_time
                             algo1_courier0_avg_speed += c.avg_speed
                             algo1_courier0_income += c.income
                         else:
@@ -1205,7 +1204,7 @@ class EnvRunner(Runner):
                             algo1_courier1_distance_per_episode += c.travel_distance
                             algo1_courier1_reject_num += c.reject_order_num
                             algo1_courier1_finish_num += c.finish_order_num
-                            algo1_courier1_leisure_time += c.leisure_time
+                            algo1_courier1_leisure_time += c.total_leisure_time
                             algo1_courier1_avg_speed += c.avg_speed
                             algo1_courier1_income += c.income
                 
