@@ -1,10 +1,9 @@
 class Order:
-    def __init__(self, OrderID, is_prebooked, is_in_the_same_da_and_poi, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
+    def __init__(self, OrderID, is_in_the_same_da_and_poi, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
         self.orderid = OrderID
         
         self.status = 'wait_pair' # wait_pair, wait_pick, picked_up, dropped
 
-        self.is_prebooked = is_prebooked
         self.is_in_the_same_da_and_poi = is_in_the_same_da_and_poi        
         self.order_create_time = order_create_time
         self.meal_prepare_time = meal_prepare_time

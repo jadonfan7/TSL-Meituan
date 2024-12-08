@@ -140,7 +140,6 @@ class Map:
           
                 self.orders_id.add(order_id)
                 
-                is_prebook = dt['is_prebook']
                 is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                 order_create_time = dt['platform_order_time']
                 pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
@@ -148,23 +147,24 @@ class Map:
                 meal_prepare_time = dt['estimate_meal_prepare_time']
                 estimate_arrived_time = dt['estimate_arrived_time']
                 
-                order = Order(order_id, is_prebook, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                 orders_new.append(order)
 
-                courier_id = dt['courier_id']
-                if courier_id not in self.couriers_id:
-                    self.couriers_id.add(courier_id)
-                    courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
-                    courier_location = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
-                    courier = Courier(courier_type, courier_id, courier_location, self.clock)
-                    courier.state = 'active'
-                    courier.start_time = self.clock
-                    
-                    # if self.algo_index == 1:
-                    #     courier.wait_to_pick.append(order)
-                    #     order.pair_time = self.clock
-                    self.couriers.append(courier)
-                    self.add_new_couriers += 1
+                if dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
+                    courier_id = dt['courier_id']
+                    if courier_id not in self.couriers_id:
+                        self.couriers_id.add(courier_id)
+                        courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
+                        courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
+                        courier = Courier(courier_type, courier_id, courier_location, self.clock)
+                        courier.state = 'active'
+                        courier.start_time = self.clock
+                        
+                        # if self.algo_index == 1:
+                        #     courier.wait_to_pick.append(order)
+                        #     order.pair_time = self.clock
+                        self.couriers.append(courier)
+                        self.add_new_couriers += 1
                     
             
             self.current_index += 1
@@ -202,43 +202,56 @@ class Map:
         
     def _accept_or_reject(self, order, courier):
         
-        decision = True if random.random() < 0.9 else False
+        # decision = True if random.random() < 0.95 else False
         
-        return decision
-        # avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-        # reward = courier.speed - avg_speed_fair
-        # fairness = abs(avg_speed_fair - avg_speed)
+        # return decision
+        avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+        reward = courier.speed - avg_speed_fair
+        fairness = abs(avg_speed_fair - avg_speed)
         
-        # num_waybill = len(courier.waybill + courier.wait_to_pick)
-        # potential_overspeed_risk = 1 if max_speed > 4 else 0
-        # rejection_history_count = order.reject_count
-        # is_in_the_same_da_and_poi = order.is_in_the_same_da_and_poi
-        # is_prebooked = order.is_prebooked
-        # pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
-        # drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
-        # estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
-        # estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
-        # order_push_time = self.clock - order.order_create_time
+        num_waybill = len(courier.waybill + courier.wait_to_pick)
+        potential_overspeed_risk = 1 if max_speed > 4 else 0
+        rejection_history_count = order.reject_count
+        is_in_the_same_da_and_poi = order.is_in_the_same_da_and_poi
+        pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
+        drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
+        estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
+        estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
+        order_push_time = self.clock - order.order_create_time
 
         # feature_names = [
         #     'reward', 'fairness', 'num_waybill', 'potential_overspeed_risk', 
-        #     'rejection history count', 'is_in_the_same_da_and_poi', 'is_prebooked', 
+        #     'rejection history count', 'is_in_the_same_da_and_poi', 
         #     'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
         #     'estimate_meal_prepare_time', 'order_push_time'
         # ]
+        feature_names = [
+            'num_waybill', 'potential_overspeed_risk', 
+            'rejection history count', 'is_in_the_same_da_and_poi', 
+            'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
+            'estimate_meal_prepare_time', 'order_push_time'
+        ]
+        # X = (reward, fairness, num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
+        X = (num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
         
-        # X = (reward, fairness, num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, is_prebooked, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
+        X_df = pd.DataFrame([X], columns=feature_names)
         
-        # X_df = pd.DataFrame([X], columns=feature_names)
+        # Load the scaler
+        # columns_to_standardize = ['reward', 'fairness', 'num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
+        columns_to_standardize = ['num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
+        scaler = joblib.load('/Users/jadonfan/Documents/TSL/scaler4.pkl')
+        # Standardize new data
+        X_df[columns_to_standardize] = scaler.transform(X_df[columns_to_standardize])
 
-        # best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/best_logreg_model.joblib')
-        # y_pred_new = best_logreg.predict(X_df)
-        
-        # if y_pred_new[0] == False:
-        #     order.reject_count += 1
-        #     courier.reject_order_num += 1
 
-        # return y_pred_new[0]
+        best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/logistic_regression_model4.joblib')
+        y_pred_new = best_logreg.predict(X_df)
+        
+        if y_pred_new[0] == False:
+            order.reject_count += 1
+            courier.reject_order_num += 1
+
+        return y_pred_new[0]
         
     def _greedy_allocation(self, orders):
         
