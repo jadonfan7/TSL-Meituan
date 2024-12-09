@@ -178,7 +178,7 @@ class Map:
                 courier.state = 'inactive'
             
             if courier.start_time != self.clock and courier.courier_type == 0:
-                courier.income += 26.4 / 3600 * self.interval # 26.4 is the least salary per hour in Beijing
+                courier.income += 15 / 3600 * self.interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
 
 
         orders_pair = orders_failed + orders_new
