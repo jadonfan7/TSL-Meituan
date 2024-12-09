@@ -445,7 +445,7 @@ class Map:
             min_reward = math.inf
             assigned_courier = None
 
-            nearby_couriers = self._get_nearby_couriers(p, 1500)
+            nearby_couriers = self._get_nearby_couriers(order, 1500)
             for courier in nearby_couriers:
                 avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
                 avg_reward = courier.reward / (self.clock - courier.start_time) if (self.clock - courier.start_time) != 0 else courier.reward
@@ -678,7 +678,15 @@ class Map:
     def _wage_response_model(self, order, courier):
         courier_total_time = self.clock - courier.start_time
         if courier_total_time == 0 or courier.income == 0:
-            return 10 # as a incentive for a new courier
+            if courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
+                wm = 10 * (len(courier.waybill) + len(courier.wait_to_pick)) / courier_total_time
+                v = 4 # 4 m/s
+                r = geodesic(order.pick_up_point, courier.position).meters
+                d = geodesic(order.pick_up_point, order.drop_off_point).meters
+                wage = wm * (r + d) / v
+                return 1.5 * wage
+            else:
+                return 10 # as a incentive for a new courier
         else:
             wm = courier.income / courier_total_time
             v = 4 # 4 m/s
