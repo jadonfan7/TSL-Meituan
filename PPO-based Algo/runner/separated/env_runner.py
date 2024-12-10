@@ -257,7 +257,7 @@ class EnvRunner(Runner):
                                     
             distance0 = round(courier0_distance_per_episode / courier0_num, 2)
             distance1 = round(courier1_distance_per_episode / courier1_num, 2)
-            distance = (courier0_distance_per_episode + courier1_distance_per_episode)/ (courier0_num + courier1_num)
+            distance = (courier0_distance_per_episode + courier1_distance_per_episode) / (courier0_num + courier1_num)
             distance = round(distance, 2)
             distance_total.append([distance0, distance1, distance])
             print(f"Average Travel Distance per Courier0: {distance0} meters, Courier1: {distance1} meters, Total: {distance} meters")
@@ -265,8 +265,8 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Total Distance/Courier0', distance0, episode + 1)
             self.writter.add_scalar('Total Distance/Courier1', distance1, episode + 1)
             
-            avg0_speed = round(courier0_avg_speed / courier0_num / self.envs.num_envs, 2)
-            avg1_speed = round(courier1_avg_speed / courier1_num / self.envs.num_envs, 2)
+            avg0_speed = round(courier0_avg_speed / courier0_num, 2)
+            avg1_speed = round(courier1_avg_speed / courier1_num, 2)
             avg_speed = (courier0_avg_speed + courier1_avg_speed) / (courier0_num + courier1_num)
             avg_speed = round(avg_speed, 2)
             avg_speed_total.append([avg0_speed, avg1_speed, avg_speed])    
@@ -313,11 +313,14 @@ class EnvRunner(Runner):
             income0 = round(courier0_income / courier0_num, 2)
             income1 = round(courier1_income / courier1_num, 2)
             income = round((courier0_income + courier1_income) / (courier0_num + courier1_num), 2)
-            income_total.append([income0, income1, income])
+            platform_cost = round((courier0_income + courier1_income) / self.envs.num_envs, 2)
+            income_total.append([income0, income1, income, platform_cost])
             print(f"Courier0's average income is {income0} yuan, Courier1's average income is {income1} yuan and Total income per courier is {income} yuan")
+            print(f"The platform total cost is {platform_cost} yuan")
             self.writter.add_scalar('Average Income/Total', income, episode + 1)
             self.writter.add_scalar('Average Income/Courier0', income0, episode + 1)
             self.writter.add_scalar('Average Income/Courier1', income1, episode + 1)
+            self.writter.add_scalar('Platform Cost', platform_cost, episode + 1)
 
             finish0 = round(courier0_finish_num / courier0_num, 2)
             finish1 = round(courier1_finish_num / courier1_num, 2)
@@ -337,7 +340,6 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average Leisure Time/Courier0', avg0_leisure, episode + 1)
             self.writter.add_scalar('Average Leisure Time/Courier1', avg1_leisure, episode + 1)
             
-            
             message = (
                 f"There are {courier0_num / self.envs.num_envs} Courier0, {courier1_num / self.envs.num_envs} Courier1, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n"
                 f"Average Travel Distance for Episode {episode+1}: Courier0 - {distance0} meters, Courier1 - {distance1} meters, Total - {distance} meters\n"
@@ -348,6 +350,7 @@ class EnvRunner(Runner):
                 f"The average rejection number for Episode {episode+1}: Courier0 - {reject0}, Courier1 - {reject1}, Total - {reject}\n"
                 f"The average price for Episode {episode+1}: Courier0 - {price_per_order0} yuan with {order0_num} orders, Courier1 - {price_per_order1} yuan with {order1_num} orders, Total - {order_price} yuan\n"
                 f"The average income for Episode {episode+1}: Courier0 - {income0} yuan, Courier1 - {income1} yuan, Total - {income} yuan\n"
+                f"The platform total cost is {platform_cost} yuan\n"
                 f"The average finish number for Episode {episode+1}: Courier0 - {finish0}, Courier1 - {finish1}, Total - {finish}\n"
                 f"The average leisure time for Episode {episode+1}: Courier0 - {avg0_leisure} minutes, Courier1 - {avg1_leisure} minutes, Total - {avg_leisure} minutes\n"
             )
@@ -483,10 +486,12 @@ class EnvRunner(Runner):
                     algo1_income0,
                     algo1_income1,
                     algo1_income,
+                    platform_cost1,
                     
                     algo2_income0,
                     algo2_income1,
                     algo2_income,
+                    platform_cost2,
                     
                     algo1_finish0,
                     algo1_finish1,
@@ -542,8 +547,8 @@ class EnvRunner(Runner):
                 algo1_eval_order_price.append([algo1_price_per_order0, algo1_price_per_order1, algo1_price_per_order])
                 algo2_eval_order_price.append([algo2_price_per_order0, algo2_price_per_order1, algo2_price_per_order])
                 
-                algo1_eval_income.append([algo1_income0, algo1_income1, algo1_income])
-                algo2_eval_income.append([algo2_income0, algo2_income1, algo2_income])
+                algo1_eval_income.append([algo1_income0, algo1_income1, algo1_income, platform_cost1])
+                algo2_eval_income.append([algo2_income0, algo2_income1, algo2_income, platform_cost2])
                 
                 algo1_eval_finish.append([algo1_finish0, algo1_finish1, algo1_finish])
                 algo2_eval_finish.append([algo2_finish0, algo2_finish1, algo2_finish])
@@ -556,7 +561,6 @@ class EnvRunner(Runner):
                 
                 algo1_rate_of_ETA_usage.append([algo1_ETA_usage_rate0, algo1_ETA_usage_rate1, algo1_ETA_usage_rate])
                 algo2_rate_of_ETA_usage.append([algo2_ETA_usage_rate0, algo2_ETA_usage_rate1, algo2_ETA_usage_rate])
-
         
         self.writter.close()
         
@@ -565,6 +569,7 @@ class EnvRunner(Runner):
         courier0_distances = [d[0] for d in distance_total]
         courier1_distances = [d[1] for d in distance_total]
         courier_distances = [d[2] for d in distance_total]
+        plt.figure(figsize=(12, 8))
         plt.plot(courier0_distances, label="Courier 0", color='blue')
         plt.plot(courier1_distances, label="Courier 1", color='orange')
         plt.plot(courier_distances, label="Courier", color='green')
@@ -574,7 +579,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.savefig('Train_Distance.png')
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(episode_rewards)
         plt.xlabel('Episodes')
         plt.ylabel('Total Rewards')
@@ -585,7 +590,7 @@ class EnvRunner(Runner):
         courier0_speed = [s[0] for s in avg_speed_total]
         courier1_speed = [s[1] for s in avg_speed_total]
         courier_speed = [s[2] for s in avg_speed_total]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(courier0_speed, label="Courier 0", color='blue')
         plt.plot(courier1_speed, label="Courier 1", color='orange')
         plt.plot(courier_speed, label="Courier", color='green')
@@ -598,7 +603,7 @@ class EnvRunner(Runner):
         courier0_overspeed = [r[0] for r in rate_of_overspeed]
         courier1_overspeed = [r[1] for r in rate_of_overspeed]
         courier_overspeed = [r[2] for r in rate_of_overspeed]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(courier0_overspeed, label="Courier 0", color='blue')
         plt.plot(courier1_overspeed, label="Courier 1", color='orange')
         plt.plot(courier_overspeed, label="Courier", color='green')
@@ -608,7 +613,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.savefig('Train_rate_of_overspeed.png')
         
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(reject_rate)
         plt.xlabel('Episodes')
         plt.ylabel('Order Reject Rate')
@@ -619,7 +624,7 @@ class EnvRunner(Runner):
         avg_reject0 = [r[0] for r in courier_reject_num_total]
         avg_reject1 = [r[1] for r in courier_reject_num_total]
         avg_reject = [r[2] for r in courier_reject_num_total]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(avg_reject0, label="Courier 0", color='blue')
         plt.plot(avg_reject1, label="Courier 1", color='orange')
         plt.plot(avg_reject, label="Courier", color='green')
@@ -632,7 +637,7 @@ class EnvRunner(Runner):
         price0 = [p[0] for p in order_price_total]
         price1 = [p[1] for p in order_price_total]
         price = [p[2] for p in order_price_total]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(price0, label="Courier 0", color='blue')
         plt.plot(price1, label="Courier 1", color='orange')
         plt.plot(price, label="Courier", color='green')
@@ -645,7 +650,7 @@ class EnvRunner(Runner):
         courier0_income = [i[0] for i in income_total]
         courier1_income = [i[1] for i in income_total] 
         courier_income = [i[2] for i in income_total]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(courier0_income, label="Courier 0", color='blue')
         plt.plot(courier1_income, label="Courier 1", color='orange')
         plt.plot(courier_income, label="Courier", color='green')
@@ -655,10 +660,19 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.savefig('Train_avg_income_per_courier.png')
         
+        platform_total_cost = [i[3] for i in income_total]
+        plt.figure(figsize=(12, 8))
+        plt.plot(platform_total_cost, label="Platform total cost", color='green')
+        plt.xlabel('Episodes')
+        plt.ylabel('Platform Total Cost')
+        plt.title('Train: Platform Total Cost')
+        plt.grid(True)
+        plt.savefig('Train_platform_total_cost.png')
+        
         courier0_finish = [f[0] for f in courier_finish_num_total]
         courier1_finish = [f[1] for f in courier_finish_num_total]
         courier_finish = [f[2] for f in courier_finish_num_total]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(courier0_finish, label="Courier 0", color='blue')
         plt.plot(courier1_finish, label="Courier 1", color='orange')
         plt.plot(courier_finish, label="Courier", color='green')
@@ -671,7 +685,7 @@ class EnvRunner(Runner):
         order0_late = [l[0] for l in rate_of_late_order]
         order1_late = [l[1] for l in rate_of_late_order]
         order_late = [l[2] for l in rate_of_late_order]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(order0_late, label="Courier 0", color='blue')
         plt.plot(order1_late, label="Courier 1", color='orange')
         plt.plot(order_late, label="Courier", color='green')
@@ -684,7 +698,7 @@ class EnvRunner(Runner):
         order0_ETA = [e[0] for e in rate_of_ETA_usage]
         order1_ETA = [e[1] for e in rate_of_ETA_usage]
         order_ETA = [e[2] for e in rate_of_ETA_usage]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.plot(order0_ETA, label="Courier 0", color='blue')
         plt.plot(order1_ETA, label="Courier 1", color='orange')
         plt.plot(order_ETA, label="Courier", color='green')
@@ -693,7 +707,6 @@ class EnvRunner(Runner):
         plt.title('Train: rate of ETA usage over Episodes')
         plt.grid(True)
         plt.savefig('Train_rate_of_ETA_usage.png')
-        
         
         #--------------------------
         # draw the Evaluation graph
@@ -807,6 +820,16 @@ class EnvRunner(Runner):
         plt.legend()
         plt.savefig('Eval_courier_avg_income.png')
         
+        plt.figure(figsize=(12, 8))
+        plt.plot(episodes, [x[3] for x in algo1_eval_income], label='Algo1', color='blue', linestyle='-', marker='o')
+        plt.plot(episodes, [x[3] for x in algo2_eval_income], label='Algo2', color='green', linestyle='-', marker='o')
+        plt.xlabel('Episodes')
+        plt.ylabel('Platform Total Cost')
+        plt.title('Eval: Platform Total Cost over Episodes')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('Eval_platform_total_cost.png')
+
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[0] for x in algo1_eval_finish], label='Algo1 Courier0', color='blue', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo1_eval_finish], label='Algo1 Courier1', color='blue', linestyle='-.', marker='s')
@@ -1389,18 +1412,22 @@ class EnvRunner(Runner):
         algo1_income0 = round(algo1_courier0_income / algo1_courier0_num, 2)
         algo1_income1 = round(algo1_courier1_income / algo1_courier1_num, 2)
         algo1_income = round((algo1_courier0_income + algo1_courier1_income) / (algo1_courier0_num + algo1_courier1_num), 2)
+        platform_cost1 = algo1_courier0_income + algo1_courier1_income
         algo2_income0 = round(algo2_courier0_income / algo2_courier0_num, 2)
         algo2_income1 = round(algo2_courier1_income / algo2_courier1_num, 2)
         algo2_income = round((algo2_courier0_income + algo2_courier1_income) / (algo2_courier0_num + algo2_courier1_num), 2)
+        platform_cost2 = algo2_courier0_income + algo2_courier1_income
         print("Average Income per Courier for Evaluation Between Two Algos:")
-        print(f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}")
-        print(f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}")
+        print(f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan")
+        print(f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan")
         self.writter.add_scalar('Average Income/Algo1_Total', algo1_income, self.eval_num)
         self.writter.add_scalar('Average Income/Algo1_Courier0', algo1_income0, self.eval_num)
         self.writter.add_scalar('Average Income/Algo1_Courier1', algo1_income1, self.eval_num)
         self.writter.add_scalar('Average Income/Algo2_Total', algo2_income, self.eval_num)
         self.writter.add_scalar('Average Income/Algo2_Courier0', algo2_income0, self.eval_num)
         self.writter.add_scalar('Average Income/Algo2_Courier1', algo2_income1, self.eval_num)
+        self.writter.add_scalar('Platform Total Cost/Algo1', platform_cost1, self.eval_num)
+        self.writter.add_scalar('Platform Total Cost/Algo2', platform_cost2, self.eval_num)
 
         algo1_finish0 = round(algo1_courier0_finish_num / algo1_courier0_num, 2)
         algo1_finish1 = round(algo1_courier1_finish_num / algo1_courier1_num, 2)
@@ -1459,8 +1486,8 @@ class EnvRunner(Runner):
             f"Algo1: The average price of Courier0's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Courier1's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}\n"
             f"Algo2: The average price of Courier0's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Courier1's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}\n"
             "Average Income per Courier for Evaluation Between Two Algos:\n"
-            f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}\n"
-            f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}\n"
+            f"Algo1: Courier0's average income is {algo1_income0} yuan, Courier1's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan\n"
+            f"Algo2: Courier0's average income is {algo2_income0} yuan, Courier1's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan\n"
             "Average Order finished per courier for Evaluation Between Two Algos:\n"
             f"Algo1: Courier0 finishes average {algo1_finish0} orders while Courier1 finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}\n"
             f"Algo2: Courier0 finishes average {algo2_finish0} orders while Courier1 finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}\n"
@@ -1619,10 +1646,12 @@ class EnvRunner(Runner):
             algo1_income0,
             algo1_income1,
             algo1_income,
+            platform_cost1,
             
             algo2_income0,
             algo2_income1,
             algo2_income,
+            platform_cost2,
             
             algo1_finish0,
             algo1_finish1,

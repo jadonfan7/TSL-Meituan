@@ -38,33 +38,33 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
         
-        config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        } # 5 min
-
         # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
-        # } # 10 min
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
+        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
+        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
+        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
+        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
+        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
+        # } # 5 min
+
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
+            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
+            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
+            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
+            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
+            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
+        } # 10 min
 
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -243,13 +243,12 @@ class Map:
         # Standardize new data
         X_df[columns_to_standardize] = scaler.transform(X_df[columns_to_standardize])
 
-
         best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         y_pred_new = best_logreg.predict(X_df)
         
-        if y_pred_new[0] == False:
-            order.reject_count += 1
-            courier.reject_order_num += 1
+        # if y_pred_new[0] == False:
+        #     order.reject_count += 1
+        #     courier.reject_order_num += 1
 
         return y_pred_new[0]
         
@@ -677,16 +676,15 @@ class Map:
         
     def _wage_response_model(self, order, courier):
         courier_total_time = self.clock - courier.start_time
-        if courier_total_time == 0 or courier.income == 0:
-            if courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                wm = 10 * (len(courier.waybill) + len(courier.wait_to_pick)) / courier_total_time
-                v = 4 # 4 m/s
-                r = geodesic(order.pick_up_point, courier.position).meters
-                d = geodesic(order.pick_up_point, order.drop_off_point).meters
-                wage = wm * (r + d) / v
-                return 1.5 * wage
-            else:
-                return 10 # as a incentive for a new courier
+        if courier_total_time == 0 or (courier.income == 0 and len(courier.waybill) + len(courier.wait_to_pick) == 0):
+            return 10 # as a incentive for a new courier, also 10 is the average price of an order
+        elif courier.income == 0 and courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
+            wm = 15 / 3600
+            v = 4 # 4 m/s
+            r = geodesic(order.pick_up_point, courier.position).meters
+            d = geodesic(order.pick_up_point, order.drop_off_point).meters
+            wage = wm * (r + d) / v
+            return 1.5 * wage
         else:
             wm = courier.income / courier_total_time
             v = 4 # 4 m/s
