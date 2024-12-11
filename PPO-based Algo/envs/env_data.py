@@ -107,6 +107,9 @@ class Map:
         self.add_new_couriers = 0
 
         self.step(first_time=1)
+        
+        self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
+        self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
 
     def reset(self, env_index):
         self.orders = []
@@ -239,12 +242,10 @@ class Map:
         # Load the scaler
         # columns_to_standardize = ['reward', 'fairness', 'num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
         columns_to_standardize = ['num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
-        scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # Standardize new data
-        X_df[columns_to_standardize] = scaler.transform(X_df[columns_to_standardize])
+        X_df[columns_to_standardize] = self.scaler.transform(X_df[columns_to_standardize])
 
-        best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
-        y_pred_new = best_logreg.predict(X_df)
+        y_pred_new = self.best_logreg.predict(X_df)
         
         # if y_pred_new[0] == False:
         #     order.reject_count += 1
