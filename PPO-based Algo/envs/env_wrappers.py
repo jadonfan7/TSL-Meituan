@@ -120,7 +120,6 @@ def worker(remote, parent_remote, env_fn_wrapper):
             # remote.send((env_map, obs))
 
         elif cmd == 'close':
-            env.close()
             remote.close()
             break
         elif cmd == 'get_spaces':
