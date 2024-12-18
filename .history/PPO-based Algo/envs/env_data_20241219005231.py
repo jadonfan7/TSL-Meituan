@@ -81,25 +81,6 @@ class Map:
             
             # self.waybill_data = df_waybill[(df_waybill['dt'] == date_value)]
 
-
-        # lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
-        # lat_values_non_zero = lat_values[lat_values > 0].dropna()
-
-        # self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
-
-        # lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
-        # lng_values_non_zero = lng_values[lng_values > 0].dropna()
-
-        # self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
-
-        # order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
-        # order_time_non_zero = order_time[order_time > 0].dropna()
-
-        # self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
-
         self.clock = self.order_data['platform_order_time'][0]
 
         self.interval = 10 # allocation for every 10 seconds

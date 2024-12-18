@@ -39,28 +39,40 @@ class EnvRunner(Runner):
         
         algo1_eval_distance = []
         algo2_eval_distance = []
+        algo3_eval_distance = []
         algo1_eval_episode_rewards = []
         algo2_eval_episode_rewards = []
+        algo3_eval_episode_rewards = []
         algo1_eval_speed = []
         algo2_eval_speed = []
+        algo3_eval_speed = []
         algo1_eval_overspeed_rate = []
         algo2_eval_overspeed_rate = []
+        algo3_eval_overspeed_rate = []
         algo1_eval_reject_rate = []
         algo2_eval_reject_rate = []
+        algo3_eval_reject_rate = []
         algo1_eval_reject = []
         algo2_eval_reject = []
+        algo3_eval_reject = []
         algo1_eval_order_price = []
         algo2_eval_order_price = []
+        algo3_eval_order_price = []
         algo1_eval_income = []
         algo2_eval_income = []
+        algo3_eval_income = []
         algo1_eval_finish = []
         algo2_eval_finish = []
+        algo3_eval_finish = []
         algo1_eval_leisure = [] 
         algo2_eval_leisure = []
+        algo3_eval_leisure = [] 
         algo1_rate_of_late_order = []
         algo2_rate_of_late_order = []
+        algo3_rate_of_late_order = []
         algo1_rate_of_ETA_usage = []
         algo2_rate_of_ETA_usage = []
+        algo3_rate_of_ETA_usage = []
 
         for episode in range(episodes):
             print(f"THE START OF EPISODE {episode+1}")
@@ -439,6 +451,7 @@ class EnvRunner(Runner):
                 (
                     algo1_eval_episode_rewards_sum,
                     algo2_eval_episode_rewards_sum,
+                    algo3_eval_episode_rewards_sum,
                     
                     algo1_distance0,
                     algo1_distance1,
@@ -448,6 +461,10 @@ class EnvRunner(Runner):
                     algo2_distance1,
                     algo2_distance,
                     
+                    algo3_distance0,
+                    algo3_distance1,
+                    algo3_distance,
+                    
                     algo1_avg0_speed,
                     algo1_avg1_speed,
                     algo1_avg_speed,
@@ -455,6 +472,10 @@ class EnvRunner(Runner):
                     algo2_avg0_speed,
                     algo2_avg1_speed,
                     algo2_avg_speed,
+                    
+                    algo3_avg0_speed,
+                    algo3_avg1_speed,
+                    algo3_avg_speed,
                     
                     algo1_overspeed0,
                     algo1_overspeed1,
@@ -464,8 +485,13 @@ class EnvRunner(Runner):
                     algo2_overspeed1,
                     algo2_overspeed,
                     
+                    algo3_overspeed0,
+                    algo3_overspeed1,
+                    algo3_overspeed,
+                    
                     algo1_reject_rate_per_episode,
                     algo2_reject_rate_per_episode,
+                    algo3_reject_rate_per_episode,
                     
                     algo1_reject0,
                     algo1_reject1,
@@ -475,6 +501,10 @@ class EnvRunner(Runner):
                     algo2_reject1,
                     algo2_reject,
                     
+                    algo3_reject0,
+                    algo3_reject1,
+                    algo3_reject,
+                    
                     algo1_price_per_order0,
                     algo1_price_per_order1,
                     algo1_price_per_order,
@@ -482,6 +512,10 @@ class EnvRunner(Runner):
                     algo2_price_per_order0,
                     algo2_price_per_order1,
                     algo2_price_per_order,
+                    
+                    algo3_price_per_order0,
+                    algo3_price_per_order1,
+                    algo3_price_per_order,
                     
                     algo1_income0,
                     algo1_income1,
@@ -493,6 +527,11 @@ class EnvRunner(Runner):
                     algo2_income,
                     platform_cost2,
                     
+                    algo3_income0,
+                    algo3_income1,
+                    algo3_income,
+                    platform_cost3,
+                    
                     algo1_finish0,
                     algo1_finish1,
                     algo1_finish,
@@ -500,6 +539,10 @@ class EnvRunner(Runner):
                     algo2_finish0,
                     algo2_finish1,
                     algo2_finish,
+                    
+                    algo3_finish0,
+                    algo3_finish1,
+                    algo3_finish,
                     
                     algo1_avg0_leisure,
                     algo1_avg1_leisure,
@@ -509,6 +552,10 @@ class EnvRunner(Runner):
                     algo2_avg1_leisure,
                     algo2_avg_leisure,
                     
+                    algo3_avg0_leisure,
+                    algo3_avg1_leisure,
+                    algo3_avg_leisure,
+                    
                     algo1_late_rate0,
                     algo1_late_rate1,
                     algo1_late_rate,
@@ -517,51 +564,72 @@ class EnvRunner(Runner):
                     algo2_late_rate1,
                     algo2_late_rate,
                     
+                    algo3_late_rate0,
+                    algo3_late_rate1,
+                    algo3_late_rate,
+                    
                     algo1_ETA_usage_rate0,
                     algo1_ETA_usage_rate1,
                     algo1_ETA_usage_rate,
                     
                     algo2_ETA_usage_rate0,
                     algo2_ETA_usage_rate1,
-                    algo2_ETA_usage_rate
+                    algo2_ETA_usage_rate,
+                    
+                    algo3_ETA_usage_rate0,
+                    algo3_ETA_usage_rate1,
+                    algo3_ETA_usage_rate,
+                    
                 ) = self.eval(total_num_steps)
 
                 algo1_eval_distance.append([algo1_distance0, algo1_distance1, algo1_distance])
                 algo2_eval_distance.append([algo2_distance0, algo2_distance1, algo2_distance])
-                
+                algo3_eval_distance.append([algo3_distance0, algo3_distance1, algo3_distance])
+
                 algo1_eval_episode_rewards.append(algo1_eval_episode_rewards_sum)
                 algo2_eval_episode_rewards.append(algo2_eval_episode_rewards_sum)
+                algo3_eval_episode_rewards.append(algo3_eval_episode_rewards_sum)
                 
                 algo1_eval_speed.append([algo1_avg0_speed, algo1_avg1_speed, algo1_avg_speed])
                 algo2_eval_speed.append([algo2_avg0_speed, algo2_avg1_speed, algo2_avg_speed])
-                
+                algo3_eval_speed.append([algo3_avg0_speed, algo3_avg1_speed, algo3_avg_speed])
+
                 algo1_eval_overspeed_rate.append([algo1_overspeed0, algo1_overspeed1, algo1_overspeed])
                 algo2_eval_overspeed_rate.append([algo2_overspeed0, algo2_overspeed1, algo2_overspeed])
+                algo3_eval_overspeed_rate.append([algo3_overspeed0, algo3_overspeed1, algo3_overspeed])
                 
                 algo1_eval_reject_rate.append(algo1_reject_rate_per_episode)
                 algo2_eval_reject_rate.append(algo2_reject_rate_per_episode)
-                                
+                algo3_eval_reject_rate.append(algo3_reject_rate_per_episode)
+
                 algo1_eval_reject.append([algo1_reject0, algo1_reject1, algo1_reject])
                 algo2_eval_reject.append([algo2_reject0, algo2_reject1, algo2_reject])
-                
+                algo3_eval_reject.append([algo3_reject0, algo3_reject1, algo3_reject])
+
                 algo1_eval_order_price.append([algo1_price_per_order0, algo1_price_per_order1, algo1_price_per_order])
                 algo2_eval_order_price.append([algo2_price_per_order0, algo2_price_per_order1, algo2_price_per_order])
-                
+                algo3_eval_order_price.append([algo3_price_per_order0, algo3_price_per_order1, algo3_price_per_order])
+
                 algo1_eval_income.append([algo1_income0, algo1_income1, algo1_income, platform_cost1])
                 algo2_eval_income.append([algo2_income0, algo2_income1, algo2_income, platform_cost2])
-                
+                algo3_eval_income.append([algo3_income0, algo3_income1, algo3_income, platform_cost3])
+
                 algo1_eval_finish.append([algo1_finish0, algo1_finish1, algo1_finish])
                 algo2_eval_finish.append([algo2_finish0, algo2_finish1, algo2_finish])
-                
+                algo3_eval_finish.append([algo3_finish0, algo3_finish1, algo3_finish])
+
                 algo1_eval_leisure.append([algo1_avg0_leisure, algo1_avg1_leisure, algo1_avg_leisure])
                 algo2_eval_leisure.append([algo2_avg0_leisure, algo2_avg1_leisure, algo2_avg_leisure])
-                
+                algo3_eval_leisure.append([algo3_avg0_leisure, algo3_avg1_leisure, algo3_avg_leisure])
+
                 algo1_rate_of_late_order.append([algo1_late_rate0, algo1_late_rate1, algo1_late_rate])
                 algo2_rate_of_late_order.append([algo2_late_rate0, algo2_late_rate1, algo2_late_rate])
-                
+                algo3_rate_of_late_order.append([algo3_late_rate0, algo3_late_rate1, algo3_late_rate])
+
                 algo1_rate_of_ETA_usage.append([algo1_ETA_usage_rate0, algo1_ETA_usage_rate1, algo1_ETA_usage_rate])
                 algo2_rate_of_ETA_usage.append([algo2_ETA_usage_rate0, algo2_ETA_usage_rate1, algo2_ETA_usage_rate])
-        
+                algo3_rate_of_ETA_usage.append([algo3_ETA_usage_rate0, algo3_ETA_usage_rate1, algo3_ETA_usage_rate])
+
         self.writter.close()
         
 
@@ -745,6 +813,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_distance], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_distance], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_distance], label='Algo2 Total Distance', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_distance], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_distance], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_distance], label='Algo3 Total Distance', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Distances')
         plt.title('Eval: Distance Comparison')
@@ -754,7 +825,8 @@ class EnvRunner(Runner):
         
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, algo1_eval_episode_rewards, label='Algo1 Reward', color='blue', marker='o')
-        plt.plot(episodes, algo2_eval_episode_rewards, label='Algo2 Reward', color='green', marker='x')
+        plt.plot(episodes, algo2_eval_episode_rewards, label='Algo2 Reward', color='green', marker='o')
+        plt.plot(episodes, algo3_eval_episode_rewards, label='Algo3 Reward', color='yellow', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Total Reward')
         plt.title('Eval: Reward over Episodes')
@@ -769,6 +841,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_speed], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_speed], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_speed], label='Algo2 average speed', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_speed], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_speed], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_speed], label='Algo3 average speed', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Average Speed')
         plt.title('Eval: Average Speed Comparison')
@@ -783,6 +858,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_overspeed_rate], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_overspeed_rate], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_overspeed_rate], label='Algo2 Overspeed Rate', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_overspeed_rate], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_overspeed_rate], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_overspeed_rate], label='Algo3 Overspeed Rate', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Overspeed Rate')
         plt.title('Eval: Overspeed Rate over Episodes')
@@ -793,6 +871,7 @@ class EnvRunner(Runner):
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, algo1_eval_reject_rate, label='Algo1', color='blue', linestyle='--', marker='o')
         plt.plot(episodes, algo2_eval_reject_rate, label='Algo2', color='green', linestyle='--', marker='o')
+        plt.plot(episodes, algo3_eval_reject_rate, label='Algo3', color='yellow', linestyle='--', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Reject Rate')
         plt.title('Eval: Reject Rate over Episodes')
@@ -807,6 +886,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_reject], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_reject], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_reject], label='Algo2 Courier Reject Number', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_reject], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_reject], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_reject], label='Algo3 Courier Reject Number', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Courier Reject Number')
         plt.title('Eval: Courier Reject Number over Episodes')
@@ -821,6 +903,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_order_price], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_order_price], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_order_price], label='Algo2 Average Order Price', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_order_price], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_order_price], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[3] for x in algo3_eval_order_price], label='Algo3 Average Order Price', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Average Order Price')
         plt.title('Eval: Average Order Price over Episodes')
@@ -835,6 +920,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_income], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_income], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_income], label='Algo2 Courier Average Income', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_income], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_income], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_income], label='Algo3 Courier Average Income', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Courier Average Income')
         plt.title('Eval: Courier Average Income over Episodes')
@@ -845,6 +933,7 @@ class EnvRunner(Runner):
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[3] for x in algo1_eval_income], label='Algo1', color='blue', linestyle='-', marker='o')
         plt.plot(episodes, [x[3] for x in algo2_eval_income], label='Algo2', color='green', linestyle='-', marker='o')
+        plt.plot(episodes, [x[3] for x in algo3_eval_income], label='Algo3', color='yellow', linestyle='-', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Platform Total Cost')
         plt.title('Eval: Platform Total Cost over Episodes')
@@ -859,6 +948,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_finish], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_finish], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_finish], label='Algo2 Average Finished Orders per Courier', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_finish], label='Algoo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_finish], label='Algoo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_finish], label='Algoo3 Average Finished Orders per Courier', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Average Finished Orders per Courier')
         plt.title('Eval: Average Finished Orders per Courier over Episodes')
@@ -873,6 +965,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_eval_leisure], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_eval_leisure], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_eval_leisure], label='Algo2 Average Leisure Time', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_eval_leisure], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_eval_leisure], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_eval_leisure], label='Algo3 Average Leisure Time', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Average Leisure Time')
         plt.title('Eval: Average Leisure Time over Episodes')
@@ -887,6 +982,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_rate_of_late_order], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_rate_of_late_order], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_rate_of_late_order], label='Algo2 Late Order Rate', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_rate_of_late_order], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_rate_of_late_order], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_rate_of_late_order], label='Algo3 Late Order Rate', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Late Order Rate')
         plt.title('Eval: Late Order Rate over Episodes')
@@ -901,6 +999,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo2_rate_of_ETA_usage], label='Algo2 Hired', color='green', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo2_rate_of_ETA_usage], label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo2_rate_of_ETA_usage], label='Algo2 Late Order Rate', color='green', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo3_rate_of_ETA_usage], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo3_rate_of_ETA_usage], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo3_rate_of_ETA_usage], label='Algo3 Late Order Rate', color='yellow', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('ETA Usage Rate')
         plt.title('Eval: ETA Usage Rate over Episodes')
@@ -1026,44 +1127,62 @@ class EnvRunner(Runner):
         algo2_Hired_num = 0
         algo2_Crowdsourced_num = 0
         algo2_Crowdsourced_on = 0
+        algo3_Hired_num = 0
+        algo3_Crowdsourced_num = 0
+        algo3_Crowdsourced_on = 0
         
         algo1_eval_episode_rewards_sum = 0
-        algo2_eval_episode_rewards_sum = 0        
+        algo2_eval_episode_rewards_sum = 0
+        algo3_eval_episode_rewards_sum = 0        
         
         algo1_Hired_distance_per_episode = 0
         algo1_Crowdsourced_distance_per_episode = 0
         algo2_Hired_distance_per_episode = 0
         algo2_Crowdsourced_distance_per_episode = 0
+        algo3_Hired_distance_per_episode = 0
+        algo3_Crowdsourced_distance_per_episode = 0
 
         algo1_count_overspeed0 = 0
         algo1_count_overspeed1 = 0
         algo2_count_overspeed0 = 0
         algo2_count_overspeed1 = 0
+        algo3_count_overspeed0 = 0
+        algo3_count_overspeed1 = 0
         
         algo1_num_active_couriers0 = 0
         algo1_num_active_couriers1 = 0
         algo2_num_active_couriers0 = 0
         algo2_num_active_couriers1 = 0
+        algo3_num_active_couriers0 = 0
+        algo3_num_active_couriers1 = 0
         
         algo1_count_reject_orders = 0
         algo1_max_reject_num = 0
         algo2_count_reject_orders = 0
         algo2_max_reject_num = 0
+        algo3_count_reject_orders = 0
+        algo3_max_reject_num = 0
 
         algo1_late_orders0 = 0
         algo1_late_orders1 = 0
         algo2_late_orders0 = 0
         algo2_late_orders1 = 0
+        algo3_late_orders0 = 0
+        algo3_late_orders1 = 0
         
         algo1_ETA_usage0 = 0
         algo1_ETA_usage1 = 0
         algo2_ETA_usage0 = 0
         algo2_ETA_usage1 = 0
+        algo3_ETA_usage0 = 0
+        algo3_ETA_usage1 = 0
         
         algo1_count_dropped_orders0 = 0
         algo1_count_dropped_orders1 = 0
         algo2_count_dropped_orders0 = 0
         algo2_count_dropped_orders1 = 0
+        algo3_count_dropped_orders0 = 0
+        algo3_count_dropped_orders1 = 0
         
         algo1_order0_price = 0
         algo1_order1_price = 0
@@ -1075,31 +1194,46 @@ class EnvRunner(Runner):
         algo2_order0_num = 0
         algo2_order1_num = 0
         algo2_order_wait = 0
+        algo3_order0_price = 0
+        algo3_order1_price = 0
+        algo3_order0_num = 0
+        algo3_order1_num = 0
+        algo3_order_wait = 0
         
         algo1_Hired_reject_num = 0
         algo1_Crowdsourced_reject_num = 0
         algo2_Hired_reject_num = 0
         algo2_Crowdsourced_reject_num = 0
+        algo3_Hired_reject_num = 0
+        algo3_Crowdsourced_reject_num = 0
         
         algo1_Hired_finish_num = 0
         algo1_Crowdsourced_finish_num = 0
         algo2_Hired_finish_num = 0
         algo2_Crowdsourced_finish_num = 0
+        algo3_Hired_finish_num = 0
+        algo3_Crowdsourced_finish_num = 0
         
         algo1_Hired_leisure_time = 0
         algo1_Crowdsourced_leisure_time = 0
         algo2_Hired_leisure_time = 0
         algo2_Crowdsourced_leisure_time = 0
+        algo3_Hired_leisure_time = 0
+        algo3_Crowdsourced_leisure_time = 0
         
         algo1_Hired_avg_speed = 0
         algo1_Crowdsourced_avg_speed = 0
         algo2_Hired_avg_speed = 0
         algo2_Crowdsourced_avg_speed = 0
+        algo3_Hired_avg_speed = 0
+        algo3_Crowdsourced_avg_speed = 0
         
         algo1_Hired_income = 0
         algo1_Crowdsourced_income = 0
         algo2_Hired_income = 0
         algo2_Crowdsourced_income = 0
+        algo3_Hired_income = 0
+        algo3_Crowdsourced_income = 0
         
         self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
 
@@ -1179,6 +1313,7 @@ class EnvRunner(Runner):
             
             algo1_eval_episode_rewards_sum += sum(eval_rewards[0])
             algo2_eval_episode_rewards_sum += sum(eval_rewards[1])
+            algo3_eval_episode_rewards_sum += sum(eval_rewards[2])
 
             eval_rnn_states[eval_dones == True] = np.zeros(
                 ((eval_dones == True).sum(), self.recurrent_N, self.hidden_size),
@@ -1210,6 +1345,18 @@ class EnvRunner(Runner):
                                 algo2_num_active_couriers1 += 1
                                 if c.speed > 4:
                                     algo2_count_overspeed1 += 1
+                else:
+                    for c in self.eval_envs.envs_discrete[i].couriers:
+                        if c.state == 'active':
+                            if c.courier_type == 0:
+                                algo3_num_active_couriers0 += 1
+                                if c.speed > 4:
+                                    algo3_count_overspeed0 += 1
+                            else:
+                                algo3_num_active_couriers1 += 1
+                                if c.speed > 4:
+                                    algo3_count_overspeed1 += 1
+                    
                                 
             eval_obs = self.eval_envs.eval_env_step()
             
@@ -1328,15 +1475,66 @@ class EnvRunner(Runner):
                             algo2_order0_num += 1
                         else:
                             algo2_order1_price += o.price
-                            algo2_order1_num += 1     
+                            algo2_order1_num += 1
+            else:
+                for c in self.eval_envs.envs_discrete[i].couriers:
+                    if c.courier_type == 0:
+                        algo3_Hired_num += 1
+                        algo3_Hired_distance_per_episode += c.travel_distance
+                        algo3_Hired_reject_num += c.reject_order_num
+                        algo3_Hired_finish_num += c.finish_order_num
+                        algo3_Hired_leisure_time += c.total_leisure_time
+                        algo3_Hired_avg_speed += c.avg_speed
+                        algo3_Hired_income += c.income
+                    else:
+                        algo3_Crowdsourced_num += 1
+                        algo3_Crowdsourced_distance_per_episode += c.travel_distance
+                        algo3_Crowdsourced_reject_num += c.reject_order_num
+                        algo3_Crowdsourced_finish_num += c.finish_order_num
+                        algo3_Crowdsourced_leisure_time += c.total_leisure_time
+                        algo3_Crowdsourced_avg_speed += c.avg_speed
+                        algo3_Crowdsourced_income += c.income
+                
+                for o in self.eval_envs.envs_discrete[i].orders:
+                    if o.status == 'dropped':
+                        if o.pair_courier.courier_type == 0:
+                            algo3_count_dropped_orders0 += 1
+                            if o.is_late == 1:
+                                algo3_late_orders0 += 1
+                            else:
+                                algo3_ETA_usage0 += o.ETA_usage
+                        else:
+                            algo3_count_dropped_orders1 += 1
+                            if o.is_late == 1:
+                                algo3_late_orders1 += 1
+                            else:
+                                algo3_ETA_usage1 += o.ETA_usage
+                            
+                    if o.reject_count > 0:
+                        algo3_count_reject_orders += 1
+                        if algo3_max_reject_num <= o.reject_count:
+                            algo3_max_reject_num = o.reject_count
+                    
+                    if o.status == 'wait_pair':
+                        algo3_order_wait += 1
+                    else:
+                        if o.pair_courier.courier_type == 0:
+                            algo3_order0_price += o.price
+                            algo3_order0_num += 1
+                        else:
+                            algo3_order1_price += o.price
+                            algo3_order1_num += 1     
                             
         print(f"In Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired")
-        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired")       
+        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired")  
+        print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired")       
+     
         
-        print(f"Total Reward for Evaluation Between Two Algos:\nAlgo1: {algo1_eval_episode_rewards_sum}\nAlgo2: {algo2_eval_episode_rewards_sum}")
+        print(f"Total Reward for Evaluation Between Two Algos:\nAlgo1: {algo1_eval_episode_rewards_sum}\nAlgo2: {algo2_eval_episode_rewards_sum}\nAlgo3: {algo3_eval_episode_rewards_sum}")
         self.writter.add_scalar('Eval Reward/Algo1', algo1_eval_episode_rewards_sum, self.eval_num)
         self.writter.add_scalar('Eval Reward/Algo2', algo2_eval_episode_rewards_sum, self.eval_num)
-        
+        self.writter.add_scalar('Eval Reward/Algo3', algo3_eval_episode_rewards_sum, self.eval_num)
+
         algo1_distance0 = round(algo1_Hired_distance_per_episode / algo1_Hired_num, 2)
         algo1_distance1 = round(algo1_Crowdsourced_distance_per_episode / algo1_Crowdsourced_num, 2)
         algo1_distance = (algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode)/ (algo1_Hired_num + algo1_Crowdsourced_num)
@@ -1345,16 +1543,24 @@ class EnvRunner(Runner):
         algo2_distance1 = round(algo2_Crowdsourced_distance_per_episode / algo2_Crowdsourced_num, 2)
         algo2_distance = (algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode)/ (algo2_Hired_num + algo2_Crowdsourced_num)
         algo2_distance = round(algo2_distance, 2)
+        algo3_distance0 = round(algo3_Hired_distance_per_episode / algo3_Hired_num, 2)
+        algo3_distance1 = round(algo3_Crowdsourced_distance_per_episode / algo3_Crowdsourced_num, 2)
+        algo3_distance = (algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode)/ (algo3_Hired_num + algo3_Crowdsourced_num)
+        algo3_distance = round(algo3_distance, 2)
         print("Average Travel Distance per Courier Between Two Algos:")
         print(f"Algo1: Hired - {algo1_distance0} meters, Crowdsourced - {algo1_distance1} meters, Total - {algo1_distance} meters")
         print(f"Algo2: Hired - {algo2_distance0} meters, Crowdsourced - {algo2_distance1} meters, Total - {algo2_distance} meters")
+        print(f"Algo3: Hired - {algo3_distance0} meters, Crowdsourced - {algo3_distance1} meters, Total - {algo3_distance} meters")
         self.writter.add_scalar('Eval Travel Distance/Algo1 Hired', algo1_distance0, self.eval_num)
         self.writter.add_scalar('Eval Travel Distance/Algo1 Crowdsourced', algo1_distance1, self.eval_num)
         self.writter.add_scalar('Eval Travel Distance/Algo1 Total', algo1_distance, self.eval_num)
         self.writter.add_scalar('Eval Travel Distance/Algo2 Hired', algo2_distance0, self.eval_num)
         self.writter.add_scalar('Eval Travel Distance/Algo2 Crowdsourced', algo2_distance1, self.eval_num)
         self.writter.add_scalar('Eval Travel Distance/Algo2 Total', algo2_distance, self.eval_num)
-        
+        self.writter.add_scalar('Eval Travel Distance/Algo3 Hired', algo3_distance0, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo3 Crowdsourced', algo3_distance1, self.eval_num)
+        self.writter.add_scalar('Eval Travel Distance/Algo3 Total', algo3_distance, self.eval_num)
+
         algo1_avg0_speed = round(algo1_Hired_avg_speed / algo1_Hired_num, 2)
         algo1_avg1_speed = round(algo1_Crowdsourced_avg_speed / algo1_Crowdsourced_num, 2)
         algo1_avg_speed = (algo1_Hired_avg_speed + algo1_Crowdsourced_avg_speed) / (algo1_Hired_num + algo1_Crowdsourced_num)
@@ -1363,15 +1569,23 @@ class EnvRunner(Runner):
         algo2_avg1_speed = round(algo2_Crowdsourced_avg_speed / algo2_Crowdsourced_num, 2)
         algo2_avg_speed = (algo2_Hired_avg_speed + algo2_Crowdsourced_avg_speed) / (algo2_Hired_num + algo2_Crowdsourced_num)
         algo2_avg_speed = round(algo2_avg_speed, 2)
+        algo3_avg0_speed = round(algo3_Hired_avg_speed / algo3_Hired_num, 2)
+        algo3_avg1_speed = round(algo3_Crowdsourced_avg_speed / algo3_Crowdsourced_num, 2)
+        algo3_avg_speed = (algo3_Hired_avg_speed + algo3_Crowdsourced_avg_speed) / (algo3_Hired_num + algo3_Crowdsourced_num)
+        algo3_avg_speed = round(algo3_avg_speed, 2)
         print("Average Speed per Courier Between Two Algos:")
         print(f"Algo1: Hired average speed is {algo1_avg0_speed} m/s, Crowdsourced average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s")
         print(f"Algo2: Hired average speed is {algo2_avg0_speed} m/s, Crowdsourced average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s")
+        print(f"Algo3: Hired average speed is {algo3_avg0_speed} m/s, Crowdsourced average speed is {algo3_avg1_speed} m/s and average speed per courier is {algo3_avg_speed} m/s")
         self.writter.add_scalar('Eval Average Speed/Algo1 Total', algo1_avg_speed, self.eval_num)
         self.writter.add_scalar('Eval Average Speed/Algo1 Hired', algo1_avg0_speed, self.eval_num)
         self.writter.add_scalar('Eval Average Speed/Algo1 Crowdsourced', algo1_avg1_speed, self.eval_num)
         self.writter.add_scalar('Eval Average Speed/Algo2 Total', algo2_avg_speed, self.eval_num)
         self.writter.add_scalar('Eval Average Speed/Algo2 Hired', algo2_avg0_speed, self.eval_num)
         self.writter.add_scalar('Eval Average Speed/Algo2 Crowdsourced', algo2_avg1_speed, self.eval_num)
+        self.writter.add_scalar('Eval Average Speed/Algo3 Total', algo3_avg_speed, self.eval_num)
+        self.writter.add_scalar('Eval Average Speed/Algo3 Hired', algo3_avg0_speed, self.eval_num)
+        self.writter.add_scalar('Eval Average Speed/Algo3 Crowdsourced', algo3_avg1_speed, self.eval_num)
 
         algo1_overspeed0 = round(algo1_count_overspeed0 / algo1_num_active_couriers0, 2)
         algo1_overspeed1 = round(algo1_count_overspeed1 / algo1_num_active_couriers1, 2)
@@ -1379,24 +1593,34 @@ class EnvRunner(Runner):
         algo2_overspeed0 = round(algo2_count_overspeed0 / algo2_num_active_couriers0, 2)
         algo2_overspeed1 = round(algo2_count_overspeed1 / algo2_num_active_couriers1, 2)
         algo2_overspeed = round((algo2_count_overspeed0 + algo2_count_overspeed1) / (algo2_num_active_couriers0 + algo2_num_active_couriers1), 2)
+        algo3_overspeed0 = round(algo3_count_overspeed0 / algo3_num_active_couriers0, 2)
+        algo3_overspeed1 = round(algo3_count_overspeed1 / algo3_num_active_couriers1, 2)
+        algo3_overspeed = round((algo3_count_overspeed0 + algo3_count_overspeed1) / (algo3_num_active_couriers0 + algo3_num_active_couriers1), 2)
         print("Rate of Overspeed for Evaluation Between Two Algos:")
         print(f"Algo1: Hired - {algo1_overspeed0}, Crowdsourced - {algo1_overspeed1}, Total rate - {algo1_overspeed}")
         print(f"Algo2: Hired - {algo2_overspeed0}, Crowdsourced - {algo2_overspeed1}, Total rate - {algo2_overspeed}")
+        print(f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}")
         self.writter.add_scalar('Eval Overspeed Rate/Algo1 Total', algo1_overspeed, self.eval_num)
         self.writter.add_scalar('Eval Overspeed Rate/Algo1 Hired', algo1_overspeed0, self.eval_num)
         self.writter.add_scalar('Eval Overspeed Rate/Algo1 Crowdsourced', algo1_overspeed1, self.eval_num)
         self.writter.add_scalar('Eval Overspeed Rate/Algo2 Total', algo2_overspeed, self.eval_num)
         self.writter.add_scalar('Eval Overspeed Rate/Algo2 Hired', algo2_overspeed0, self.eval_num)
         self.writter.add_scalar('Eval Overspeed Rate/Algo2 Crowdsourced', algo2_overspeed1, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Total', algo3_overspeed, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Hired', algo3_overspeed0, self.eval_num)
+        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Crowdsourced', algo3_overspeed1, self.eval_num)
 
         algo1_reject_rate_per_episode = round(algo1_count_reject_orders / len(self.eval_envs.envs_discrete[0].orders), 2)
         algo2_reject_rate_per_episode = round(algo2_count_reject_orders / len(self.eval_envs.envs_discrete[1].orders), 2)
+        algo3_reject_rate_per_episode = round(algo3_count_reject_orders / len(self.eval_envs.envs_discrete[2].orders), 2)
         print("Reject Rate for Evaluation Between Two Algos:")
         print(f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most")
         print(f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most")
+        print(f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most")
         self.writter.add_scalar('Eval Reject rate/Algo1', algo1_reject_rate_per_episode, self.eval_num)
         self.writter.add_scalar('Eval Reject rate/Algo2', algo2_reject_rate_per_episode, self.eval_num)
-        
+        self.writter.add_scalar('Eval Reject rate/Algo3', algo3_reject_rate_per_episode, self.eval_num)
+
         algo1_reject0 = round(algo1_Hired_reject_num / algo1_Hired_num, 2)
         algo1_reject1 = round(algo1_Crowdsourced_reject_num / algo1_Crowdsourced_num, 2)
         algo1_reject = (algo1_Crowdsourced_reject_num + algo1_Crowdsourced_reject_num) / (algo1_Hired_num + algo1_Crowdsourced_num)
@@ -1405,15 +1629,23 @@ class EnvRunner(Runner):
         algo2_reject1 = round(algo2_Crowdsourced_reject_num / algo2_Crowdsourced_num, 2)
         algo2_reject = (algo2_Crowdsourced_reject_num + algo2_Crowdsourced_reject_num) / (algo2_Hired_num + algo2_Crowdsourced_num)
         algo2_reject = round(algo2_reject, 2)
+        algo3_reject0 = round(algo3_Hired_reject_num / algo3_Hired_num, 2)
+        algo3_reject1 = round(algo3_Crowdsourced_reject_num / algo3_Crowdsourced_num, 2)
+        algo3_reject = (algo3_Crowdsourced_reject_num + algo3_Crowdsourced_reject_num) / (algo3_Hired_num + algo3_Crowdsourced_num)
+        algo3_reject = round(algo3_reject, 2)
         print("Average Reject Numbers per Courier for Evaluation Between Two Algos:")
         print(f"Algo1: Hired rejects average {algo1_reject0} orders, Crowdsourced rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}")
         print(f"Algo2: Hired rejects average {algo2_reject0} orders, Crowdsourced rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}")
+        print(f"Algo3: Hired rejects average {algo3_reject0} orders, Crowdsourced rejects average {algo3_reject1} orders and Total reject number per courier is {algo3_reject}")
         self.writter.add_scalar('Eval Average Rejection/Algo1 Total', algo1_reject, self.eval_num)
         self.writter.add_scalar('Eval Average Rejection/Algo1 Hired', algo1_reject0, self.eval_num)
         self.writter.add_scalar('Eval Average Rejection/Algo1 Crowdsourced', algo1_reject1, self.eval_num)
         self.writter.add_scalar('Eval Average Rejection/Algo2 Total', algo2_reject, self.eval_num)
         self.writter.add_scalar('Eval Average Rejection/Algo2 Hired', algo2_reject0, self.eval_num)
         self.writter.add_scalar('Eval Average Rejection/Algo2 Crowdsourced', algo2_reject1, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo3 Total', algo3_reject, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo3 Hired', algo3_reject0, self.eval_num)
+        self.writter.add_scalar('Eval Average Rejection/Algo3 Crowdsourced', algo3_reject1, self.eval_num)
 
         algo1_price_per_order0 = round(algo1_order0_price / algo1_order0_num, 2)
         algo1_price_per_order1 = round(algo1_order1_price / algo1_order1_num, 2)
@@ -1421,15 +1653,22 @@ class EnvRunner(Runner):
         algo2_price_per_order0 = round(algo2_order0_price / algo2_order0_num, 2)
         algo2_price_per_order1 = round(algo2_order1_price / algo2_order1_num, 2)
         algo2_price_per_order = round((algo2_order0_price + algo2_order1_price) / (algo2_order0_num + algo2_order1_num), 2)
+        algo3_price_per_order0 = round(algo3_order0_price / algo3_order0_num, 2)
+        algo3_price_per_order1 = round(algo3_order1_price / algo3_order1_num, 2)
+        algo3_price_per_order = round((algo3_order0_price + algo3_order1_price) / (algo3_order0_num + algo3_order1_num), 2)
         print("Average Price per order for Evaluation Between Two Algos:")
         print(f"Algo1: The average price of Hired's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}")
         print(f"Algo2: The average price of Hired's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}")
+        print(f"Algo3: The average price of Hired's order is {algo3_price_per_order0} yuan with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} yuan with {algo3_order1_num} orders and for all is {algo3_price_per_order}")
         self.writter.add_scalar('Eval Average Price/Algo1 Total', algo1_price_per_order, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo1 Hired', algo1_price_per_order0, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo1 Crowdsourced', algo1_price_per_order1, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo2 Total', algo2_price_per_order, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo2 Hired', algo2_price_per_order0, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo2 Crowdsourced', algo2_price_per_order1, self.eval_num)
+        self.writter.add_scalar('Eval Average Price/Algo3 Total', algo3_price_per_order, self.eval_num)
+        self.writter.add_scalar('Eval Average Price/Algo3 Hired', algo3_price_per_order0, self.eval_num)
+        self.writter.add_scalar('Eval Average Price/Algo3 Crowdsourced', algo3_price_per_order1, self.eval_num)
 
         algo1_income0 = round(algo1_Hired_income / algo1_Hired_num, 2)
         algo1_income1 = round(algo1_Crowdsourced_income / algo1_Crowdsourced_num, 2)
@@ -1439,17 +1678,26 @@ class EnvRunner(Runner):
         algo2_income1 = round(algo2_Crowdsourced_income / algo2_Crowdsourced_num, 2)
         algo2_income = round((algo2_Hired_income + algo2_Crowdsourced_income) / (algo2_Hired_num + algo2_Crowdsourced_num), 2)
         platform_cost2 = algo2_Hired_income + algo2_Crowdsourced_income
+        algo3_income0 = round(algo3_Hired_income / algo3_Hired_num, 2)
+        algo3_income1 = round(algo3_Crowdsourced_income / algo3_Crowdsourced_num, 2)
+        algo3_income = round((algo3_Hired_income + algo3_Crowdsourced_income) / (algo3_Hired_num + algo3_Crowdsourced_num), 2)
+        platform_cost3 = algo3_Hired_income + algo3_Crowdsourced_income
         print("Average Income per Courier for Evaluation Between Two Algos:")
         print(f"Algo1: Hired's average income is {algo1_income0} yuan, Crowdsourced's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan")
         print(f"Algo2: Hired's average income is {algo2_income0} yuan, Crowdsourced's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan")
+        print(f"Algo3: Hired's average income is {algo3_income0} yuan, Crowdsourced's average income is {algo3_income1} yuan and Total income per courier is {algo3_income}, The platform total cost is {platform_cost3} yuan")
         self.writter.add_scalar('Eval Average Income/Algo1 Total', algo1_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Hired', algo1_income0, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced', algo1_income1, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Total', algo2_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Hired', algo2_income0, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Crowdsourced', algo2_income1, self.eval_num)
+        self.writter.add_scalar('Eval Average Income/Algo3 Total', algo3_income, self.eval_num)
+        self.writter.add_scalar('Eval Average Income/Algo3 Hired', algo3_income0, self.eval_num)
+        self.writter.add_scalar('Eval Average Income/Algo3 Crowdsourced', algo3_income1, self.eval_num)
         self.writter.add_scalar('Eval Platform Total Cost/Algo1', platform_cost1, self.eval_num)
         self.writter.add_scalar('Eval Platform Total Cost/Algo2', platform_cost2, self.eval_num)
+        self.writter.add_scalar('Eval Platform Total Cost/Algo3', platform_cost3, self.eval_num)
 
         algo1_finish0 = round(algo1_Hired_finish_num / algo1_Hired_num, 2)
         algo1_finish1 = round(algo1_Crowdsourced_finish_num / algo1_Crowdsourced_num, 2)
@@ -1457,15 +1705,22 @@ class EnvRunner(Runner):
         algo2_finish0 = round(algo2_Hired_finish_num / algo2_Hired_num, 2)
         algo2_finish1 = round(algo2_Crowdsourced_finish_num / algo2_Crowdsourced_num, 2)
         algo2_finish = round((algo2_Hired_finish_num + algo2_Crowdsourced_finish_num) / (algo2_Hired_num + algo2_Crowdsourced_num), 2)
+        algo3_finish0 = round(algo3_Hired_finish_num / algo3_Hired_num, 2)
+        algo3_finish1 = round(algo3_Crowdsourced_finish_num / algo3_Crowdsourced_num, 2)
+        algo3_finish = round((algo3_Hired_finish_num + algo3_Crowdsourced_finish_num) / (algo3_Hired_num + algo3_Crowdsourced_num), 2)
         print("Average Order finished per courier for Evaluation Between Two Algos:")
         print(f"Algo1: Hired finishes average {algo1_finish0} orders while Crowdsourced finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}")
         print(f"Algo2: Hired finishes average {algo2_finish0} orders while Crowdsourced finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}")
+        print(f"Algo3: Hired finishes average {algo3_finish0} orders while Crowdsourced finishes average {algo3_finish1} orders, Total finish number per courier is {algo3_finish}")
         self.writter.add_scalar('Eval Average Finish/Algo1 Total', algo1_finish, self.eval_num)
         self.writter.add_scalar('Eval Average Finish/Algo1 Hired', algo1_finish0, self.eval_num)
         self.writter.add_scalar('Eval Average Finish/Algo1 Crowdsourced', algo1_finish1, self.eval_num)
         self.writter.add_scalar('Eval Average Finish/Algo2 Total', algo2_finish, self.eval_num)
         self.writter.add_scalar('Eval Average Finish/Algo2 Hired', algo2_finish0, self.eval_num)
         self.writter.add_scalar('Eval Average Finish/Algo2 Crowdsourced', algo2_finish1, self.eval_num)
+        self.writter.add_scalar('Eval Average Finish/Algo3 Total', algo3_finish, self.eval_num)
+        self.writter.add_scalar('Eval Average Finish/Algo3 Hired', algo3_finish0, self.eval_num)
+        self.writter.add_scalar('Eval Average Finish/Algo3 Crowdsourced', algo3_finish1, self.eval_num)
 
         algo1_avg0_leisure = round(algo1_Hired_leisure_time / algo1_Hired_num / 60, 2)
         algo1_avg1_leisure = round(algo1_Crowdsourced_leisure_time / algo1_Crowdsourced_num / 60, 2)
@@ -1473,49 +1728,67 @@ class EnvRunner(Runner):
         algo2_avg0_leisure = round(algo2_Hired_leisure_time / algo2_Hired_num / 60, 2)
         algo2_avg1_leisure = round(algo2_Crowdsourced_leisure_time / algo2_Crowdsourced_num / 60, 2)
         algo2_avg_leisure = round((algo2_Hired_leisure_time + algo2_Crowdsourced_leisure_time) / (algo2_Hired_num + algo2_Crowdsourced_num) / 60, 2)
+        algo3_avg0_leisure = round(algo3_Hired_leisure_time / algo3_Hired_num / 60, 2)
+        algo3_avg1_leisure = round(algo3_Crowdsourced_leisure_time / algo3_Crowdsourced_num / 60, 2)
+        algo3_avg_leisure = round((algo3_Hired_leisure_time + algo3_Crowdsourced_leisure_time) / (algo3_Hired_num + algo3_Crowdsourced_num) / 60, 2)
         print("Average leisure time per courier for Evaluation Between Two Algos:")
         print(f"Algo1: Hired leisure time is {algo1_avg0_leisure} minutes, Crowdsourced leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes")
         print(f"Algo2: Hired leisure time is {algo2_avg0_leisure} minutes, Crowdsourced leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes")
+        print(f"Algo3: Hired leisure time is {algo3_avg0_leisure} minutes, Crowdsourced leisure time is {algo3_avg1_leisure} minutes and Total leisure time per courier is {algo3_avg_leisure} minutes")
         self.writter.add_scalar('Eval Average Leisure Time/Algo1 Total', algo1_avg_leisure, self.eval_num)
         self.writter.add_scalar('Eval Average Leisure Time/Algo1 Hired', algo1_avg0_leisure, self.eval_num)
         self.writter.add_scalar('Eval Average Leisure Time/Algo1 Crowdsourced', algo1_avg1_leisure, self.eval_num)
         self.writter.add_scalar('Eval Average Leisure Time/Algo2 Total', algo2_avg_leisure, self.eval_num)
         self.writter.add_scalar('Eval Average Leisure Time/Algo2 Hired', algo2_avg0_leisure, self.eval_num)
         self.writter.add_scalar('Eval Average Leisure Time/Algo2 Crowdsourced', algo2_avg1_leisure, self.eval_num)
+        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Total', algo3_avg_leisure, self.eval_num)
+        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Hired', algo3_avg0_leisure, self.eval_num)
+        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Crowdsourced', algo3_avg1_leisure, self.eval_num)
 
         message = (
             f"In Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired\n"
             f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired\n"
+            f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired\n"
             f"Total Reward for Evaluation Between Two Algos:\n"
             f"Algo1: {algo1_eval_episode_rewards_sum}\n"
             f"Algo2: {algo2_eval_episode_rewards_sum}\n"
+            f"Algo3: {algo3_eval_episode_rewards_sum}\n"
             f"Average Travel Distance per Courier Between Two Algos:\n"
             f"Algo1: Hired - {algo1_distance0} meters, Crowdsourced - {algo1_distance1} meters, Total - {algo1_distance} meters\n"
             f"Algo2: Hired - {algo2_distance0} meters, Crowdsourced - {algo2_distance1} meters, Total - {algo2_distance}\n"
+            f"Algo3: Hired - {algo3_distance0} meters, Crowdsourced - {algo3_distance1} meters, Total - {algo3_distance} meters\n"
             "Average Speed per Courier Between Two Algos:\n"
             f"Algo1: Hired average speed is {algo1_avg0_speed} m/s, Crowdsourced average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s\n"
             f"Algo2: Hired average speed is {algo2_avg0_speed} m/s, Crowdsourced average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s\n"
+            f"Algo3: Hired average speed is {algo3_avg0_speed} m/s, Crowdsourced average speed is {algo3_avg1_speed} m/s and average speed per courier is {algo3_avg_speed} m/s\n"
             "Rate of Overspeed for Evaluation Between Two Algos:\n"
             f"Algo1: Hired - {algo1_overspeed0}, Crowdsourced - {algo1_overspeed1}, Total rate - {algo1_overspeed}\n"
             f"Algo2: Hired - {algo2_overspeed0}, Crowdsourced - {algo2_overspeed1}, Total rate - {algo2_overspeed}\n"
+            f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}\n"
             "Reject Rate for Evaluation Between Two Algos:\n"
             f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
             f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
+            f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most\n"
             "Average Reject Numbers per Courier for Evaluation Between Two Algos:\n"
             f"Algo1: Hired rejects average {algo1_reject0} orders, Crowdsourced rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}\n"
             f"Algo2: Hired rejects average {algo2_reject0} orders, Crowdsourced rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}\n"
+            f"Algo3: Hired rejects average {algo3_reject0} orders, Crowdsourced rejects average {algo3_reject1} orders and Total reject number per courier is {algo3_reject}\n"
             "Average Price per order for Evaluation Between Two Algos:\n"
             f"Algo1: The average price of Hired's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}\n"
             f"Algo2: The average price of Hired's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}\n"
+            f"Algo3: The average price of Hired's order is {algo3_price_per_order0} yuan with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} yuan with {algo3_order1_num} orders and for all is {algo3_price_per_order}\n"
             "Average Income per Courier for Evaluation Between Two Algos:\n"
             f"Algo1: Hired's average income is {algo1_income0} yuan, Crowdsourced's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan\n"
             f"Algo2: Hired's average income is {algo2_income0} yuan, Crowdsourced's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan\n"
+            f"Algo3: Hired's average income is {algo3_income0} yuan, Crowdsourced's average income is {algo3_income1} yuan and Total income per courier is {algo3_income}, The platform total cost is {platform_cost3} yuan\n"
             "Average Order finished per courier for Evaluation Between Two Algos:\n"
             f"Algo1: Hired finishes average {algo1_finish0} orders while Crowdsourced finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}\n"
             f"Algo2: Hired finishes average {algo2_finish0} orders while Crowdsourced finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}\n"
+            f"Algo3: Hired finishes average {algo3_finish0} orders while Crowdsourced finishes average {algo3_finish1} orders, Total finish number per courier is {algo3_finish}\n"
             "Average leisure time per courier for Evaluation Between Two Algos:\n"
             f"Algo1: Hired leisure time is {algo1_avg0_leisure} minutes, Crowdsourced leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes\n"
             f"Algo2: Hired leisure time is {algo2_avg0_leisure} minutes, Crowdsourced leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes\n"
+            f"Algo3: Hired leisure time is {algo3_avg0_leisure} minutes, Crowdsourced leisure time is {algo3_avg1_leisure} minutes and Total leisure time per courier is {algo3_avg_leisure} minutes\n"
         )
         
         if algo1_count_dropped_orders0 + algo1_count_dropped_orders1 == 0:
@@ -1613,7 +1886,54 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo2 fCrowdsourced', algo2_ETA_usage_rate1, self.eval_num)
 
             message += f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo2: Hired - {algo2_ETA_usage_rate0}, Crowdsourced - {algo2_ETA_usage_rate1}, Total - {algo2_ETA_usage_rate}\n"
-        
+            
+        if algo3_count_dropped_orders0 + algo3_count_dropped_orders1 == 0:
+            print("No order is dropped in Algo3")
+            algo3_late_rate = -1
+            algo3_late_rate0 = -1
+            algo3_late_rate1 = -1
+            algo3_ETA_usage_rate = -1
+            algo3_ETA_usage_rate0 = -1
+            algo3_ETA_usage_rate1 = -1
+
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Total', algo3_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Hired', algo3_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Crowdsourced', algo3_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total', algo3_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired', algo3_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced', algo3_ETA_usage_rate1, self.eval_num)
+            
+            message += "No order is dropped in Algo3\n"
+        else:
+            if algo3_count_dropped_orders0:                
+                algo3_late_rate0 = round(algo3_late_orders0 / algo3_count_dropped_orders0, 2)
+                algo3_ETA_usage_rate0 = round(algo3_ETA_usage0 / algo3_count_dropped_orders0, 2)
+            else:
+                algo3_late_rate0 = -1
+                algo3_ETA_usage_rate0 = -1
+                
+            if algo3_count_dropped_orders1:                
+                algo3_late_rate1 = round(algo3_late_orders1 / algo3_count_dropped_orders1, 2)
+                algo3_ETA_usage_rate1 = round(algo3_ETA_usage1 / algo3_count_dropped_orders1, 2)
+            else:
+                algo3_late_rate1 = -1
+                algo3_ETA_usage_rate1 = -1
+                
+            algo3_late_rate = round((algo3_late_orders0 + algo3_late_orders1) / (algo3_count_dropped_orders0 +algo3_count_dropped_orders1), 2)
+            print(f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate}")
+
+            algo3_ETA_usage_rate = round((algo3_ETA_usage0 + algo3_ETA_usage1) / (algo3_count_dropped_orders0 +algo3_count_dropped_orders1), 2)
+            print(f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0}, Crowdsourced - {algo3_ETA_usage_rate1}, Total - {algo3_ETA_usage_rate}")
+            
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Total', algo3_late_rate, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Hired', algo3_late_rate0, self.eval_num)
+            self.writter.add_scalar('Eval Late Order Rate/Algo3 Crowdsourced', algo3_late_rate1, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total', algo3_ETA_usage_rate, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired', algo3_ETA_usage_rate0, self.eval_num)
+            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced', algo3_ETA_usage_rate1, self.eval_num)
+            
+            message += f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0}, Crowdsourced - {algo3_ETA_usage_rate1}, Total - {algo3_ETA_usage_rate}\n"
+
         logger.success(message)
             
         print("\n")
@@ -1621,6 +1941,7 @@ class EnvRunner(Runner):
         return (
             algo1_eval_episode_rewards_sum,
             algo2_eval_episode_rewards_sum,
+            algo3_eval_episode_rewards_sum,
             
             algo1_distance0,
             algo1_distance1,
@@ -1630,6 +1951,10 @@ class EnvRunner(Runner):
             algo2_distance1,
             algo2_distance,
             
+            algo3_distance0,
+            algo3_distance1,
+            algo3_distance,
+            
             algo1_avg0_speed,
             algo1_avg1_speed,
             algo1_avg_speed,
@@ -1637,6 +1962,10 @@ class EnvRunner(Runner):
             algo2_avg0_speed,
             algo2_avg1_speed,
             algo2_avg_speed,
+            
+            algo3_avg0_speed,
+            algo3_avg1_speed,
+            algo3_avg_speed,
             
             algo1_overspeed0,
             algo1_overspeed1,
@@ -1646,8 +1975,13 @@ class EnvRunner(Runner):
             algo2_overspeed1,
             algo2_overspeed,
             
+            algo3_overspeed0,
+            algo3_overspeed1,
+            algo3_overspeed,
+            
             algo1_reject_rate_per_episode,
             algo2_reject_rate_per_episode,
+            algo3_reject_rate_per_episode,
             
             algo1_reject0,
             algo1_reject1,
@@ -1657,6 +1991,10 @@ class EnvRunner(Runner):
             algo2_reject1,
             algo2_reject,
             
+            algo3_reject0,
+            algo3_reject1,
+            algo3_reject,
+            
             algo1_price_per_order0,
             algo1_price_per_order1,
             algo1_price_per_order,
@@ -1664,6 +2002,10 @@ class EnvRunner(Runner):
             algo2_price_per_order0,
             algo2_price_per_order1,
             algo2_price_per_order,
+            
+            algo3_price_per_order0,
+            algo3_price_per_order1,
+            algo3_price_per_order,
             
             algo1_income0,
             algo1_income1,
@@ -1675,6 +2017,11 @@ class EnvRunner(Runner):
             algo2_income,
             platform_cost2,
             
+            algo3_income0,
+            algo3_income1,
+            algo3_income,
+            platform_cost3,
+            
             algo1_finish0,
             algo1_finish1,
             algo1_finish,
@@ -1682,6 +2029,10 @@ class EnvRunner(Runner):
             algo2_finish0,
             algo2_finish1,
             algo2_finish,
+            
+            algo3_finish0,
+            algo3_finish1,
+            algo3_finish,
             
             algo1_avg0_leisure,
             algo1_avg1_leisure,
@@ -1691,6 +2042,10 @@ class EnvRunner(Runner):
             algo2_avg1_leisure,
             algo2_avg_leisure,
             
+            algo3_avg0_leisure,
+            algo3_avg1_leisure,
+            algo3_avg_leisure,
+            
             algo1_late_rate0,
             algo1_late_rate1,
             algo1_late_rate,
@@ -1699,13 +2054,21 @@ class EnvRunner(Runner):
             algo2_late_rate1,
             algo2_late_rate,
             
+            algo3_late_rate0,
+            algo3_late_rate1,
+            algo3_late_rate,
+            
             algo1_ETA_usage_rate0,
             algo1_ETA_usage_rate1,
             algo1_ETA_usage_rate,
             
             algo2_ETA_usage_rate0,
             algo2_ETA_usage_rate1,
-            algo2_ETA_usage_rate
+            algo2_ETA_usage_rate,
+            
+            algo3_ETA_usage_rate0,
+            algo3_ETA_usage_rate1,
+            algo3_ETA_usage_rate
         )
         
 
