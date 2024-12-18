@@ -11,6 +11,7 @@ class Courier:
         self.is_leisure = 0
         self.leisure_time = time
         self.total_leisure_time = 0
+        self.total_running_time = 0
         
         self.reject_order_num = 0
         self.finish_order_num = 0

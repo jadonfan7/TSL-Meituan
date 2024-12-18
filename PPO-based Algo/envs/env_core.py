@@ -149,7 +149,7 @@ class EnvCore(object):
             agent.is_leisure = 0
             agent.leisure_time = self.map.clock
 
-        agent.avg_speed = agent.travel_distance / (self.map.clock - agent.start_time) if self.map.clock - agent.start_time != 0 else 0
+        agent.avg_speed = agent.travel_distance / agent.total_running_time if agent.total_running_time != 0 else 0
         
         agent.reward += reward
 

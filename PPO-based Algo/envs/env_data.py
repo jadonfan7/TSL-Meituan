@@ -167,7 +167,6 @@ class Map:
                         #     order.pair_time = self.clock
                         self.couriers.append(courier)
                         self.add_new_couriers += 1
-                    
             
             self.current_index += 1
             
@@ -175,6 +174,9 @@ class Map:
         for courier in self.couriers:
             if courier.is_leisure == 1 and courier.state == 'active':
                 courier.total_leisure_time += self.interval
+            elif courier.is_leisure == 0 and courier.state == 'active':
+                courier.total_running_time += self.interval
+
             
             if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                 courier.state = 'inactive'
@@ -333,108 +335,190 @@ class Map:
     def _EEtradeoff_allocation(self, orders):
         speed_upper_bound = 4
 
-        # Create a cost matrix
         cost_matrix = []
         couriers = set()
-        
+
         for order in orders:
-            nearby_couriers = self._get_nearby_couriers(order)
+            nearby_couriers = self._get_nearby_couriers(order, dist_range=1000)
             couriers.update(nearby_couriers)
-        
+
         couriers = list(couriers)
-        
+        num_orders = len(orders)
+        num_couriers = len(couriers)
+        max_size = max(num_orders, num_couriers)
+
         for order in orders:
             row = []
             for courier in couriers:
                 avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
                 if max_speed < speed_upper_bound:
-                    avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.appear_time) != 0 else courier.income
-                    pick_up_distance = geodesic(courier, order.pick_up_position).meters / 1000
-                    cost = avg_income + pick_up_distance # Define the cost based on factors you consider reasonable
+                    price = self._wage_response_model(order, courier)
+                    formal_speed, _, _ = self._cal_speed(None, courier)
+                    speed_variation = avg_speed_fair - formal_speed
+                    cost =  speed_variation / price
                     row.append(cost)
                 else:
-                    row.append(np.inf)  # Set an infinite cost if the assignment is unreasonable
+                    row.append(float('inf'))  # Set an infinite cost if the assignment is unreasonable
             cost_matrix.append(row)
 
-        cost_matrix = np.array(cost_matrix)
-        
-        # Solve the bipartite matching problem
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+        # Pad the cost matrix to make it square
+        padded_cost_matrix = np.full((max_size, max_size), float('inf'))
+        padded_cost_matrix[:num_orders, :num_couriers] = cost_matrix
 
-        # Assign orders to couriers based on the optimal matching
-        for order_index, courier_index in zip(row_ind, col_ind):
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
+        # 将权重转换为适合KM算法的负数形式
+        finite_costs = [padded_cost_matrix[i, j] for i in range(max_size) for j in range(max_size) if padded_cost_matrix[i, j] != float('inf')]
+        max_cost = max(finite_costs) if finite_costs else 0  # 找到最大有限权重
+        for i in range(max_size):
+            for j in range(max_size):
+                if padded_cost_matrix[i, j] != float('inf'):
+                    padded_cost_matrix[i, j] = max_cost - padded_cost_matrix[i, j]  # 转换权重
             
-            if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
-                if assigned_courier.courier_type == 0:
-                    order.price = self._wage_response_model(order, assigned_courier)
-                else:
-                    order.price = self._wage_response_model(order, assigned_courier) * 2
-                
-                assigned_courier.wait_to_pick.append(order)
-                order.pair_courier = assigned_courier
-                order.status = 'wait_pick'
-                order.pair_time = self.clock
-                
-                if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
-                    assigned_courier.pick_order(order)
+        # Solve the bipartite matching problem using Kuhn-Munkres algorithm
+        lx = np.max(padded_cost_matrix, axis=1)  # Labels for rows
+        ly = np.zeros(max_size)                 # Labels for columns
+        match = [-1] * max_size                 # Match results for rows
 
-                    if assigned_courier.position == order.drop_off_point:  # dropping off
-                        assigned_courier.drop_order(order)
-                        
-            elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
-                decision = self._accept_or_reject(order, courier)
-                if decision == True:
-                    order.price = self._wage_response_model(order, assigned_courier)                    
+        def find_path(x, visited_x, visited_y):
+            visited_x[x] = True
+            for y in range(max_size):
+                if not visited_y[y] and lx[x] + ly[y] == padded_cost_matrix[x][y]:
+                    visited_y[y] = True
+                    if match[y] == -1 or find_path(match[y], visited_x, visited_y):
+                        match[y] = x
+                        return True
+            return False
+
+        for x in range(max_size):
+            while True:
+                visited_x = [False] * max_size
+                visited_y = [False] * max_size
+                if find_path(x, visited_x, visited_y):
+                    break
+                delta = float('inf')
+                for i in range(max_size):
+                    if visited_x[i]:
+                        for j in range(max_size):
+                            if not visited_y[j]:
+                                delta = min(delta, lx[i] + ly[j] - padded_cost_matrix[i][j])
+                for i in range(max_size):
+                    if visited_x[i]:
+                        lx[i] -= delta
+                    if visited_y[i]:
+                        ly[i] += delta
+
+        # Extract matching results and assign orders to couriers
+        for y in range(num_couriers):
+            if match[y] < num_orders:
+                order_index = match[y]
+                courier_index = y
+                order = orders[order_index]
+                assigned_courier = couriers[courier_index]
+
+                if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
+                    if assigned_courier.courier_type == 0:
+                        order.price = self._wage_response_model(order, assigned_courier)
+                    else:
+                        order.price = self._wage_response_model(order, assigned_courier) * 2
+
                     assigned_courier.wait_to_pick.append(order)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
-                    
+
                     if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
                         assigned_courier.pick_order(order)
 
                         if assigned_courier.position == order.drop_off_point:  # dropping off
-                            assigned_courier.drop_order(order)                    
-                else:
-                    order.reject_count += 1
-                    courier.reject_order_num += 1
+                            assigned_courier.drop_order(order)
+
+                elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
+                    decision = self._accept_or_reject(order, courier)
+                    if decision:
+                        order.price = self._wage_response_model(order, assigned_courier)
+                        assigned_courier.wait_to_pick.append(order)
+                        order.pair_courier = assigned_courier
+                        order.status = 'wait_pick'
+                        order.pair_time = self.clock
+
+                        if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+                            assigned_courier.pick_order(order)
+
+                            if assigned_courier.position == order.drop_off_point:  # dropping off
+                                assigned_courier.drop_order(order)
+                    else:
+                        order.reject_count += 1
+                        courier.reject_order_num += 1
+
+        # speed_upper_bound = 4
+
+        # # Create a cost matrix
+        # cost_matrix = []
+        # couriers = set()
+        
+        # for order in orders:
+        #     nearby_couriers = self._get_nearby_couriers(order)
+        #     couriers.update(nearby_couriers)
+        
+        # couriers = list(couriers)
+        
+        # for order in orders:
+        #     row = []
+        #     for courier in couriers:
+        #         avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+        #         if max_speed < speed_upper_bound:
+        #             avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.appear_time) != 0 else courier.income
+        #             pick_up_distance = geodesic(courier, order.pick_up_position).meters / 1000
+        #             cost = avg_income + pick_up_distance # Define the cost based on factors you consider reasonable
+        #             row.append(cost)
+        #         else:
+        #             row.append(np.inf)  # Set an infinite cost if the assignment is unreasonable
+        #     cost_matrix.append(row)
+
+        # cost_matrix = np.array(cost_matrix)
+        
+        # # Solve the bipartite matching problem
+        # row_ind, col_ind = linear_sum_assignment(cost_matrix)
+
+        # # Assign orders to couriers based on the optimal matching
+        # for order_index, courier_index in zip(row_ind, col_ind):
+        #     order = orders[order_index]
+        #     assigned_courier = couriers[courier_index]
+            
+        #     if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
+        #         if assigned_courier.courier_type == 0:
+        #             order.price = self._wage_response_model(order, assigned_courier)
+        #         else:
+        #             order.price = self._wage_response_model(order, assigned_courier) * 2
+                
+        #         assigned_courier.wait_to_pick.append(order)
+        #         order.pair_courier = assigned_courier
+        #         order.status = 'wait_pick'
+        #         order.pair_time = self.clock
+                
+        #         if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+        #             assigned_courier.pick_order(order)
+
+        #             if assigned_courier.position == order.drop_off_point:  # dropping off
+        #                 assigned_courier.drop_order(order)
                         
-            # if (courier.courier_type == 1) or (courier.courier_type == 0 and courier.reject_order_num < 10):
-                
-            #     decision = self._accept_or_reject(order, courier)
-            #     if decision == True:
-            #         order.price = self._wage_response_model(order, courier)
-            #         # courier.income += order.price
+        #     elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
+        #         decision = self._accept_or_reject(order, courier)
+        #         if decision == True:
+        #             order.price = self._wage_response_model(order, assigned_courier)                    
+        #             assigned_courier.wait_to_pick.append(order)
+        #             order.pair_courier = assigned_courier
+        #             order.status = 'wait_pick'
+        #             order.pair_time = self.clock
                     
-            #         courier.wait_to_pick.append(order)
-            #         order.pair_courier = courier
-            #         order.status = 'wait_pick'
-            #         order.pair_time = self.clock
-                    
-            #         if courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
-            #             courier.pick_order(order)
+        #             if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+        #                 assigned_courier.pick_order(order)
 
-            #             if courier.position == order.drop_off_point:  # dropping off
-            #                 courier.drop_order(order)
-            #     else:
-            #         order.reject_count += 1
-            #         courier.reject_order_num += 1
-            # else:
-            #     order.price = self._wage_response_model(order, courier)
-            #     # courier.income += order.price
-                                
-            #     courier.wait_to_pick.append(order)
-            #     order.pair_courier = courier
-            #     order.status = 'wait_pick'
-            #     order.pair_time = self.clock
-                
-            #     if courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
-            #         courier.pick_order(order)
-
-            #         if courier.position == order.drop_off_point:  # dropping off
-            #             courier.drop_order(order)
+        #                 if assigned_courier.position == order.drop_off_point:  # dropping off
+        #                     assigned_courier.drop_order(order)                    
+        #         else:
+        #             order.reject_count += 1
+        #             courier.reject_order_num += 1
+                        
                         
     def _fair_allocation(self, orders):
         speed_upper_bound = 4
@@ -547,7 +631,8 @@ class Map:
         order_speed = {}
         visited_orders = set()  
         orders = (courier.waybill + courier.wait_to_pick).copy()
-        orders.append(order)
+        if order is not None:
+            orders.append(order)
         
         total_dist = geodesic(courier.position, order_sequence[0][0]).meters
         order_id = order_sequence[0][2]
@@ -586,7 +671,8 @@ class Map:
     
     def _cal_sequence(self, order, courier):
         orders = (courier.waybill + courier.wait_to_pick).copy()
-        orders.append(order)
+        if order is not None:
+            orders.append(order)
         # ETA reveals the sequence of the appearance of orders on the platform
         orders = sorted(orders, key=lambda o: o.ETA)
         order_sequence = []
