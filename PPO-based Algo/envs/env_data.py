@@ -38,33 +38,33 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
         
-        config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        } # 5 min
-
         # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
-        # } # 10 min
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
+        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
+        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
+        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
+        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
+        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
+        # } # 5 min
+
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
+            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
+            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
+            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
+            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
+            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
+        } # 10 min
 
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -82,23 +82,23 @@ class Map:
             # self.waybill_data = df_waybill[(df_waybill['dt'] == date_value)]
 
 
-        # lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
-        # lat_values_non_zero = lat_values[lat_values > 0].dropna()
+        lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
+        lat_values_non_zero = lat_values[lat_values > 0].dropna()
 
-        # self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+        self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
 
-        # lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
-        # lng_values_non_zero = lng_values[lng_values > 0].dropna()
+        lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
+        lng_values_non_zero = lng_values[lng_values > 0].dropna()
 
-        # self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+        self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
 
-        # order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
-        # order_time_non_zero = order_time[order_time > 0].dropna()
+        order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
+        order_time_non_zero = order_time[order_time > 0].dropna()
 
-        # self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
-        # self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
+        self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
 
         self.clock = self.order_data['platform_order_time'][0]
 
@@ -200,7 +200,7 @@ class Map:
             #         nearby_couriers = self._get_nearby_couriers(p, 1500)
             #     gorubi_solver(nearby_couriers, orders, self.clock)
             elif self.algo_index == 1:
-                self._greedy_allocation(orders_pair)     
+                self._Efficiency_allocation(orders_pair)     
             else:
                 self._fair_allocation(orders_pair)   
         
@@ -257,7 +257,7 @@ class Map:
 
         return y_pred_new[0]
         
-    def _greedy_allocation(self, orders):
+    def _Efficiency_allocation(self, orders):
         
         for order in orders:
             min_dist = math.inf
@@ -335,12 +335,13 @@ class Map:
 
         cost_matrix = np.array(cost_matrix)
         
-        
         # Solve the bipartite matching problem
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
 
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            if cost_matrix[order_index][courier_index] == float('inf'):
+                continue  # Skip infeasible matches
             order = orders[order_index]
             assigned_courier = couriers[courier_index]
             
@@ -582,7 +583,66 @@ class Map:
 
                 #         if assigned_courier.position == p.drop_off_point:  # dropping off
                 #             assigned_courier.drop_order(p)
+                
+    def _greedy_allocation(self, orders):
+        speed_upper_bound = 4
+
+        for i, order in enumerate(orders):
+            min_cost = math.inf
+            assigned_courier = None
+
+            nearby_couriers = self._get_nearby_couriers(order, 1500)
+            for courier in nearby_couriers:
+                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+                if len(courier.waybill) + len(courier.wait_to_pick) > 0:
+                    formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
+                else:
+                    formal_speed_fair = 0
+
+                price = self._wage_response_model(order, courier)
+                
+                cost = (avg_speed_fair - formal_speed_fair) / price
+                
+                if min_cost > cost and max_speed < speed_upper_bound:
+                    min_cost = cost
+                    assigned_courier = courier
+            
+            if assigned_courier is not None:
+                if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
+                    if assigned_courier.courier_type == 0:
+                        order.price = self._wage_response_model(order, assigned_courier)
+                    else:
+                        order.price = self._wage_response_model(order, assigned_courier) * 2
+                    
+                    assigned_courier.wait_to_pick.append(order)
+                    order.pair_courier = assigned_courier
+                    order.status = 'wait_pick'
+                    order.pair_time = self.clock
+                    
+                    if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+                        assigned_courier.pick_order(order)
+
+                        if assigned_courier.position == order.drop_off_point:  # dropping off
+                            assigned_courier.drop_order(order)
                             
+                elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
+                    decision = self._accept_or_reject(order, courier)
+                    if decision == True:
+                        order.price = self._wage_response_model(order, assigned_courier)                    
+                        assigned_courier.wait_to_pick.append(order)
+                        order.pair_courier = assigned_courier
+                        order.status = 'wait_pick'
+                        order.pair_time = self.clock
+                        
+                        if assigned_courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+                            assigned_courier.pick_order(order)
+
+                            if assigned_courier.position == order.drop_off_point:  # dropping off
+                                assigned_courier.drop_order(order)                    
+                    else:
+                        order.reject_count += 1
+                        courier.reject_order_num += 1
+                   
     def _get_nearby_couriers(self, order, dist_range=1500):
         nearby_couriers = []
 
