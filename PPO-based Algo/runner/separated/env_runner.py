@@ -132,21 +132,21 @@ class EnvRunner(Runner):
             self.num_agents = self.envs.envs_discrete[0].num_couriers
 
             for step in range(self.episode_length):
-                # print("-"*25)
-                # print(f"THIS IS STEP {step}")
+                print("-"*25)
+                print(f"THIS IS STEP {step}")
                 # dead_count = 0 # end the code
 
                 for i in range(self.envs.num_envs):
-                #     print(f"ENVIRONMENT {i+1}")
+                    print(f"ENVIRONMENT {i+1}")
 
-                #     print("Couriers:")
-                #     for c in self.envs.envs_discrete[i].couriers:
-                #         if c.state == 'active':
-                #             print(c)
-                #     print("Orders:")
-                #     for o in self.envs.envs_discrete[i].orders:
-                #         print(o)  
-                #     print("\n")
+                    print("Couriers:")
+                    for c in self.envs.envs_discrete[i].couriers:
+                        if c.state == 'active':
+                            print(c)
+                    print("Orders:")
+                    for o in self.envs.envs_discrete[i].orders:
+                        print(o)  
+                    print("\n")
                     self.log_env(episode, step, i)
 
                     # if self.game_success(step, self.envs.envs_discrete[i].map):
@@ -262,7 +262,7 @@ class EnvRunner(Runner):
                             order1_price += o.price
                             order1_num += 1              
                             
-            print(f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} Orders waiting to be paired")                
+            print(f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
             episode_rewards.append(episode_reward_sum)
             print(f"Total Reward for Episode {episode+1}: {episode_reward_sum}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
@@ -297,7 +297,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Overspeed Rate/Hired', overspeed0, episode + 1)
             self.writter.add_scalar('Overspeed Rate/Crowdsourced', overspeed1, episode + 1)
             
-            reject_rate_per_episode = round(count_reject_orders / (order_wait + order0_num + order1_num), 2) # reject once or twice or more
+            reject_rate_per_episode = round(count_reject_orders / (order0_num + order1_num), 2) # reject once or twice or more
             reject_rate.append(reject_rate_per_episode)
             print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
             self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
@@ -353,7 +353,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average Leisure Time/Crowdsourced', avg1_leisure, episode + 1)
             
             message = (
-                f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n"
+                f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired\n"
                 f"Average Travel Distance for Episode {episode+1}: Hired - {distance0} meters, Crowdsourced - {distance1} meters, Total - {distance} meters\n"
                 f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n"
                 f"The average speed for Episode {episode+1}: Hired - {avg0_speed} m/s, Crowdsourced - {avg1_speed} m/s, Total - {avg_speed} m/s\n"
@@ -1525,9 +1525,9 @@ class EnvRunner(Runner):
                             algo3_order1_price += o.price
                             algo3_order1_num += 1     
                             
-        print(f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired")
-        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired")  
-        print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired")       
+        print(f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired")
+        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired")  
+        print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired")       
      
         
         print(f"Total Reward for Evaluation Between Algos:\nAlgo1: {round(algo1_eval_episode_rewards_sum, 2)}\nAlgo2: {round(algo2_eval_episode_rewards_sum, 2)}\nAlgo3: {round(algo3_eval_episode_rewards_sum, 2)}")
@@ -1746,9 +1746,9 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Leisure Time/Algo3 Crowdsourced', algo3_avg1_leisure, self.eval_num)
 
         message = (
-            f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired\n"
-            f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired\n"
-            f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired\n"
+            f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired\n"
             f"Total Reward for Evaluation Between Algos:\n"
             f"Algo1: {round(algo1_eval_episode_rewards_sum, 2)}\n"
             f"Algo2: {round(algo2_eval_episode_rewards_sum, 2)}\n"

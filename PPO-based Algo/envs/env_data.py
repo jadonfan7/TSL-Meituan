@@ -199,8 +199,10 @@ class Map:
             #     gorubi_solver(nearby_couriers, orders, self.clock)
             elif self.algo_index == 1:
                 self._Efficiency_allocation(orders_pair)     
-            else:
+            elif self.algo_index == 2:
                 self._fair_allocation(orders_pair)   
+            else:
+                self._greedy_allocation(orders_pair)
         
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
