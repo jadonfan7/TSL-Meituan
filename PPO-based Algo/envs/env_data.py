@@ -21,8 +21,8 @@ class Map:
         self.current_index = 0
     
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
@@ -105,10 +105,10 @@ class Map:
         self.interval = 10 # allocation for every 10 seconds
 
         self.add_new_couriers = 0
-        # self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
-        # self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
-        self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
-        self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
+        self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
+        self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
+        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
+        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
 
         self.step(first_time=1)
     
@@ -335,8 +335,10 @@ class Map:
 
         cost_matrix = np.array(cost_matrix)
         
-        inf_rows, inf_cols = np.where(np.isinf(cost_matrix))
-        if inf_rows.size > 0:
+        inf_rows = np.where(np.isinf(cost_matrix).all(axis=1))[0]  # rows are infinite
+        inf_cols = np.where(np.isinf(cost_matrix).all(axis=0))[0]  # columns are inf
+        
+        if inf_rows.size > 0 or inf_cols.size > 0 > 0:
             valid_rows = [i for i in range(cost_matrix.shape[0]) if i not in inf_rows]
             valid_cols = [i for i in range(cost_matrix.shape[1]) if i not in inf_cols]
 

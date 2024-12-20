@@ -196,7 +196,7 @@ def get_config():
     parser.add_argument(
         "--n_eval_rollout_threads",
         type=int,
-        default=3,
+        default=4,
         help="Number of parallel envs for evaluating rollouts",
     )
     # *************
