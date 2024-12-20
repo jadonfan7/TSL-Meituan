@@ -179,13 +179,11 @@ class Map:
             elif courier.is_leisure == 0 and courier.state == 'active':
                 courier.total_running_time += self.interval
 
-            
             if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                 courier.state = 'inactive'
             
             if courier.start_time != self.clock and courier.courier_type == 0:
                 courier.income += 15 / 3600 * self.interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
-
 
         orders_pair = orders_failed + orders_new
         if orders_pair != []:
@@ -335,9 +333,20 @@ class Map:
 
         cost_matrix = np.array(cost_matrix)
         
-        # Solve the bipartite matching problem
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+        inf_rows, inf_cols = np.where(np.isinf(cost_matrix))
+        if inf_rows.size > 0:
+            valid_rows = [i for i in range(cost_matrix.shape[0]) if i not in inf_rows]
+            valid_cols = [i for i in range(cost_matrix.shape[1]) if i not in inf_cols]
 
+            valid_cost_matrix = cost_matrix[valid_rows, :][:, valid_cols]
+                        
+            row_ind_valid, col_ind_valid = linear_sum_assignment(valid_cost_matrix)
+            
+            row_ind = [valid_rows[i] for i in row_ind_valid]
+            col_ind = [valid_cols[i] for i in col_ind_valid]                
+        else:
+            row_ind, col_ind = linear_sum_assignment(cost_matrix)        
+        
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
             if cost_matrix[order_index][courier_index] == float('inf'):

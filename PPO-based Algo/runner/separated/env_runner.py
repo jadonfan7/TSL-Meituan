@@ -317,7 +317,7 @@ class EnvRunner(Runner):
             order_price = (order0_price + order1_price) / (order0_num + order1_num)
             order_price = round(order_price, 2)
             order_price_total.append([price_per_order0, price_per_order1, order_price])
-            print(f"The average price of Hired's order is {price_per_order0} yuan with {order0_num} orders, Crowdsourced's is {price_per_order1} yuan with {order1_num} orders and for all is {order_price}")
+            print(f"The average price of Hired's order is {price_per_order0} dollar with {order0_num} orders, Crowdsourced's is {price_per_order1} dollar with {order1_num} orders and for all is {order_price}")
             self.writter.add_scalar('Average Price/Total', order_price, episode + 1)
             self.writter.add_scalar('Average Price/Hired', order0_price, episode + 1)
             self.writter.add_scalar('Average Price/Crowdsourced', order1_price, episode + 1)
@@ -327,8 +327,8 @@ class EnvRunner(Runner):
             income = round((Hired_income + Crowdsourced_income) / (Hired_num + Crowdsourced_num), 2)
             platform_cost = round((Hired_income + Crowdsourced_income) / self.envs.num_envs, 2)
             income_total.append([income0, income1, income, platform_cost])
-            print(f"Hired's average income is {income0} yuan, Crowdsourced's average income is {income1} yuan and Total income per courier is {income} yuan")
-            print(f"The platform total cost is {platform_cost} yuan")
+            print(f"Hired's average income is {income0} dollar, Crowdsourced's average income is {income1} dollar and Total income per courier is {income} dollar")
+            print(f"The platform total cost is {platform_cost} dollar")
             self.writter.add_scalar('Average Income/Total', income, episode + 1)
             self.writter.add_scalar('Average Income/Hired', income0, episode + 1)
             self.writter.add_scalar('Average Income/Crowdsourced', income1, episode + 1)
@@ -353,16 +353,16 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average Leisure Time/Crowdsourced', avg1_leisure, episode + 1)
             
             message = (
-                f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n"
+                f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1\n"
                 f"Average Travel Distance for Episode {episode+1}: Hired - {distance0} meters, Crowdsourced - {distance1} meters, Total - {distance} meters\n"
                 f"Total Reward for Episode {episode+1}: {episode_reward_sum}\n"
                 f"The average speed for Episode {episode+1}: Hired - {avg0_speed} m/s, Crowdsourced - {avg1_speed} m/s, Total - {avg_speed} m/s\n"
                 f"Rate of Overspeed for Episode {episode+1}: Hired - {overspeed0}, Crowdsourced - {overspeed1}, Total - {overspeed}\n"
                 f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
                 f"The average rejection number for Episode {episode+1}: Hired - {reject0}, Crowdsourced - {reject1}, Total - {reject}\n"
-                f"The average price for Episode {episode+1}: Hired - {price_per_order0} yuan with {order0_num} orders, Crowdsourced - {price_per_order1} yuan with {order1_num} orders, Total - {order_price} yuan\n"
-                f"The average income for Episode {episode+1}: Hired- {income0} yuan, Crowdsourced - {income1} yuan, Total - {income} yuan\n"
-                f"The platform total cost is {platform_cost} yuan\n"
+                f"The average price for Episode {episode+1}: Hired - {price_per_order0} dollar with {order0_num} orders, Crowdsourced - {price_per_order1} dollar with {order1_num} orders, Total - {order_price} dollar\n"
+                f"The average income for Episode {episode+1}: Hired - {income0} dollar, Crowdsourced - {income1} dollar, Total - {income} dollar\n"
+                f"The platform total cost is {platform_cost} dollar\n"
                 f"The average finish number for Episode {episode+1}: Hired - {finish0}, Crowdsourced - {finish1}, Total - {finish}\n"
                 f"The average leisure time for Episode {episode+1}: Hired - {avg0_leisure} minutes, Crowdsourced - {avg1_leisure} minutes, Total - {avg_leisure} minutes\n"
             )
@@ -415,7 +415,7 @@ class EnvRunner(Runner):
             print("\n")
                         
 
-            # compute return and update network
+            # compute return and update nrk
             self.compute()
             train_infos = self.train()
 
@@ -1530,7 +1530,7 @@ class EnvRunner(Runner):
         print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired")       
      
         
-        print(f"Total Reward for Evaluation Between Two Algos:\nAlgo1: {algo1_eval_episode_rewards_sum}\nAlgo2: {algo2_eval_episode_rewards_sum}\nAlgo3: {algo3_eval_episode_rewards_sum}")
+        print(f"Total Reward for Evaluation Between Algos:\nAlgo1: {round(algo1_eval_episode_rewards_sum, 2)}\nAlgo2: {round(algo2_eval_episode_rewards_sum, 2)}\nAlgo3: {round(algo3_eval_episode_rewards_sum, 2)}")
         self.writter.add_scalar('Eval Reward/Algo1', algo1_eval_episode_rewards_sum, self.eval_num)
         self.writter.add_scalar('Eval Reward/Algo2', algo2_eval_episode_rewards_sum, self.eval_num)
         self.writter.add_scalar('Eval Reward/Algo3', algo3_eval_episode_rewards_sum, self.eval_num)
@@ -1547,7 +1547,7 @@ class EnvRunner(Runner):
         algo3_distance1 = round(algo3_Crowdsourced_distance_per_episode / algo3_Crowdsourced_num, 2)
         algo3_distance = (algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode)/ (algo3_Hired_num + algo3_Crowdsourced_num)
         algo3_distance = round(algo3_distance, 2)
-        print("Average Travel Distance per Courier Between Two Algos:")
+        print("Average Travel Distance per Courier Between Algos:")
         print(f"Algo1: Hired - {algo1_distance0} meters, Crowdsourced - {algo1_distance1} meters, Total - {algo1_distance} meters")
         print(f"Algo2: Hired - {algo2_distance0} meters, Crowdsourced - {algo2_distance1} meters, Total - {algo2_distance} meters")
         print(f"Algo3: Hired - {algo3_distance0} meters, Crowdsourced - {algo3_distance1} meters, Total - {algo3_distance} meters")
@@ -1573,7 +1573,7 @@ class EnvRunner(Runner):
         algo3_avg1_speed = round(algo3_Crowdsourced_avg_speed / algo3_Crowdsourced_num, 2)
         algo3_avg_speed = (algo3_Hired_avg_speed + algo3_Crowdsourced_avg_speed) / (algo3_Hired_num + algo3_Crowdsourced_num)
         algo3_avg_speed = round(algo3_avg_speed, 2)
-        print("Average Speed per Courier Between Two Algos:")
+        print("Average Speed per Courier Between Algos:")
         print(f"Algo1: Hired average speed is {algo1_avg0_speed} m/s, Crowdsourced average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s")
         print(f"Algo2: Hired average speed is {algo2_avg0_speed} m/s, Crowdsourced average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s")
         print(f"Algo3: Hired average speed is {algo3_avg0_speed} m/s, Crowdsourced average speed is {algo3_avg1_speed} m/s and average speed per courier is {algo3_avg_speed} m/s")
@@ -1596,7 +1596,7 @@ class EnvRunner(Runner):
         algo3_overspeed0 = round(algo3_count_overspeed0 / algo3_num_active_couriers0, 2)
         algo3_overspeed1 = round(algo3_count_overspeed1 / algo3_num_active_couriers1, 2)
         algo3_overspeed = round((algo3_count_overspeed0 + algo3_count_overspeed1) / (algo3_num_active_couriers0 + algo3_num_active_couriers1), 2)
-        print("Rate of Overspeed for Evaluation Between Two Algos:")
+        print("Rate of Overspeed for Evaluation Between Algos:")
         print(f"Algo1: Hired - {algo1_overspeed0}, Crowdsourced - {algo1_overspeed1}, Total rate - {algo1_overspeed}")
         print(f"Algo2: Hired - {algo2_overspeed0}, Crowdsourced - {algo2_overspeed1}, Total rate - {algo2_overspeed}")
         print(f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}")
@@ -1613,7 +1613,7 @@ class EnvRunner(Runner):
         algo1_reject_rate_per_episode = round(algo1_count_reject_orders / len(self.eval_envs.envs_discrete[0].orders), 2)
         algo2_reject_rate_per_episode = round(algo2_count_reject_orders / len(self.eval_envs.envs_discrete[1].orders), 2)
         algo3_reject_rate_per_episode = round(algo3_count_reject_orders / len(self.eval_envs.envs_discrete[2].orders), 2)
-        print("Reject Rate for Evaluation Between Two Algos:")
+        print("Reject Rate for Evaluation Between Algos:")
         print(f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most")
         print(f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most")
         print(f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most")
@@ -1633,7 +1633,7 @@ class EnvRunner(Runner):
         algo3_reject1 = round(algo3_Crowdsourced_reject_num / algo3_Crowdsourced_num, 2)
         algo3_reject = (algo3_Crowdsourced_reject_num + algo3_Crowdsourced_reject_num) / (algo3_Hired_num + algo3_Crowdsourced_num)
         algo3_reject = round(algo3_reject, 2)
-        print("Average Reject Numbers per Courier for Evaluation Between Two Algos:")
+        print("Average Reject Numbers per Courier for Evaluation Between Algos:")
         print(f"Algo1: Hired rejects average {algo1_reject0} orders, Crowdsourced rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}")
         print(f"Algo2: Hired rejects average {algo2_reject0} orders, Crowdsourced rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}")
         print(f"Algo3: Hired rejects average {algo3_reject0} orders, Crowdsourced rejects average {algo3_reject1} orders and Total reject number per courier is {algo3_reject}")
@@ -1656,10 +1656,10 @@ class EnvRunner(Runner):
         algo3_price_per_order0 = round(algo3_order0_price / algo3_order0_num, 2)
         algo3_price_per_order1 = round(algo3_order1_price / algo3_order1_num, 2)
         algo3_price_per_order = round((algo3_order0_price + algo3_order1_price) / (algo3_order0_num + algo3_order1_num), 2)
-        print("Average Price per order for Evaluation Between Two Algos:")
-        print(f"Algo1: The average price of Hired's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}")
-        print(f"Algo2: The average price of Hired's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}")
-        print(f"Algo3: The average price of Hired's order is {algo3_price_per_order0} yuan with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} yuan with {algo3_order1_num} orders and for all is {algo3_price_per_order}")
+        print("Average Price per order for Evaluation Between Algos:")
+        print(f"Algo1: The average price of Hired's order is {algo1_price_per_order0} dollar with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} dollar with {algo1_order1_num} orders and for all is {algo1_price_per_order} dollar")
+        print(f"Algo2: The average price of Hired's order is {algo2_price_per_order0} dollar with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} dollar with {algo2_order1_num} orders and for all is {algo2_price_per_order} dollar")
+        print(f"Algo3: The average price of Hired's order is {algo3_price_per_order0} dollar with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} dollar with {algo3_order1_num} orders and for all is {algo3_price_per_order} dollar")
         self.writter.add_scalar('Eval Average Price/Algo1 Total', algo1_price_per_order, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo1 Hired', algo1_price_per_order0, self.eval_num)
         self.writter.add_scalar('Eval Average Price/Algo1 Crowdsourced', algo1_price_per_order1, self.eval_num)
@@ -1673,19 +1673,19 @@ class EnvRunner(Runner):
         algo1_income0 = round(algo1_Hired_income / algo1_Hired_num, 2)
         algo1_income1 = round(algo1_Crowdsourced_income / algo1_Crowdsourced_num, 2)
         algo1_income = round((algo1_Hired_income + algo1_Crowdsourced_income) / (algo1_Hired_num + algo1_Crowdsourced_num), 2)
-        platform_cost1 = algo1_Hired_income + algo1_Crowdsourced_income
+        platform_cost1 = round(algo1_Hired_income + algo1_Crowdsourced_income, 2)
         algo2_income0 = round(algo2_Hired_income / algo2_Hired_num, 2)
         algo2_income1 = round(algo2_Crowdsourced_income / algo2_Crowdsourced_num, 2)
         algo2_income = round((algo2_Hired_income + algo2_Crowdsourced_income) / (algo2_Hired_num + algo2_Crowdsourced_num), 2)
-        platform_cost2 = algo2_Hired_income + algo2_Crowdsourced_income
+        platform_cost2 = round(algo2_Hired_income + algo2_Crowdsourced_income, 2)
         algo3_income0 = round(algo3_Hired_income / algo3_Hired_num, 2)
         algo3_income1 = round(algo3_Crowdsourced_income / algo3_Crowdsourced_num, 2)
         algo3_income = round((algo3_Hired_income + algo3_Crowdsourced_income) / (algo3_Hired_num + algo3_Crowdsourced_num), 2)
-        platform_cost3 = algo3_Hired_income + algo3_Crowdsourced_income
-        print("Average Income per Courier for Evaluation Between Two Algos:")
-        print(f"Algo1: Hired's average income is {algo1_income0} yuan, Crowdsourced's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan")
-        print(f"Algo2: Hired's average income is {algo2_income0} yuan, Crowdsourced's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan")
-        print(f"Algo3: Hired's average income is {algo3_income0} yuan, Crowdsourced's average income is {algo3_income1} yuan and Total income per courier is {algo3_income}, The platform total cost is {platform_cost3} yuan")
+        platform_cost3 = round(algo3_Hired_income + algo3_Crowdsourced_income, 2)
+        print("Average Income per Courier for Evaluation Between Algos:")
+        print(f"Algo1: Hired's average income is {algo1_income0} dollar, Crowdsourced's average income is {algo1_income1} dollar and Total income per courier is {algo1_income} dollar, The platform total cost is {platform_cost1} dollar")
+        print(f"Algo2: Hired's average income is {algo2_income0} dollar, Crowdsourced's average income is {algo2_income1} dollar and Total income per courier is {algo2_income} dollar, The platform total cost is {platform_cost2} dollar")
+        print(f"Algo3: Hired's average income is {algo3_income0} dollar, Crowdsourced's average income is {algo3_income1} dollar and Total income per courier is {algo3_income} dollar, The platform total cost is {platform_cost3} dollar")
         self.writter.add_scalar('Eval Average Income/Algo1 Total', algo1_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Hired', algo1_income0, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced', algo1_income1, self.eval_num)
@@ -1708,7 +1708,7 @@ class EnvRunner(Runner):
         algo3_finish0 = round(algo3_Hired_finish_num / algo3_Hired_num, 2)
         algo3_finish1 = round(algo3_Crowdsourced_finish_num / algo3_Crowdsourced_num, 2)
         algo3_finish = round((algo3_Hired_finish_num + algo3_Crowdsourced_finish_num) / (algo3_Hired_num + algo3_Crowdsourced_num), 2)
-        print("Average Order finished per courier for Evaluation Between Two Algos:")
+        print("Average Order finished per courier for Evaluation Between Algos:")
         print(f"Algo1: Hired finishes average {algo1_finish0} orders while Crowdsourced finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}")
         print(f"Algo2: Hired finishes average {algo2_finish0} orders while Crowdsourced finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}")
         print(f"Algo3: Hired finishes average {algo3_finish0} orders while Crowdsourced finishes average {algo3_finish1} orders, Total finish number per courier is {algo3_finish}")
@@ -1731,7 +1731,7 @@ class EnvRunner(Runner):
         algo3_avg0_leisure = round(algo3_Hired_leisure_time / algo3_Hired_num / 60, 2)
         algo3_avg1_leisure = round(algo3_Crowdsourced_leisure_time / algo3_Crowdsourced_num / 60, 2)
         algo3_avg_leisure = round((algo3_Hired_leisure_time + algo3_Crowdsourced_leisure_time) / (algo3_Hired_num + algo3_Crowdsourced_num) / 60, 2)
-        print("Average leisure time per courier for Evaluation Between Two Algos:")
+        print("Average leisure time per courier for Evaluation Between Algos:")
         print(f"Algo1: Hired leisure time is {algo1_avg0_leisure} minutes, Crowdsourced leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes")
         print(f"Algo2: Hired leisure time is {algo2_avg0_leisure} minutes, Crowdsourced leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes")
         print(f"Algo3: Hired leisure time is {algo3_avg0_leisure} minutes, Crowdsourced leisure time is {algo3_avg1_leisure} minutes and Total leisure time per courier is {algo3_avg_leisure} minutes")
@@ -1746,46 +1746,46 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Leisure Time/Algo3 Crowdsourced', algo3_avg1_leisure, self.eval_num)
 
         message = (
-            f"In Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired\n"
+            f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} Orders waiting to be paired\n"
             f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} Orders waiting to be paired\n"
             f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} Orders waiting to be paired\n"
-            f"Total Reward for Evaluation Between Two Algos:\n"
-            f"Algo1: {algo1_eval_episode_rewards_sum}\n"
-            f"Algo2: {algo2_eval_episode_rewards_sum}\n"
-            f"Algo3: {algo3_eval_episode_rewards_sum}\n"
-            f"Average Travel Distance per Courier Between Two Algos:\n"
+            f"Total Reward for Evaluation Between Algos:\n"
+            f"Algo1: {round(algo1_eval_episode_rewards_sum, 2)}\n"
+            f"Algo2: {round(algo2_eval_episode_rewards_sum, 2)}\n"
+            f"Algo3: {round(algo3_eval_episode_rewards_sum, 2)}\n"
+            f"Average Travel Distance per Courier Between Algos:\n"
             f"Algo1: Hired - {algo1_distance0} meters, Crowdsourced - {algo1_distance1} meters, Total - {algo1_distance} meters\n"
-            f"Algo2: Hired - {algo2_distance0} meters, Crowdsourced - {algo2_distance1} meters, Total - {algo2_distance}\n"
+            f"Algo2: Hired - {algo2_distance0} meters, Crowdsourced - {algo2_distance1} meters, Total - {algo2_distance} meters\n"
             f"Algo3: Hired - {algo3_distance0} meters, Crowdsourced - {algo3_distance1} meters, Total - {algo3_distance} meters\n"
-            "Average Speed per Courier Between Two Algos:\n"
+            "Average Speed per Courier Between Algos:\n"
             f"Algo1: Hired average speed is {algo1_avg0_speed} m/s, Crowdsourced average speed is {algo1_avg1_speed} m/s and average speed per courier is {algo1_avg_speed} m/s\n"
             f"Algo2: Hired average speed is {algo2_avg0_speed} m/s, Crowdsourced average speed is {algo2_avg1_speed} m/s and average speed per courier is {algo2_avg_speed} m/s\n"
             f"Algo3: Hired average speed is {algo3_avg0_speed} m/s, Crowdsourced average speed is {algo3_avg1_speed} m/s and average speed per courier is {algo3_avg_speed} m/s\n"
-            "Rate of Overspeed for Evaluation Between Two Algos:\n"
+            "Rate of Overspeed for Evaluation Between Algos:\n"
             f"Algo1: Hired - {algo1_overspeed0}, Crowdsourced - {algo1_overspeed1}, Total rate - {algo1_overspeed}\n"
             f"Algo2: Hired - {algo2_overspeed0}, Crowdsourced - {algo2_overspeed1}, Total rate - {algo2_overspeed}\n"
             f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}\n"
-            "Reject Rate for Evaluation Between Two Algos:\n"
+            "Reject Rate for Evaluation Between Algos:\n"
             f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
             f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
             f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most\n"
-            "Average Reject Numbers per Courier for Evaluation Between Two Algos:\n"
+            "Average Reject Numbers per Courier for Evaluation Between Algos:\n"
             f"Algo1: Hired rejects average {algo1_reject0} orders, Crowdsourced rejects average {algo1_reject1} orders and Total reject number per courier is {algo1_reject}\n"
             f"Algo2: Hired rejects average {algo2_reject0} orders, Crowdsourced rejects average {algo2_reject1} orders and Total reject number per courier is {algo2_reject}\n"
             f"Algo3: Hired rejects average {algo3_reject0} orders, Crowdsourced rejects average {algo3_reject1} orders and Total reject number per courier is {algo3_reject}\n"
-            "Average Price per order for Evaluation Between Two Algos:\n"
-            f"Algo1: The average price of Hired's order is {algo1_price_per_order0} yuan with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} yuan with {algo1_order1_num} orders and for all is {algo1_price_per_order}\n"
-            f"Algo2: The average price of Hired's order is {algo2_price_per_order0} yuan with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} yuan with {algo2_order1_num} orders and for all is {algo2_price_per_order}\n"
-            f"Algo3: The average price of Hired's order is {algo3_price_per_order0} yuan with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} yuan with {algo3_order1_num} orders and for all is {algo3_price_per_order}\n"
-            "Average Income per Courier for Evaluation Between Two Algos:\n"
-            f"Algo1: Hired's average income is {algo1_income0} yuan, Crowdsourced's average income is {algo1_income1} yuan and Total income per courier is {algo1_income}, The platform total cost is {platform_cost1} yuan\n"
-            f"Algo2: Hired's average income is {algo2_income0} yuan, Crowdsourced's average income is {algo2_income1} yuan and Total income per courier is {algo2_income}, The platform total cost is {platform_cost2} yuan\n"
-            f"Algo3: Hired's average income is {algo3_income0} yuan, Crowdsourced's average income is {algo3_income1} yuan and Total income per courier is {algo3_income}, The platform total cost is {platform_cost3} yuan\n"
-            "Average Order finished per courier for Evaluation Between Two Algos:\n"
+            "Average Price per order for Evaluation Between Algos:\n"
+            f"Algo1: The average price of Hired's order is {algo1_price_per_order0} dollar with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} dollar with {algo1_order1_num} orders and for all is {algo1_price_per_order} dollar\n"
+            f"Algo2: The average price of Hired's order is {algo2_price_per_order0} dollar with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} dollar with {algo2_order1_num} orders and for all is {algo2_price_per_order} dollar\n"
+            f"Algo3: The average price of Hired's order is {algo3_price_per_order0} dollar with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} dollar with {algo3_order1_num} orders and for all is {algo3_price_per_order} dollar\n"
+            "Average Income per Courier for Evaluation Between Algos:\n"
+            f"Algo1: Hired's average income is {algo1_income0} dollar, Crowdsourced's average income is {algo1_income1} dollar and Total income per courier is {algo1_income} dollar, The platform total cost is {platform_cost1} dollar\n"
+            f"Algo2: Hired's average income is {algo2_income0} dollar, Crowdsourced's average income is {algo2_income1} dollar and Total income per courier is {algo2_income} dollar, The platform total cost is {platform_cost2} dollar\n"
+            f"Algo3: Hired's average income is {algo3_income0} dollar, Crowdsourced's average income is {algo3_income1} dollar and Total income per courier is {algo3_income} dollar, The platform total cost is {platform_cost3} dollar\n"
+            "Average Order finished per courier for Evaluation Between Algos:\n"
             f"Algo1: Hired finishes average {algo1_finish0} orders while Crowdsourced finishes average {algo1_finish1} orders, Total finish number per courier is {algo1_finish}\n"
             f"Algo2: Hired finishes average {algo2_finish0} orders while Crowdsourced finishes average {algo2_finish1} orders, Total finish number per courier is {algo2_finish}\n"
             f"Algo3: Hired finishes average {algo3_finish0} orders while Crowdsourced finishes average {algo3_finish1} orders, Total finish number per courier is {algo3_finish}\n"
-            "Average leisure time per courier for Evaluation Between Two Algos:\n"
+            "Average leisure time per courier for Evaluation Between Algos:\n"
             f"Algo1: Hired leisure time is {algo1_avg0_leisure} minutes, Crowdsourced leisure time is {algo1_avg1_leisure} minutes and Total leisure time per courier is {algo1_avg_leisure} minutes\n"
             f"Algo2: Hired leisure time is {algo2_avg0_leisure} minutes, Crowdsourced leisure time is {algo2_avg1_leisure} minutes and Total leisure time per courier is {algo2_avg_leisure} minutes\n"
             f"Algo3: Hired leisure time is {algo3_avg0_leisure} minutes, Crowdsourced leisure time is {algo3_avg1_leisure} minutes and Total leisure time per courier is {algo3_avg_leisure} minutes\n"
