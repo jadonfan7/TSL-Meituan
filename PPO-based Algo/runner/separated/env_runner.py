@@ -928,6 +928,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_Distance.png')
+        plt.close()
 
         plt.figure(figsize=(12, 8))
         plt.plot(episode_rewards)
@@ -937,6 +938,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_reward_curve.png')
+        plt.close()
         
         Hired_speed = [s[0] for s in avg_speed_total]
         var_Hired_speed = [s[1] for s in avg_speed_total]
@@ -957,6 +959,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_speed.png')
+        plt.close()
         
         Hired_overspeed = [r[0] for r in rate_of_overspeed]
         Crowdsourced_overspeed = [r[1] for r in rate_of_overspeed]
@@ -971,6 +974,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_rate_of_overspeed.png')
+        plt.close()
         
         plt.figure(figsize=(12, 8))
         plt.plot(reject_rate)
@@ -980,6 +984,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_order_reject_rate.png')
+        plt.close()
         
         avg_reject0 = [r[0] for r in courier_reject_num_total]
         var_reject0 = [r[1] for r in courier_reject_num_total]
@@ -1000,6 +1005,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_rejection_num.png')
+        plt.close()
         
         price0 = [p[0] for p in order_price_total]
         var_price0 = [p[1] for p in order_price_total]
@@ -1020,6 +1026,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_price_of_order.png')
+        plt.close()
         
         Hired_income = [i[0] for i in income_total]
         var_Hired_income = [i[1] for i in income_total]
@@ -1040,6 +1047,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_income_per_courier.png')
+        plt.close()
         
         platform_total_cost = [i[3] for i in income_total]
         plt.figure(figsize=(12, 8))
@@ -1050,6 +1058,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_platform_total_cost.png')
+        plt.close()
         
         Hired_finish = [f[0] for f in courier_finish_num_total]
         var_Hired_finish = [f[1] for f in courier_finish_num_total]
@@ -1070,6 +1079,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_finish_per_courier.png')
+        plt.close()
         
         Hired_leisure = [f[0] for f in leisure_time_total]
         var_Hired_leisure = [f[1] for f in leisure_time_total]
@@ -1090,6 +1100,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_leisure_time_per_courier.png')
+        plt.close()
         
         Hired_running = [f[0] for f in running_time_total]
         var_Hired_running = [f[1] for f in running_time_total]
@@ -1110,6 +1121,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_avg_running_time_per_courier.png')
+        plt.close()
         
         order0_late = [l[0] for l in rate_of_late_order]
         order1_late = [l[1] for l in rate_of_late_order]
@@ -1124,6 +1136,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_rate_of_late_orders.png')
+        plt.close()
         
         order0_ETA = [e[0] for e in rate_of_ETA_usage]
         var_order0_ETA = [e[1] for e in rate_of_ETA_usage]  # 假设方差数据在第二个位置
@@ -1144,6 +1157,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Train_rate_of_ETA_usage.png')
+        plt.close()
         
         #--------------------------
         # draw the Evaluation graph
@@ -1192,6 +1206,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Distance.png')
+        plt.close()
         
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, algo1_eval_episode_rewards, label='Algo1 Reward', color='blue', marker='o')
@@ -1203,6 +1218,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Reward.png')
+        plt.close()
                 
         x0 = [x[0] for x in algo1_eval_speed]
         x0_var = [x[1] for x in algo1_eval_speed]
@@ -1247,6 +1263,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Average_Speed.png')
+        plt.close()
 
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[0] for x in algo1_eval_overspeed_rate], label='Algo1 Hired', color='blue', linestyle='--', marker='o')
@@ -1264,6 +1281,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Overspeed_Rate.png')
+        plt.close()
         
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, algo1_eval_reject_rate, label='Algo1', color='blue', linestyle='--', marker='o')
@@ -1275,6 +1293,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Reject_Rate.png')
+        plt.close()
 
         x0 = [x[0] for x in algo1_eval_reject]
         x0_var = [x[1] for x in algo1_eval_reject]
@@ -1319,6 +1338,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Courier_Reject_Number.png')
+        plt.close()
         
         x0 = [x[0] for x in algo1_eval_order_price]
         x0_var = [x[1] for x in algo1_eval_order_price]
@@ -1363,6 +1383,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_order_price.png')
+        plt.close()
 
         x0 = [x[0] for x in algo1_eval_income]
         x0_var = [x[1] for x in algo1_eval_income]
@@ -1407,6 +1428,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_courier_avg_income.png')
+        plt.close()
         
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[6] for x in algo1_eval_income], label='Algo1', color='blue', linestyle='-', marker='o')
@@ -1418,6 +1440,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_platform_total_cost.png')
+        plt.close()
 
         x0 = [x[0] for x in algo1_eval_finish]
         x0_var = [x[1] for x in algo1_eval_finish]
@@ -1462,6 +1485,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_order_finished.png')
+        plt.close()
 
         x0 = [x[0] for x in algo1_eval_leisure]
         x0_var = [x[1] for x in algo1_eval_leisure]
@@ -1506,6 +1530,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_leisure_time.png')
+        plt.close()
         
         x0 = [x[0] for x in algo1_eval_running]
         x0_var = [x[1] for x in algo1_eval_running]
@@ -1550,6 +1575,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_running_time.png')
+        plt.close()
         
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[0] for x in algo1_rate_of_late_order], label='Algo1 Hired', color='blue', linestyle='--', marker='o')
@@ -1567,6 +1593,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_Late_Order_Rate.png')
+        plt.close()
         
         x0 = [x[0] for x in algo1_rate_of_ETA_usage]
         x0_var = [x[1] for x in algo1_rate_of_ETA_usage]
@@ -1611,6 +1638,7 @@ class EnvRunner(Runner):
         plt.grid(True)
         plt.legend()
         plt.savefig('Eval_ETA_Usage_Rate.png')
+        plt.close()
 
     @torch.no_grad()
     def collect(self, step, available_actions):
