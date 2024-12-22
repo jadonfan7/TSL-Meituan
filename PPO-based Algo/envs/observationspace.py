@@ -74,8 +74,9 @@ class ObservationSpace:
         # 合并订单和骑手数据
         combined_obs = np.concatenate((orders_array, couriers_array))
         
-        if combined_obs.size < 52:
-            combined_obs = np.pad(combined_obs, (0, 52 - combined_obs.size), 'constant', constant_values=-1)
+        obs_dim = 5 * self.courier.capacity + 2
+        if combined_obs.size < obs_dim:
+            combined_obs = np.pad(combined_obs, (0, obs_dim - combined_obs.size), 'constant', constant_values=-1)
             
         # 返回订单和骑手信息的Box空间
         return combined_obs

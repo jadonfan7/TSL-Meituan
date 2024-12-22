@@ -1,4 +1,5 @@
 from geopy.distance import geodesic
+import numpy as np
 
 class Courier:
     def __init__(self, courier_type, CourierID, position, time, state='inactive'):
@@ -11,7 +12,10 @@ class Courier:
         self.is_leisure = 0
         self.leisure_time = time
         self.total_leisure_time = 0
+        self.riding_time = 0
         self.total_running_time = 0
+        
+        self.grab_or_deliver = 0
         
         self.reject_order_num = 0
         self.finish_order_num = 0
@@ -25,7 +29,7 @@ class Courier:
         self.speed = 0
         self.avg_speed = 0
         
-        self.capacity = 10
+        self.capacity = 5
         self.reward = 0
         
         self.income = 0
@@ -56,18 +60,25 @@ class Courier:
 
 
     def pick_order(self, order):
+        interval = 10
         self.waybill.append(order)
         self.wait_to_pick.remove(order)
         order.status = 'picked_up'
+        self.grab_or_deliver = np.floor(np.random.normal(2, 1) * 60 / interval)
 
     def drop_order(self, order):
+        interval = 10
         self.waybill.remove(order)
         order.status = 'dropped'
         self.finish_order_num += 1
+        self.grab_or_deliver = np.floor(np.random.normal(2, 1) * 60 / interval)
 
     def move(self, interval):
+        congestion_ratio = 0.8
         if self.speed != 0:
-            travel_distance = interval * self.speed
+            self.riding_time += interval
+            
+            travel_distance = interval * self.speed * congestion_ratio
             distance_to_target = geodesic(self.target_location, self.position).meters
             
             if travel_distance >= distance_to_target:

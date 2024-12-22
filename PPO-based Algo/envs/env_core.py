@@ -70,21 +70,25 @@ class EnvCore(object):
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
+        
         reward = 0
         
-        if agent.waybill != [] or agent.wait_to_pick != []:
+        if (agent.waybill != [] or agent.wait_to_pick != []) and agent.grab_or_deliver == 0:
+
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
             total_length = waybill_length + wait_to_pick_length
             index = self.map.couriers[0].capacity
 
             if np.argmax(action[:index]) > total_length - 1:
-                reward -= 100
-                order_index = np.random.randint(0, total_length)
+                # reward -= 100
+                # order_index = np.random.randint(0, total_length)
+                agent.speed = 0
+                order_index = np.argmax(action[:index])
             else:
                 order_index = np.argmax(action[:index])
 
-            agent.speed =  np.argmax(action[index:]) + 1
+            agent.speed = np.argmax(action[index:]) + 1
 
             if agent.speed > 4:
                 if agent.courier_type == 0:
@@ -111,6 +115,8 @@ class EnvCore(object):
                 agent.move(self.map.interval) 
         else:
             agent.speed = 0
+            if agent.grab_or_deliver != 0:
+                agent.grab_or_deliver -= 1
                 
         for order in agent.wait_to_pick:
             if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
@@ -132,18 +138,22 @@ class EnvCore(object):
                     else:
                         reward -= 300 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
                         
-                    agent.income += order.price * 0.6
+                    agent.income += order.price * 0.7
                     order.is_late = 1
+                    
+                    self.map.platform_cost += order.price * 0.3
+                    
                 else:
                     order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
                     if agent.courier_type == 0:
                         reward += 300 * order.ETA_usage
+                        
                     else:
                         reward += 150 * order.ETA_usage
                         
                     agent.income += order.price
                     
-        if agent.waybill == [] and agent.wait_to_pick == []:
+        if agent.waybill == [] and agent.wait_to_pick == [] and agent.grab_or_deliver == 0:
             agent.is_leisure = 1
         else:
             agent.is_leisure = 0

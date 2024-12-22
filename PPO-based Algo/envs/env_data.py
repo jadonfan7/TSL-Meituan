@@ -20,9 +20,10 @@ class Map:
         self.algo_index = algo_index
         self.current_index = 0
     
+        self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -65,33 +66,33 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
         
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        # } # 5 min
-
         config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
-            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
-            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
-            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
-            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
-            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
-            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
-            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
-            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
-            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
-        } # 10 min
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
+            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
+            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
+            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
+            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
+            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
+        } # 5 min
+
+        # config_mapping = {
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001400},
+        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087800},
+        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666174200},
+        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260600},
+        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
+        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
+        # } # 10 min
 
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -132,10 +133,10 @@ class Map:
         self.interval = 10 # allocation for every 10 seconds
 
         self.add_new_couriers = 0
-        self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
-        self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
-        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
-        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
+        # self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
+        # self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
+        self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
+        self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
 
         self.step(first_time=1)
     
@@ -210,7 +211,9 @@ class Map:
                 courier.state = 'inactive'
             
             if courier.start_time != self.clock and courier.courier_type == 0:
-                courier.income += 15 / 3600 * self.interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                salary_per_interval = 15 / 3600 * self.interval
+                courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                self.platform_cost += salary_per_interval
 
         orders_pair = orders_failed + orders_new
         if orders_pair != []:
@@ -299,8 +302,10 @@ class Map:
             if (self.clock - order.order_create_time > 120) and (nearest_courier.courier_type == 0 and nearest_courier.reject_order_num > 5):
                 if nearest_courier.courier_type == 0:
                     order.price = self._wage_response_model(order, nearest_courier)
+                    self.platform_cost += order.price
                 else:
                     order.price = self._wage_response_model(order, nearest_courier) * 2
+                    self.platform_cost += order.price
                 
                 nearest_courier.wait_to_pick.append(order)
                 order.pair_courier = nearest_courier
@@ -315,7 +320,9 @@ class Map:
             elif (self.clock - order.order_create_time <= 120) and ((nearest_courier.courier_type == 1) or (nearest_courier.courier_type == 0 and nearest_courier.reject_order_num <= 5)):
                 decision = self._accept_or_reject(order, courier)
                 if decision == True:
-                    order.price = self._wage_response_model(order, nearest_courier)                    
+                    order.price = self._wage_response_model(order, nearest_courier) 
+                    self.platform_cost += order.price           
+                            
                     nearest_courier.wait_to_pick.append(order)
                     order.pair_courier = nearest_courier
                     order.status = 'wait_pick'
@@ -557,8 +564,10 @@ class Map:
                 if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                     if assigned_courier.courier_type == 0:
                         order.price = self._wage_response_model(order, assigned_courier)
+                        self.platform_cost += order.price
                     else:
                         order.price = self._wage_response_model(order, assigned_courier) * 2
+                        self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
                     order.pair_courier = assigned_courier
@@ -574,7 +583,9 @@ class Map:
                 elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
                     decision = self._accept_or_reject(order, courier)
                     if decision == True:
-                        order.price = self._wage_response_model(order, assigned_courier)                    
+                        order.price = self._wage_response_model(order, assigned_courier)
+                        self.platform_cost += order.price
+                                            
                         assigned_courier.wait_to_pick.append(order)
                         order.pair_courier = assigned_courier
                         order.status = 'wait_pick'
@@ -651,8 +662,10 @@ class Map:
                 if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                     if assigned_courier.courier_type == 0:
                         order.price = self._wage_response_model(order, assigned_courier)
+                        self.platform_cost += order.price
                     else:
                         order.price = self._wage_response_model(order, assigned_courier) * 2
+                        self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
                     order.pair_courier = assigned_courier
@@ -668,7 +681,9 @@ class Map:
                 elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
                     decision = self._accept_or_reject(order, courier)
                     if decision == True:
-                        order.price = self._wage_response_model(order, assigned_courier)                    
+                        order.price = self._wage_response_model(order, assigned_courier)      
+                        self.platform_cost += order.price
+                                      
                         assigned_courier.wait_to_pick.append(order)
                         order.pair_courier = assigned_courier
                         order.status = 'wait_pick'
@@ -768,8 +783,10 @@ class Map:
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                 if assigned_courier.courier_type == 0:
                     order.price = self._wage_response_model(order, assigned_courier)
+                    self.platform_cost += order.price
                 else:
                     order.price = self._wage_response_model(order, assigned_courier) * 2
+                    self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
                 order.pair_courier = assigned_courier
@@ -785,7 +802,8 @@ class Map:
             elif (self.clock - order.order_create_time <= 120) and ((assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5)):
                 decision = self._accept_or_reject(order, courier)
                 if decision == True:
-                    order.price = self._wage_response_model(order, assigned_courier)                    
+                    order.price = self._wage_response_model(order, assigned_courier)     
+                    self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
@@ -995,10 +1013,11 @@ class Map:
                 
     def get_actions(self):
         num_agents = len(self.couriers)
-        available_actions = [[0] * 10 for _ in range(num_agents)]
+        capacity = self.couriers[0].capacity
+        available_actions = [[0] * capacity for _ in range(num_agents)]
         for i, courier in enumerate(self.couriers):
             length = len(courier.waybill) + len(courier.wait_to_pick) - 1
-            for j in range(min(length, 10)):
+            for j in range(min(length, capacity)):
                 available_actions[i][j] = 1
                 
         return available_actions
