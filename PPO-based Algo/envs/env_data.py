@@ -699,10 +699,10 @@ class Map:
                         courier.reject_order_num += 1
     
     def _EEtradeoff_bipartite_allocation(self, orders):
+        
         def get_predicted_orders(clock, time_window=20):
-            
-            data = self.order_data[(self.order_data['platform_order_time'] > clock - 86400) & (self.order_data['platform_order_time'] <= clock - 86400 + time_window)]
-            
+            df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+            data = df[(df['platform_order_time'] > clock - 86400) & (df['platform_order_time'] <= clock - 86400 + time_window)]
             predicted_orders = []
             for index, row in data.iterrows():
                 order_id = row['order_id']
