@@ -149,7 +149,7 @@ class EnvRunner(Runner):
                 for agent_id in range(self.num_agents):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
             
-            obs = self.envs.reset(episode % 10)
+            obs = self.envs.reset(episode % 4)
             self.num_agents = self.envs.envs_discrete[0].num_couriers
 
             for step in range(self.episode_length):
@@ -243,7 +243,8 @@ class EnvRunner(Runner):
                         Hired_finish_num.append(c.finish_order_num)
                         Hired_leisure_time.append(c.total_leisure_time)
                         Hired_running_time.append(c.total_running_time)
-                        Hired_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            Hired_avg_speed.append(c.avg_speed)
                         Hired_income.append(c.income)
                     else:
                         Crowdsourced_num += 1
@@ -252,7 +253,8 @@ class EnvRunner(Runner):
                         Crowdsourced_finish_num.append(c.finish_order_num)
                         Crowdsourced_leisure_time.append(c.total_leisure_time)
                         Crowdsourced_running_time.append(c.total_running_time)
-                        Crowdsourced_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            Crowdsourced_avg_speed.append(c.avg_speed)
                         Crowdsourced_income.append(c.income)
                         if c.state == 'active':
                             Crowdsourced_on += 1
@@ -1750,7 +1752,7 @@ class EnvRunner(Runner):
     @torch.no_grad()
     def eval(self, total_num_steps):
         
-        eval_obs = self.eval_envs.reset(10)
+        eval_obs = self.eval_envs.reset(4)
         
         algo1_Hired_num = 0
         algo1_Crowdsourced_num = 0
@@ -2079,7 +2081,8 @@ class EnvRunner(Runner):
                         algo1_Hired_finish_num.append(c.finish_order_num)
                         algo1_Hired_leisure_time.append(c.total_leisure_time)
                         algo1_Hired_running_time.append(c.total_running_time)
-                        algo1_Hired_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo1_Hired_avg_speed.append(c.avg_speed)
                         algo1_Hired_income.append(c.income)
                     else:
                         algo1_Crowdsourced_num += 1
@@ -2088,8 +2091,12 @@ class EnvRunner(Runner):
                         algo1_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo1_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo1_Crowdsourced_running_time.append(c.total_running_time)
-                        algo1_Crowdsourced_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo1_Crowdsourced_avg_speed.append(c.avg_speed)
                         algo1_Crowdsourced_income.append(c.income)
+                        if c.state == 'active':
+                            algo1_Crowdsourced_on += 1
+
                 
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
@@ -2131,7 +2138,8 @@ class EnvRunner(Runner):
                         algo2_Hired_finish_num.append(c.finish_order_num)
                         algo2_Hired_leisure_time.append(c.total_leisure_time)
                         algo2_Hired_running_time.append(c.total_running_time)
-                        algo2_Hired_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo2_Hired_avg_speed.append(c.avg_speed)
                         algo2_Hired_income.append(c.income)
                     else:
                         algo2_Crowdsourced_num += 1
@@ -2140,8 +2148,11 @@ class EnvRunner(Runner):
                         algo2_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo2_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo2_Crowdsourced_running_time.append(c.total_running_time)
-                        algo2_Crowdsourced_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo2_Crowdsourced_avg_speed.append(c.avg_speed)
                         algo2_Crowdsourced_income.append(c.income)
+                        if c.state == 'active':
+                            algo2_Crowdsourced_on += 1
                 
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
@@ -2182,7 +2193,8 @@ class EnvRunner(Runner):
                         algo3_Hired_finish_num.append(c.finish_order_num)
                         algo3_Hired_leisure_time.append(c.total_leisure_time)
                         algo3_Hired_running_time.append(c.total_running_time)
-                        algo3_Hired_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo3_Hired_avg_speed.append(c.avg_speed)
                         algo3_Hired_income.append(c.income)
                     else:
                         algo3_Crowdsourced_num += 1
@@ -2191,8 +2203,11 @@ class EnvRunner(Runner):
                         algo3_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo3_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo3_Crowdsourced_running_time.append(c.total_running_time)
-                        algo3_Crowdsourced_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo3_Crowdsourced_avg_speed.append(c.avg_speed)
                         algo3_Crowdsourced_income.append(c.income)
+                        if c.state == 'active':
+                            algo3_Crowdsourced_on += 1
                 
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
@@ -2233,7 +2248,8 @@ class EnvRunner(Runner):
                         algo4_Hired_finish_num.append(c.finish_order_num)
                         algo4_Hired_leisure_time.append(c.total_leisure_time)
                         algo4_Hired_running_time.append(c.total_running_time)
-                        algo4_Hired_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo4_Hired_avg_speed.append(c.avg_speed)
                         algo4_Hired_income.append(c.income)
                     else:
                         algo4_Crowdsourced_num += 1
@@ -2242,8 +2258,11 @@ class EnvRunner(Runner):
                         algo4_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo4_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo4_Crowdsourced_running_time.append(c.total_running_time)
-                        algo4_Crowdsourced_avg_speed.append(c.avg_speed)
+                        if c.avg_speed > 0:
+                            algo4_Crowdsourced_avg_speed.append(c.avg_speed)
                         algo4_Crowdsourced_income.append(c.income)
+                        if c.state == 'active':
+                            algo4_Crowdsourced_on += 1
                 
                 for o in self.eval_envs.envs_discrete[i].orders:
                     if o.status == 'dropped':

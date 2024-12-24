@@ -29,7 +29,7 @@ class Courier:
         self.speed = 0
         self.avg_speed = 0
         
-        self.capacity = 5
+        self.capacity = 6
         self.reward = 0
         
         self.income = 0

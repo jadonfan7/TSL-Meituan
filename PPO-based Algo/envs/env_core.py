@@ -159,7 +159,7 @@ class EnvCore(object):
             agent.is_leisure = 0
             agent.leisure_time = self.map.clock
 
-        agent.avg_speed = agent.travel_distance / agent.total_running_time if agent.total_running_time != 0 else 0
+        agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
         
         agent.reward += reward
 
@@ -173,16 +173,7 @@ class EnvCore(object):
             return True
         else:
             return False
-        # if self.map.current_index < 654344: # num of the data
-        #     return False
-        
-        # all_dropped = all(order.status == 'dropped' for order in self.orders)
-
-        # if agent.waybill == [] and agent.wait_to_pick == [] and all_dropped:
-        #     return True
-        # else:
-        #     return False
-        
+                
     def _get_info(self, agent):
         return {
             'courier': agent,

@@ -23,7 +23,9 @@ class Map:
         self.platform_cost = 0
         
         df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        #df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        
+        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -66,19 +68,19 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
         
-        config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-            1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-            2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-            3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-            4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-            5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-            6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-            7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-            8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-            9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-            10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        } # 5 min
+        # config_mapping = {
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
+        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
+        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
+        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
+        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
+        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
+        # } # 5 min
 
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -93,22 +95,30 @@ class Map:
         #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666347000},
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
         # } # 10 min
-
+        
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        } # 5 min
+        
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
             config = config_mapping[self.env_index]
             date_value = config['date']
-            start_time = config['start_time']
-            end_time = config['end_time']
+            self.start_time = config['start_time']
+            self.end_time = config['end_time']
             
             # 筛选和排序数据
             df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0)]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
-            df = df[(df['platform_order_time'] >= start_time) & (df['platform_order_time'] < end_time)]
+            df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
             self.order_data = df.reset_index(drop=True)
             
-            # self.waybill_data = df_waybill[(df_waybill['dt'] == date_value)]
-
+            self.predicted_count = order_estimate_30min[order_estimate_30min['dt'] == date_value]['predicted_count']
+            
 
         lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
         lat_values_non_zero = lat_values[lat_values > 0].dropna()
@@ -128,15 +138,17 @@ class Map:
         self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
         self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
 
-        self.clock = self.order_data['platform_order_time'][0]
+        self.interval = 20 # allocation for every 20 seconds
 
-        self.interval = 10 # allocation for every 10 seconds
+        self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
 
         self.add_new_couriers = 0
         # self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
         # self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
-        self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
-        self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
+        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
+        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
+        
+        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -158,7 +170,8 @@ class Map:
         self.add_new_couriers = 0
         
         if not first_time:
-            self.clock += self.interval
+            if self.clock < self.end_time:
+                self.clock += self.interval 
 
         orders_failed = [order for order in self.orders if order.status == "wait_pair"]
         orders_new = []
@@ -167,7 +180,6 @@ class Map:
             dt = self.order_data.iloc[self.current_index]
             order_id = dt['order_id']
             
-            # if order_id not in self.orders_id and dt['is_courier_grabbed'] == 1 and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:      
             if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
           
                 self.orders_id.add(order_id)
@@ -700,29 +712,38 @@ class Map:
     
     def _EEtradeoff_bipartite_allocation(self, orders):
         
-        def get_predicted_orders(clock, time_window=20):
-            df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-            data = df[(df['platform_order_time'] > clock - 86400) & (df['platform_order_time'] <= clock - 86400 + time_window)]
+        def get_predicted_orders():
+            
+            index = (self.clock - self.start_time) // self.interval - 1
+            predicted_count = int(self.predicted_count.iloc[index])
+
             predicted_orders = []
-            for index, row in data.iterrows():
-                order_id = row['order_id']
-                if row['is_courier_grabbed'] == 1 and row['estimate_arrived_time'] - row['order_push_time'] > 0:
-            
-                    order_type = row['is_prebook']
-                    order_create_time = row['platform_order_time']
-                    pickup_point = (row['sender_lat'] / 1e6, row['sender_lng'] / 1e6)
-                    dropoff_point = (row['recipient_lat'] / 1e6, row['recipient_lng'] / 1e6)
-                    prepare_time = row['estimate_meal_prepare_time'] - row['order_push_time']
-                    estimate_arrived_time = row['estimate_arrived_time'] - row['order_push_time']
-            
-                    order = Order(order_type, order_id, order_create_time, pickup_point, dropoff_point, prepare_time, estimate_arrived_time, 0)
-                    predicted_orders.append(order)
+
+            assigned_poi_ids = np.random.choice(
+                self.poi_frequency['poi_id'],
+                size=predicted_count,
+                p=self.poi_frequency['frequency_ratio']
+            )
+            order_id_index = 0
+            for poi_id in assigned_poi_ids:
+                data = self.poi_frequency[self.poi_frequency['poi_id'] == poi_id]
+                
+                eta = data['avg_delivery_time'].values[0] + self.clock
+
+                order_create_time = self.clock
+                pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
+                dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
+        
+                order = Order(order_id_index, 0, order_create_time, pickup_point, dropoff_point, 0, eta)
+                predicted_orders.append(order)
+                
+                order_id_index += 1
 
             return predicted_orders
 
         speed_upper_bound = 4
         
-        predicted_orders = get_predicted_orders(self.clock)
+        predicted_orders = get_predicted_orders()
         all_orders = orders + predicted_orders
         
         # Create a cost matrix
@@ -853,7 +874,6 @@ class Map:
             visited_orders.add(order_sequence[0][2])
             matched_order = next((o for o in orders if o.orderid == order_id), None)
             order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time)
-
         
         for i in range(1, len(order_sequence)):
             prev_location = order_sequence[i-1][0]
@@ -889,7 +909,6 @@ class Map:
         orders = sorted(orders, key=lambda o: o.ETA)
         order_sequence = []
         drop_off_point = []
-
         
         if len(orders) == 1:
             order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].orderid))
