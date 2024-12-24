@@ -121,7 +121,7 @@ def get_config():
         --clone_coef <float>
             clone term coefficient (default: 0.01)
 
-    Run parameters：
+    Run parameters:
         --use_linear_lr_decay
             by default, do not apply linear decay to learning rate. If set, use a linear schedule on the learning rate
 
@@ -189,7 +189,7 @@ def get_config():
     parser.add_argument(
         "--n_rollout_threads",
         type=int,
-        default=4, #5
+        default=5, #5
         help="Number of parallel envs for training rollouts",
     )
     # *************
@@ -203,7 +203,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=500, #1e5 2e6
+        default=50000, #1e5 2e6
         help="Number of environment steps to train (default: 10e6)",
     )
     # env parameters
@@ -217,7 +217,7 @@ def get_config():
 
     # *************
     # replay buffer parameters
-    parser.add_argument("--episode_length", type=int, default=5, help="Max length for any episode") #200
+    parser.add_argument("--episode_length", type=int, default=100, help="Max length for any episode") #200
 
     # network parameters
     parser.add_argument(

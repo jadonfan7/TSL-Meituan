@@ -22,10 +22,12 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        #df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+
         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -96,13 +98,22 @@ class Map:
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666408200},
         # } # 10 min
         
+        # config_mapping = {
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
+        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
+        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
+        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
+        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
+        # } # 5 min
+        
         config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-        } # 5 min
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+        } # 10 min
+
         
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -148,7 +159,8 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -307,9 +319,9 @@ class Map:
             for courier in self.couriers:
                 if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
                     dist = geodesic(courier.position, order.pick_up_point).meters
-                if min_dist > dist:
-                    min_dist = dist
-                    nearest_courier = courier
+                    if min_dist > dist:
+                        min_dist = dist
+                        nearest_courier = courier
             
             if (self.clock - order.order_create_time > 120) and (nearest_courier.courier_type == 0 and nearest_courier.reject_order_num > 5):
                 if nearest_courier.courier_type == 0:
