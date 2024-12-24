@@ -207,3 +207,4 @@ class EnvCore(object):
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
         
         return self.action_space, self.observation_space
+    

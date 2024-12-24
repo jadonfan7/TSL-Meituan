@@ -235,3 +235,26 @@ class Runner(object):
             )
             self.buffer.append(bu)
             self.trainer.append(tr)
+    
+    def reset_courier_num(self, num):
+        if num > self.num_agents:
+            for agent_id in range(num):
+                po = Policy(
+                    self.all_args,
+                    self.envs.observation_space[self.num_agents + agent_id],
+                    # share_observation_space[0], # add [0]
+                    self.envs.action_space[self.num_agents + agent_id],
+                    device=self.device,
+                )
+                self.policy.append(po)
+                
+            for agent_id in range(num):
+                tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
+                bu = SeparatedReplayBuffer(
+                    self.all_args,
+                    self.envs.observation_space[self.num_agents + agent_id],
+                    # share_observation_space[0], # add [0]
+                    self.envs.action_space[self.num_agents + agent_id],
+                )
+                self.buffer.append(bu)
+                self.trainer.append(tr)

@@ -150,10 +150,11 @@ class EnvRunner(Runner):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
             
             obs = self.envs.reset(episode % 4)
+            self.reset_courier_num(self.envs.envs_discrete[0].num_couriers)
             self.num_agents = self.envs.envs_discrete[0].num_couriers
 
             for step in range(self.episode_length):
-                # print("-"*25)
+                print("-"*25)
                 print(f"THIS IS STEP {step}")
                 # dead_count = 0 # end the code
 
