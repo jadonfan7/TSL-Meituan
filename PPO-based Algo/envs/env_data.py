@@ -769,7 +769,7 @@ class Map:
         couriers = list(couriers)
         
         M = 1e9
-        
+        min_cost = 0
         for order in all_orders:
             row = []
             for courier in couriers:
@@ -782,12 +782,15 @@ class Map:
                         formal_speed_fair = 0
                     speed_variation = avg_speed_fair - formal_speed_fair
                     cost =  speed_variation / price
+                    if cost < min_cost:
+                        min_cost = cost
                     row.append(cost)
                 else:
                     row.append(float(M))  # Set an infinite cost if the assignment is unreasonable
             cost_matrix.append(row)
 
         cost_matrix = np.array(cost_matrix)
+        cost_matrix += abs(min_cost)
 
         row_ind, col_ind = linear_sum_assignment(cost_matrix)        
 

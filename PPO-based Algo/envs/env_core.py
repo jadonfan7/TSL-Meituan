@@ -81,10 +81,10 @@ class EnvCore(object):
             index = self.map.couriers[0].capacity
 
             if np.argmax(action[:index]) > total_length - 1:
-                # reward -= 100
-                # order_index = np.random.randint(0, total_length)
-                agent.speed = 0
-                order_index = np.argmax(action[:index])
+                reward -= 100
+                order_index = np.random.randint(0, total_length)
+                # agent.speed = 0
+                # order_index = np.argmax(action[:index])
             else:
                 order_index = np.argmax(action[:index])
 
@@ -95,7 +95,6 @@ class EnvCore(object):
                     reward -= (agent.speed - 4) ** 2 * 100
                 else:
                     reward -= (agent.speed - 4) ** 2 * 50
-                # reward -= 100
 
             if order_index < waybill_length:
                 if agent.target_location == None:

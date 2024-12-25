@@ -189,7 +189,7 @@ def get_config():
     parser.add_argument(
         "--n_rollout_threads",
         type=int,
-        default=1, #5
+        default=5, #5
         help="Number of parallel envs for training rollouts",
     )
     # *************
@@ -203,7 +203,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=10, #1e5 2e6
+        default=25000, #1e5 2e6
         help="Number of environment steps to train (default: 10e6)",
     )
     # env parameters
@@ -217,7 +217,7 @@ def get_config():
 
     # *************
     # replay buffer parameters
-    parser.add_argument("--episode_length", type=int, default=5, help="Max length for any episode") #200
+    parser.add_argument("--episode_length", type=int, default=100, help="Max length for any episode") #200
 
     # network parameters
     parser.add_argument(
