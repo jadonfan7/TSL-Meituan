@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -159,8 +159,8 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -768,6 +768,8 @@ class Map:
         
         couriers = list(couriers)
         
+        M = 1e9
+        
         for order in all_orders:
             row = []
             for courier in couriers:
@@ -782,30 +784,32 @@ class Map:
                     cost =  speed_variation / price
                     row.append(cost)
                 else:
-                    row.append(float('inf'))  # Set an infinite cost if the assignment is unreasonable
+                    row.append(float(M))  # Set an infinite cost if the assignment is unreasonable
             cost_matrix.append(row)
 
         cost_matrix = np.array(cost_matrix)
-        
-        inf_rows = np.where(np.isinf(cost_matrix).all(axis=1))[0]  # rows are infinite
-        inf_cols = np.where(np.isinf(cost_matrix).all(axis=0))[0]  # columns are inf
-        
-        if inf_rows.size > 0 or inf_cols.size > 0 > 0:
-            valid_rows = [i for i in range(cost_matrix.shape[0]) if i not in inf_rows]
-            valid_cols = [i for i in range(cost_matrix.shape[1]) if i not in inf_cols]
 
-            valid_cost_matrix = cost_matrix[valid_rows, :][:, valid_cols]
+        row_ind, col_ind = linear_sum_assignment(cost_matrix)        
+
+        # inf_rows = np.where(np.isinf(cost_matrix).all(axis=1))[0]  # rows are infinite
+        # inf_cols = np.where(np.isinf(cost_matrix).all(axis=0))[0]  # columns are inf
+                
+        # if inf_rows.size > 0 or inf_cols.size > 0:
+        #     valid_rows = [i for i in range(cost_matrix.shape[0]) if i not in inf_rows]
+        #     valid_cols = [i for i in range(cost_matrix.shape[1]) if i not in inf_cols]
+
+        #     valid_cost_matrix = cost_matrix[valid_rows, :][:, valid_cols]
                         
-            row_ind_valid, col_ind_valid = linear_sum_assignment(valid_cost_matrix)
+        #     row_ind_valid, col_ind_valid = linear_sum_assignment(valid_cost_matrix)
             
-            row_ind = [valid_rows[i] for i in row_ind_valid]
-            col_ind = [valid_cols[i] for i in col_ind_valid]                
-        else:
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)        
+        #     row_ind = [valid_rows[i] for i in row_ind_valid]
+        #     col_ind = [valid_cols[i] for i in col_ind_valid]                
+        # else:
+        #     row_ind, col_ind = linear_sum_assignment(cost_matrix)        
         
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
-            if cost_matrix[order_index][courier_index] == float('inf'):
+            if cost_matrix[order_index][courier_index] == float(M):
                 continue  # Skip infeasible matches
             order = all_orders[order_index]
             assigned_courier = couriers[courier_index]

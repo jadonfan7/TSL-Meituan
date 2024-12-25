@@ -6,6 +6,7 @@ from runner.separated.base_runner import Runner
 import matplotlib.pyplot as plt
 
 from loguru import logger
+import numpy as np
 
 
 
@@ -939,7 +940,6 @@ class EnvRunner(Runner):
         plt.ylabel('Total Rewards')
         plt.title('Train: Reward over Episodes')
         plt.grid(True)
-        plt.legend()
         plt.savefig('Train_reward_curve.png')
         plt.close()
         
@@ -985,7 +985,6 @@ class EnvRunner(Runner):
         plt.ylabel('Order Reject Rate')
         plt.title('Train: order reject rate over Episodes')
         plt.grid(True)
-        plt.legend()
         plt.savefig('Train_order_reject_rate.png')
         plt.close()
         
@@ -997,11 +996,11 @@ class EnvRunner(Runner):
         var_reject = [r[5] for r in courier_reject_num_total]
         plt.figure(figsize=(12, 8))
         plt.plot(avg_reject0, label="Hired", color='blue')
-        plt.fill_between(range(len(avg_reject0)), np.array(avg_reject0) - np.array(var_reject0), np.array(avg_reject0) + np.array(var_reject0), color='blue', alpha=0.2)
+        plt.fill_between(range(len(avg_reject0)), np.array(avg_reject0) - np.array(np.sqrt(var_reject0)), np.array(avg_reject0) + np.array(np.sqrt(var_reject0)), color='blue', alpha=0.2)
         plt.plot(avg_reject1, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(avg_reject1)), np.array(avg_reject1) - np.array(var_reject1), np.array(avg_reject1) + np.array(var_reject1), color='orange', alpha=0.2)
+        plt.fill_between(range(len(avg_reject1)), np.array(avg_reject1) - np.array(np.sqrt(var_reject1)), np.array(avg_reject1) + np.array(np.sqrt(var_reject1)), color='orange', alpha=0.2)
         plt.plot(avg_reject, label="Courier", color='green')
-        plt.fill_between(range(len(avg_reject)), np.array(avg_reject) - np.array(var_reject), np.array(avg_reject) + np.array(var_reject), color='green', alpha=0.2)
+        plt.fill_between(range(len(avg_reject)), np.array(avg_reject) - np.array(np.sqrt(var_reject)), np.array(avg_reject) + np.array(np.sqrt(var_reject)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Rejection Number')
         plt.title("Train: courier's average rejection number")
@@ -1018,11 +1017,11 @@ class EnvRunner(Runner):
         var_price = [p[5] for p in order_price_total]
         plt.figure(figsize=(12, 8))
         plt.plot(price0, label="Hired", color='blue')
-        plt.fill_between(range(len(price0)), np.array(price0) - np.array(var_price0), np.array(price0) + np.array(var_price0), color='blue', alpha=0.2)
+        plt.fill_between(range(len(price0)), np.array(price0) - np.array(np.sqrt(var_price0)), np.array(price0) + np.array(np.sqrt(var_price0)), color='blue', alpha=0.2)
         plt.plot(price1, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(price1)), np.array(price1) - np.array(var_price1), np.array(price1) + np.array(var_price1), color='orange', alpha=0.2)
+        plt.fill_between(range(len(price1)), np.array(price1) - np.array(np.sqrt(var_price1)), np.array(price1) + np.array(np.sqrt(var_price1)), color='orange', alpha=0.2)
         plt.plot(price, label="Courier", color='green')
-        plt.fill_between(range(len(price)), np.array(price) - np.array(var_price), np.array(price) + np.array(var_price), color='green', alpha=0.2)
+        plt.fill_between(range(len(price)), np.array(price) - np.array(np.sqrt(var_price)), np.array(price) + np.array(np.sqrt(var_price)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Price of Order')
         plt.title('Train: average price of order')
@@ -1039,11 +1038,11 @@ class EnvRunner(Runner):
         var_courier_income = [i[5] for i in income_total]
         plt.figure(figsize=(12, 8))
         plt.plot(Hired_income, label="Hired", color='blue')
-        plt.fill_between(range(len(Hired_income)), np.array(Hired_income) - np.array(var_Hired_income), np.array(Hired_income) + np.array(var_Hired_income), color='blue', alpha=0.2)
+        plt.fill_between(range(len(Hired_income)), np.array(Hired_income) - np.array(np.sqrt(var_Hired_income)), np.array(Hired_income) + np.array(np.sqrt(var_Hired_income)), color='blue', alpha=0.2)
         plt.plot(Crowdsourced_income, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(Crowdsourced_income)), np.array(Crowdsourced_income) - np.array(var_Crowdsourced_income), np.array(Crowdsourced_income) + np.array(var_Crowdsourced_income), color='orange', alpha=0.2)
+        plt.fill_between(range(len(Crowdsourced_income)), np.array(Crowdsourced_income) - np.array(np.sqrt(var_Crowdsourced_income)), np.array(Crowdsourced_income) + np.array(np.sqrt(var_Crowdsourced_income)), color='orange', alpha=0.2)
         plt.plot(courier_income, label="Courier", color='green')
-        plt.fill_between(range(len(courier_income)), np.array(courier_income) - np.array(var_courier_income), np.array(courier_income) + np.array(var_courier_income), color='green', alpha=0.2)
+        plt.fill_between(range(len(courier_income)), np.array(courier_income) - np.array(np.sqrt(var_courier_income)), np.array(courier_income) + np.array(np.sqrt(var_courier_income)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Income per Courier')
         plt.title('Train: average income per courier')
@@ -1059,7 +1058,6 @@ class EnvRunner(Runner):
         plt.ylabel('Platform Total Cost')
         plt.title('Train: Platform Total Cost')
         plt.grid(True)
-        plt.legend()
         plt.savefig('Train_platform_total_cost.png')
         plt.close()
         
@@ -1071,11 +1069,11 @@ class EnvRunner(Runner):
         var_courier_finish = [f[5] for f in courier_finish_num_total]
         plt.figure(figsize=(12, 8))
         plt.plot(Hired_finish, label="Hired", color='blue')
-        plt.fill_between(range(len(Hired_finish)), np.array(Hired_finish) - np.array(var_Hired_finish), np.array(Hired_finish) + np.array(var_Hired_finish), color='blue', alpha=0.2)
+        plt.fill_between(range(len(Hired_finish)), np.array(Hired_finish) - np.array(np.sqrt(var_Hired_finish)), np.array(Hired_finish) + np.array(np.sqrt(var_Hired_finish)), color='blue', alpha=0.2)
         plt.plot(Crowdsourced_finish, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(Crowdsourced_finish)), np.array(Crowdsourced_finish) - np.array(var_Crowdsourced_finish), np.array(Crowdsourced_finish) + np.array(var_Crowdsourced_finish), color='orange', alpha=0.2)
+        plt.fill_between(range(len(Crowdsourced_finish)), np.array(Crowdsourced_finish) - np.array(np.sqrt(var_Crowdsourced_finish)), np.array(Crowdsourced_finish) + np.array(np.sqrt(var_Crowdsourced_finish)), color='orange', alpha=0.2)
         plt.plot(courier_finish, label="Courier", color='green')
-        plt.fill_between(range(len(courier_finish)), np.array(courier_finish) - np.array(var_courier_finish), np.array(courier_finish) + np.array(var_courier_finish), color='green', alpha=0.2)
+        plt.fill_between(range(len(courier_finish)), np.array(courier_finish) - np.array(np.sqrt(var_courier_finish)), np.array(courier_finish) + np.array(np.sqrt(var_courier_finish)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Finish per Courier')
         plt.title('Train: average finish per courier')
@@ -1092,11 +1090,11 @@ class EnvRunner(Runner):
         var_courier_leisure = [f[5] for f in leisure_time_total]
         plt.figure(figsize=(12, 8))
         plt.plot(Hired_leisure, label="Hired", color='blue')
-        plt.fill_between(range(len(Hired_leisure)), np.array(Hired_leisure) - np.array(var_Hired_leisure), np.array(Hired_leisure) + np.array(var_Hired_leisure), color='blue', alpha=0.2)
+        plt.fill_between(range(len(Hired_leisure)), np.array(Hired_leisure) - np.array(np.sqrt(var_Hired_leisure)), np.array(Hired_leisure) + np.array(np.sqrt(var_Hired_leisure)), color='blue', alpha=0.2)
         plt.plot(Crowdsourced_leisure, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(Crowdsourced_leisure)), np.array(Crowdsourced_leisure) - np.array(var_Crowdsourced_leisure), np.array(Crowdsourced_leisure) + np.array(var_Crowdsourced_leisure), color='orange', alpha=0.2)
+        plt.fill_between(range(len(Crowdsourced_leisure)), np.array(Crowdsourced_leisure) - np.array(np.sqrt(var_Crowdsourced_leisure)), np.array(Crowdsourced_leisure) + np.array(np.sqrt(var_Crowdsourced_leisure)), color='orange', alpha=0.2)
         plt.plot(courier_leisure, label="Courier", color='green')
-        plt.fill_between(range(len(courier_leisure)), np.array(courier_leisure) - np.array(var_courier_leisure), np.array(courier_leisure) + np.array(var_courier_leisure), color='green', alpha=0.2)
+        plt.fill_between(range(len(courier_leisure)), np.array(courier_leisure) - np.array(np.sqrt(var_courier_leisure)), np.array(courier_leisure) + np.array(np.sqrt(var_courier_leisure)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Leisure Time per Courier')
         plt.title('Train: average leisure time per courier')
@@ -1113,11 +1111,11 @@ class EnvRunner(Runner):
         var_courier_running = [f[5] for f in running_time_total]
         plt.figure(figsize=(12, 8))
         plt.plot(Hired_running, label="Hired", color='blue')
-        plt.fill_between(range(len(Hired_running)), np.array(Hired_running) - np.array(var_Hired_running), np.array(Hired_running) + np.array(var_Hired_running), color='blue', alpha=0.2)
+        plt.fill_between(range(len(Hired_running)), np.array(Hired_running) - np.array(np.sqrt(var_Hired_running)), np.array(Hired_running) + np.array(np.sqrt(var_Hired_running)), color='blue', alpha=0.2)
         plt.plot(Crowdsourced_running, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(Crowdsourced_running)), np.array(Crowdsourced_running) - np.array(var_Crowdsourced_running), np.array(Crowdsourced_running) + np.array(var_Crowdsourced_running), color='orange', alpha=0.2)
+        plt.fill_between(range(len(Crowdsourced_running)), np.array(Crowdsourced_running) - np.array(np.sqrt(var_Crowdsourced_running)), np.array(Crowdsourced_running) + np.array(np.sqrt(var_Crowdsourced_running)), color='orange', alpha=0.2)
         plt.plot(courier_running, label="Courier", color='green')
-        plt.fill_between(range(len(courier_running)), np.array(courier_running) - np.array(var_courier_running), np.array(courier_running) + np.array(var_courier_running), color='green', alpha=0.2)
+        plt.fill_between(range(len(courier_running)), np.array(courier_running) - np.array(np.sqrt(var_courier_running)), np.array(courier_running) + np.array(np.sqrt(var_courier_running)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average running Time per Courier')
         plt.title('Train: average running time per courier')
@@ -1142,18 +1140,18 @@ class EnvRunner(Runner):
         plt.close()
         
         order0_ETA = [e[0] for e in rate_of_ETA_usage]
-        var_order0_ETA = [e[1] for e in rate_of_ETA_usage]  # 假设方差数据在第二个位置
+        var_order0_ETA = [e[1] for e in rate_of_ETA_usage]
         order1_ETA = [e[2] for e in rate_of_ETA_usage]
-        var_order1_ETA = [e[3] for e in rate_of_ETA_usage]  # 假设方差数据在第四个位置
+        var_order1_ETA = [e[3] for e in rate_of_ETA_usage]
         order_ETA = [e[4] for e in rate_of_ETA_usage]
         var_order_ETA = [e[5] for e in rate_of_ETA_usage]
         plt.figure(figsize=(12, 8))
         plt.plot(order0_ETA, label="Hired", color='blue')
-        plt.fill_between(range(len(order0_ETA)), np.array(order0_ETA) - np.array(var_order0_ETA), np.array(order0_ETA) + np.array(var_order0_ETA), color='blue', alpha=0.2)
+        plt.fill_between(range(len(order0_ETA)), np.array(order0_ETA) - np.array(np.sqrt(var_order0_ETA)), np.array(order0_ETA) + np.array(np.sqrt(var_order0_ETA)), color='blue', alpha=0.2)
         plt.plot(order1_ETA, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(order1_ETA)), np.array(order1_ETA) - np.array(var_order1_ETA), np.array(order1_ETA) + np.array(var_order1_ETA), color='orange', alpha=0.2)
+        plt.fill_between(range(len(order1_ETA)), np.array(order1_ETA) - np.array(np.sqrt(var_order1_ETA)), np.array(order1_ETA) + np.array(np.sqrt(var_order1_ETA)), color='orange', alpha=0.2)
         plt.plot(order_ETA, label="Courier", color='green')
-        plt.fill_between(range(len(order_ETA)), np.array(order_ETA) - np.array(var_order_ETA), np.array(order_ETA) + np.array(var_order_ETA), color='green', alpha=0.2)
+        plt.fill_between(range(len(order_ETA)), np.array(order_ETA) - np.array(np.sqrt(var_order_ETA)), np.array(order_ETA) + np.array(np.sqrt(var_order_ETA)), color='green', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Rate of ETA Usage')
         plt.title('Train: rate of ETA usage over Episodes')
@@ -1172,37 +1170,49 @@ class EnvRunner(Runner):
         x1_var = [x[3] for x in algo1_eval_distance]
         x2 = [x[4] for x in algo1_eval_distance]
         x2_var = [x[5] for x in algo1_eval_distance]
-        x3 = [x[0] for x in algo1_eval_distance]
-        x3_var = [x[1] for x in algo1_eval_distance]
-        x4 = [x[2] for x in algo1_eval_distance]
-        x4_var = [x[3] for x in algo1_eval_distance]
-        x5 = [x[4] for x in algo1_eval_distance]
-        x5_var = [x[5] for x in algo1_eval_distance]
-        x6 = [x[0] for x in algo1_eval_distance]
-        x6_var = [x[1] for x in algo1_eval_distance]
-        x7 = [x[2] for x in algo1_eval_distance]
-        x7_var = [x[3] for x in algo1_eval_distance]
-        x8 = [x[4] for x in algo1_eval_distance]
-        x8_var = [x[5] for x in algo1_eval_distance]
+        x3 = [x[0] for x in algo2_eval_distance]
+        x3_var = [x[1] for x in algo2_eval_distance]
+        x4 = [x[2] for x in algo2_eval_distance]
+        x4_var = [x[3] for x in algo2_eval_distance]
+        x5 = [x[4] for x in algo2_eval_distance]
+        x5_var = [x[5] for x in algo2_eval_distance]
+        x6 = [x[0] for x in algo3_eval_distance]
+        x6_var = [x[1] for x in algo3_eval_distance]
+        x7 = [x[2] for x in algo3_eval_distance]
+        x7_var = [x[3] for x in algo3_eval_distance]
+        x8 = [x[4] for x in algo3_eval_distance]
+        x8_var = [x[5] for x in algo3_eval_distance]
+        x9 = [x[0] for x in algo4_eval_distance]
+        x9_var = [x[1] for x in algo4_eval_distance]
+        x10 = [x[2] for x in algo4_eval_distance]
+        x10_var = [x[3] for x in algo4_eval_distance]
+        x11 = [x[4] for x in algo4_eval_distance]
+        x11_var = [x[5] for x in algo4_eval_distance]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Total Distance', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Total Distance', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Total Distance', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Total Distance', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Distances')
         plt.title('Eval: Distance Comparison')
@@ -1215,6 +1225,7 @@ class EnvRunner(Runner):
         plt.plot(episodes, algo1_eval_episode_rewards, label='Algo1 Reward', color='blue', marker='o')
         plt.plot(episodes, algo2_eval_episode_rewards, label='Algo2 Reward', color='green', marker='o')
         plt.plot(episodes, algo3_eval_episode_rewards, label='Algo3 Reward', color='yellow', marker='o')
+        plt.plot(episodes, algo4_eval_episode_rewards, label='Algo4 Reward', color='red', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Total Reward')
         plt.title('Eval: Reward over Episodes')
@@ -1241,25 +1252,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_speed]
         x8 = [x[4] for x in algo3_eval_speed]
         x8_var = [x[5] for x in algo3_eval_speed]
+        x9 = [x[0] for x in algo4_eval_distance]
+        x9_var = [x[1] for x in algo4_eval_distance]
+        x10 = [x[2] for x in algo4_eval_distance]
+        x10_var = [x[3] for x in algo4_eval_distance]
+        x11 = [x[4] for x in algo4_eval_distance]
+        x11_var = [x[5] for x in algo4_eval_distance]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 average speed', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 average speed', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 average speed', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 average speed', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Speed')
         plt.title('Eval: Average Speed Comparison')
@@ -1267,7 +1290,7 @@ class EnvRunner(Runner):
         plt.legend()
         plt.savefig('Eval_Average_Speed.png')
         plt.close()
-
+        
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, [x[0] for x in algo1_eval_overspeed_rate], label='Algo1 Hired', color='blue', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo1_eval_overspeed_rate], label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
@@ -1278,6 +1301,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo3_eval_overspeed_rate], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo3_eval_overspeed_rate], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo3_eval_overspeed_rate], label='Algo3 Overspeed Rate', color='yellow', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo4_eval_overspeed_rate], label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo4_eval_overspeed_rate], label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo4_eval_overspeed_rate], label='Algo4 Overspeed Rate', color='red', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Overspeed Rate')
         plt.title('Eval: Overspeed Rate over Episodes')
@@ -1290,6 +1316,7 @@ class EnvRunner(Runner):
         plt.plot(episodes, algo1_eval_reject_rate, label='Algo1', color='blue', linestyle='--', marker='o')
         plt.plot(episodes, algo2_eval_reject_rate, label='Algo2', color='green', linestyle='--', marker='o')
         plt.plot(episodes, algo3_eval_reject_rate, label='Algo3', color='yellow', linestyle='--', marker='o')
+        plt.plot(episodes, algo4_eval_reject_rate, label='Algo4', color='red', linestyle='--', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Reject Rate')
         plt.title('Eval: Reject Rate over Episodes')
@@ -1316,25 +1343,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_reject]
         x8 = [x[4] for x in algo3_eval_reject]
         x8_var = [x[5] for x in algo3_eval_reject]
+        x9 = [x[0] for x in algo4_eval_reject]
+        x9_var = [x[1] for x in algo4_eval_reject]
+        x10 = [x[2] for x in algo4_eval_reject]
+        x10_var = [x[3] for x in algo4_eval_reject]
+        x11 = [x[4] for x in algo4_eval_reject]
+        x11_var = [x[5] for x in algo4_eval_reject]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Courier Reject Number', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Courier Reject Number', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Courier Reject Number', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Courier Reject Number', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Courier Reject Number')
         plt.title('Eval: Courier Reject Number over Episodes')
@@ -1361,25 +1400,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_order_price]
         x8 = [x[4] for x in algo3_eval_order_price]
         x8_var = [x[5] for x in algo3_eval_order_price]
+        x9 = [x[0] for x in algo4_eval_order_price]
+        x9_var = [x[1] for x in algo4_eval_order_price]
+        x10 = [x[2] for x in algo4_eval_order_price]
+        x10_var = [x[3] for x in algo4_eval_order_price]
+        x11 = [x[4] for x in algo4_eval_order_price]
+        x11_var = [x[5] for x in algo4_eval_order_price]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Average Order Price', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Average Order Price', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Average Order Price', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Average Order Price', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Order Price')
         plt.title('Eval: Average Order Price over Episodes')
@@ -1406,25 +1457,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_income]
         x8 = [x[4] for x in algo3_eval_income]
         x8_var = [x[5] for x in algo3_eval_income]
+        x9 = [x[0] for x in algo4_eval_income]
+        x9_var = [x[1] for x in algo4_eval_income]
+        x10 = [x[2] for x in algo4_eval_income]
+        x10_var = [x[3] for x in algo4_eval_income]
+        x11 = [x[4] for x in algo4_eval_income]
+        x11_var = [x[5] for x in algo4_eval_income]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Courier Average Income', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Courier Average Income', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Courier Average Income', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Courier Average Income', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Courier Average Income')
         plt.title('Eval: Courier Average Income over Episodes')
@@ -1437,6 +1500,7 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[6] for x in algo1_eval_income], label='Algo1', color='blue', linestyle='-', marker='o')
         plt.plot(episodes, [x[6] for x in algo2_eval_income], label='Algo2', color='green', linestyle='-', marker='o')
         plt.plot(episodes, [x[6] for x in algo3_eval_income], label='Algo3', color='yellow', linestyle='-', marker='o')
+        plt.plot(episodes, [x[6] for x in algo4_eval_income], label='Algo4', color='red', linestyle='-', marker='o')
         plt.xlabel('Episodes')
         plt.ylabel('Platform Total Cost')
         plt.title('Eval: Platform Total Cost over Episodes')
@@ -1444,7 +1508,7 @@ class EnvRunner(Runner):
         plt.legend()
         plt.savefig('Eval_platform_total_cost.png')
         plt.close()
-
+        
         x0 = [x[0] for x in algo1_eval_finish]
         x0_var = [x[1] for x in algo1_eval_finish]
         x1 = [x[2] for x in algo1_eval_finish]
@@ -1463,25 +1527,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_finish]
         x8 = [x[4] for x in algo3_eval_finish]
         x8_var = [x[5] for x in algo3_eval_finish]
+        x9 = [x[0] for x in algo4_eval_finish]
+        x9_var = [x[1] for x in algo4_eval_finish]
+        x10 = [x[2] for x in algo4_eval_finish]
+        x10_var = [x[3] for x in algo4_eval_finish]
+        x11 = [x[4] for x in algo4_eval_finish]
+        x11_var = [x[5] for x in algo4_eval_finish]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Average Finished Orders per Courier', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Average Finished Orders per Courier', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Average Finished Orders per Courier', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Average Finished Orders per Courier', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Finished Orders per Courier')
         plt.title('Eval: Average Finished Orders per Courier over Episodes')
@@ -1508,25 +1584,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_leisure]
         x8 = [x[4] for x in algo3_eval_leisure]
         x8_var = [x[5] for x in algo3_eval_leisure]
+        x9 = [x[0] for x in algo4_eval_leisure]
+        x9_var = [x[1] for x in algo4_eval_leisure]
+        x10 = [x[2] for x in algo4_eval_leisure]
+        x10_var = [x[3] for x in algo4_eval_leisure]
+        x11 = [x[4] for x in algo4_eval_leisure]
+        x11_var = [x[5] for x in algo4_eval_leisure]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Average Leisure Time', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Average Leisure Time', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Average Leisure Time', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Average Leisure Time', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average Leisure Time')
         plt.title('Eval: Average Leisure Time over Episodes')
@@ -1553,25 +1641,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_eval_running]
         x8 = [x[4] for x in algo3_eval_running]
         x8_var = [x[5] for x in algo3_eval_running]
+        x9 = [x[0] for x in algo4_eval_running]
+        x9_var = [x[1] for x in algo4_eval_running]
+        x10 = [x[2] for x in algo4_eval_running]
+        x10_var = [x[3] for x in algo4_eval_running]
+        x11 = [x[4] for x in algo4_eval_running]
+        x11_var = [x[5] for x in algo4_eval_running]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x2, label='Algo1 Average running Time', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
         plt.plot(episodes, x5, label='Algo2 Average running Time', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x8, label='Algo3 Average running Time', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 Average running Time', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('Average running Time')
         plt.title('Eval: Average running Time over Episodes')
@@ -1590,6 +1690,9 @@ class EnvRunner(Runner):
         plt.plot(episodes, [x[0] for x in algo3_rate_of_late_order], label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
         plt.plot(episodes, [x[1] for x in algo3_rate_of_late_order], label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
         plt.plot(episodes, [x[2] for x in algo3_rate_of_late_order], label='Algo3 Late Order Rate', color='yellow', linestyle='-', marker='^')
+        plt.plot(episodes, [x[0] for x in algo4_rate_of_late_order], label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.plot(episodes, [x[1] for x in algo4_rate_of_late_order], label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.plot(episodes, [x[2] for x in algo4_rate_of_late_order], label='Algo4 Late Order Rate', color='red', linestyle='-', marker='^')
         plt.xlabel('Episodes')
         plt.ylabel('Late Order Rate')
         plt.title('Eval: Late Order Rate over Episodes')
@@ -1616,25 +1719,37 @@ class EnvRunner(Runner):
         x7_var = [x[3] for x in algo3_rate_of_ETA_usage]
         x8 = [x[4] for x in algo3_rate_of_ETA_usage]
         x8_var = [x[5] for x in algo3_rate_of_ETA_usage]
+        x9 = [x[0] for x in algo4_rate_of_ETA_usage]
+        x9_var = [x[1] for x in algo4_rate_of_ETA_usage]
+        x10 = [x[2] for x in algo4_rate_of_ETA_usage]
+        x10_var = [x[3] for x in algo4_rate_of_ETA_usage]
+        x11 = [x[4] for x in algo4_rate_of_ETA_usage]
+        x11_var = [x[5] for x in algo4_rate_of_ETA_usage]
         plt.figure(figsize=(12, 8))
         plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(x0_var), np.array(x0) + np.array(x0_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(x1_var), np.array(x1) + np.array(x1_var), color='blue', alpha=0.2)
-        plt.plot(episodes, x2, label='Algo1 Late Order Rate', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(x2_var), np.array(x2) + np.array(x2_var), color='blue', alpha=0.2)
+        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
+        plt.plot(episodes, x2, label='Algo1 ETA Usage', color='blue', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
         plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(x3_var), np.array(x3) + np.array(x3_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
         plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(x4_var), np.array(x4) + np.array(x4_var), color='green', alpha=0.2)
-        plt.plot(episodes, x5, label='Algo2 Late Order Rate', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(x5_var), np.array(x5) + np.array(x5_var), color='green', alpha=0.2)
+        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
+        plt.plot(episodes, x5, label='Algo2 ETA Usage', color='green', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
         plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(x6_var), np.array(x6) + np.array(x6_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
         plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(x7_var), np.array(x7) + np.array(x7_var), color='yellow', alpha=0.2)
-        plt.plot(episodes, x8, label='Algo3 Late Order Rate', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(x8_var), np.array(x8) + np.array(x8_var), color='yellow', alpha=0.2)
+        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x8, label='Algo3 ETA Usage', color='yellow', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        plt.plot(episodes, x11, label='Algo4 ETA Usage', color='red', linestyle='-', marker='^')
+        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
         plt.xlabel('Episodes')
         plt.ylabel('ETA Usage Rate')
         plt.title('Eval: ETA Usage Rate over Episodes')
