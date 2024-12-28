@@ -30,9 +30,9 @@ class EnvRunner(Runner):
         rate_of_overspeed = []
         rate_of_late_order = []
         rate_of_ETA_usage = []
-        reject_rate = []
+        # reject_rate = []
         order_price_total = []
-        courier_reject_num_total = []
+        # courier_reject_num_total = []
         courier_finish_num_total = []
         leisure_time_total = []
         running_time_total = []
@@ -55,14 +55,14 @@ class EnvRunner(Runner):
         algo2_eval_overspeed_rate = []
         algo3_eval_overspeed_rate = []
         algo4_eval_overspeed_rate = []
-        algo1_eval_reject_rate = []
-        algo2_eval_reject_rate = []
-        algo3_eval_reject_rate = []
-        algo4_eval_reject_rate = []
-        algo1_eval_reject = []
-        algo2_eval_reject = []
-        algo3_eval_reject = []
-        algo4_eval_reject = []
+        # algo1_eval_reject_rate = []
+        # algo2_eval_reject_rate = []
+        # algo3_eval_reject_rate = []
+        # algo4_eval_reject_rate = []
+        # algo1_eval_reject = []
+        # algo2_eval_reject = []
+        # algo3_eval_reject = []
+        # algo4_eval_reject = []
         algo1_eval_order_price = []
         algo2_eval_order_price = []
         algo3_eval_order_price = []
@@ -110,8 +110,8 @@ class EnvRunner(Runner):
             count_overspeed1 = 0
             num_active_Crowdsourced = 0
 
-            count_reject_orders = 0
-            max_reject_num = 0
+            # count_reject_orders = 0
+            # max_reject_num = 0
 
             late_orders0 = 0
             late_orders1 = 0
@@ -128,8 +128,8 @@ class EnvRunner(Runner):
             order1_num = 0
             order_wait = 0
 
-            Hired_reject_num = []
-            Crowdsourced_reject_num = []
+            # Hired_reject_num = []
+            # Crowdsourced_reject_num = []
             
             Hired_finish_num = []
             Crowdsourced_finish_num = []
@@ -150,12 +150,13 @@ class EnvRunner(Runner):
                 for agent_id in range(self.num_agents):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
             
-            obs = self.envs.reset(episode % 4)
+            obs = self.envs.reset(episode % 5)
+            # obs = self.envs.reset(1)
             self.reset_courier_num(self.envs.envs_discrete[0].num_couriers)
             self.num_agents = self.envs.envs_discrete[0].num_couriers
 
             for step in range(self.episode_length):
-                print("-"*25)
+                # print("-"*25)
                 print(f"THIS IS STEP {step}")
                 # dead_count = 0 # end the code
 
@@ -241,7 +242,7 @@ class EnvRunner(Runner):
                     if c.courier_type == 0:
                         Hired_num += 1
                         Hired_distance_per_episode.append(c.travel_distance)
-                        Hired_reject_num.append(c.reject_order_num)
+                        # Hired_reject_num.append(c.reject_order_num)
                         Hired_finish_num.append(c.finish_order_num)
                         Hired_leisure_time.append(c.total_leisure_time)
                         Hired_running_time.append(c.total_running_time)
@@ -251,7 +252,7 @@ class EnvRunner(Runner):
                     else:
                         Crowdsourced_num += 1
                         Crowdsourced_distance_per_episode.append(c.travel_distance)
-                        Crowdsourced_reject_num.append(c.reject_order_num)
+                        # Crowdsourced_reject_num.append(c.reject_order_num)
                         Crowdsourced_finish_num.append(c.finish_order_num)
                         Crowdsourced_leisure_time.append(c.total_leisure_time)
                         Crowdsourced_running_time.append(c.total_running_time)
@@ -276,10 +277,10 @@ class EnvRunner(Runner):
                             else:
                                 ETA_usage1.append(o.ETA_usage)
                         
-                    if o.reject_count > 0:
-                        count_reject_orders += 1
-                        if max_reject_num <= o.reject_count:
-                            max_reject_num = o.reject_count
+                    # if o.reject_count > 0:
+                    #     count_reject_orders += 1
+                    #     if max_reject_num <= o.reject_count:
+                    #         max_reject_num = o.reject_count
                     
                     if o.status == 'wait_pair':
                         order_wait += 1
@@ -291,7 +292,8 @@ class EnvRunner(Runner):
                             order1_price.append(o.price)
                             order1_num += 1              
                             
-            print(f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
+            print(f"\nThis is Episode {episode+1}\n")                
+            print(f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
             episode_rewards.append(episode_reward_sum)
             print(f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
@@ -352,31 +354,31 @@ class EnvRunner(Runner):
             
             # ---------------------
             # order reject rate
-            reject_rate_per_episode = round(count_reject_orders / (order0_num + order1_num), 2) # reject once or twice or more
-            reject_rate.append(reject_rate_per_episode)
-            print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
-            self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
+            # reject_rate_per_episode = round(count_reject_orders / (order0_num + order1_num), 2) # reject once or twice or more
+            # reject_rate.append(reject_rate_per_episode)
+            # print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
+            # self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
             
             # ---------------------
             # courier reject number
-            avg_reject0 = round(np.mean(Hired_reject_num), 2)
-            var_reject0 = round(np.var(Hired_reject_num), 2)
-            avg_reject1 = round(np.mean(Crowdsourced_reject_num), 2)
-            var_reject1 = round(np.var(Crowdsourced_reject_num), 2)
-            avg_reject = round(np.mean(Hired_reject_num + Crowdsourced_reject_num), 2)
-            var_reject = round(np.var(Hired_reject_num + Crowdsourced_reject_num), 2)
-            courier_reject_num_total.append([avg_reject0, var_reject0, avg_reject1, var_reject1, avg_reject, var_reject])
-            print(
-                f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), "
-                f"Crowdsourced - {avg_reject1} (Var: {var_reject1}), "
-                f"Total - {avg_reject} (Var: {var_reject})"
-            )
-            self.writter.add_scalar('Reject Rate/Total', avg_reject, episode + 1)
-            self.writter.add_scalar('Reject Rate/Total_Var', var_reject, episode + 1)
-            self.writter.add_scalar('Reject Rate/Hired', avg_reject0, episode + 1)
-            self.writter.add_scalar('Reject Rate/Hired_Var', var_reject0, episode + 1)
-            self.writter.add_scalar('Reject Rate/Crowdsourced', avg_reject1, episode + 1)
-            self.writter.add_scalar('Reject Rate/Crowdsourced_Var', var_reject1, episode + 1)
+            # avg_reject0 = round(np.mean(Hired_reject_num), 2)
+            # var_reject0 = round(np.var(Hired_reject_num), 2)
+            # avg_reject1 = round(np.mean(Crowdsourced_reject_num), 2)
+            # var_reject1 = round(np.var(Crowdsourced_reject_num), 2)
+            # avg_reject = round(np.mean(Hired_reject_num + Crowdsourced_reject_num), 2)
+            # var_reject = round(np.var(Hired_reject_num + Crowdsourced_reject_num), 2)
+            # courier_reject_num_total.append([avg_reject0, var_reject0, avg_reject1, var_reject1, avg_reject, var_reject])
+            # print(
+            #     f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), "
+            #     f"Crowdsourced - {avg_reject1} (Var: {var_reject1}), "
+            #     f"Total - {avg_reject} (Var: {var_reject})"
+            # )
+            # self.writter.add_scalar('Reject Rate/Total', avg_reject, episode + 1)
+            # self.writter.add_scalar('Reject Rate/Total_Var', var_reject, episode + 1)
+            # self.writter.add_scalar('Reject Rate/Hired', avg_reject0, episode + 1)
+            # self.writter.add_scalar('Reject Rate/Hired_Var', var_reject0, episode + 1)
+            # self.writter.add_scalar('Reject Rate/Crowdsourced', avg_reject1, episode + 1)
+            # self.writter.add_scalar('Reject Rate/Crowdsourced_Var', var_reject1, episode + 1)
             
             # ---------------------
             # average order price for courier
@@ -471,13 +473,13 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average running Time/Crowdsourced_Var', var_running1, episode + 1)
             
             message = (
-                f"\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired\n"
+                f"\nThis is Train Episode {episode+1}\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired\n"
                 f"Average Travel Distance for Episode {episode+1}: Hired - {distance0} km (Var: {distance_var0}), Crowdsourced - {distance1} km (Var: {distance_var1}), Total - {distance} km (Var: {distance_var})\n"
                 f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}\n"
                 f"The average speed for Episode {episode+1}: Hired - {avg0_speed} m/s (Var: {var0_speed}), Crowdsourced - {avg1_speed} m/s (Var: {var1_speed}), Total - {avg_speed} m/s (Var: {var_speed})\n"
                 f"Rate of Overspeed for Episode {episode+1}: Hired - {overspeed0}, Crowdsourced - {overspeed1}, Total - {overspeed}\n"
-                f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
-                f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), Crowdsourced - {avg_reject1} (Var: {var_reject1}), Total - {avg_reject} (Var: {var_reject})\n"
+                # f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
+                # f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), Crowdsourced - {avg_reject1} (Var: {var_reject1}), Total - {avg_reject} (Var: {var_reject})\n"
                 f"The average price for Episode {episode+1}: Hired - {price_per_order0} dollar (Var: {var_price0}) with {order0_num} orders, Crowdsourced - {price_per_order1} dollar (Var: {var_price1}) with {order1_num} orders, Total - {price_per_order} dollar (Var: {var_price})\n"
                 f"The average income for Episode {episode+1}: Hired - {income0} dollar (Var: {var_income0}), Crowdsourced - {income1} dollar (Var: {var_income1}), Total - {income} dollar (Var: {var_income})\n"
                 f"The platform total cost is {platform_cost} dollar\n"
@@ -647,35 +649,35 @@ class EnvRunner(Runner):
                     algo4_overspeed1,
                     algo4_overspeed,
                     
-                    algo1_reject_rate_per_episode,
-                    algo2_reject_rate_per_episode,
-                    algo3_reject_rate_per_episode,
-                    algo4_reject_rate_per_episode,
+                    # algo1_reject_rate_per_episode,
+                    # algo2_reject_rate_per_episode,
+                    # algo3_reject_rate_per_episode,
+                    # algo4_reject_rate_per_episode,
                     
-                    algo1_reject0,
-                    algo1_reject1,
-                    algo1_reject,
-                    algo2_reject0,
-                    algo2_reject1,
-                    algo2_reject,
-                    algo3_reject0,
-                    algo3_reject1,
-                    algo3_reject,
-                    algo4_reject0,
-                    algo4_reject1,
-                    algo4_reject,
-                    algo1_var0_reject,
-                    algo1_var1_reject,
-                    algo1_var_reject,
-                    algo2_var0_reject,
-                    algo2_var1_reject,
-                    algo2_var_reject,
-                    algo3_var0_reject,
-                    algo3_var1_reject,
-                    algo3_var_reject,
-                    algo4_var0_reject,
-                    algo4_var1_reject,
-                    algo4_var_reject,
+                    # algo1_reject0,
+                    # algo1_reject1,
+                    # algo1_reject,
+                    # algo2_reject0,
+                    # algo2_reject1,
+                    # algo2_reject,
+                    # algo3_reject0,
+                    # algo3_reject1,
+                    # algo3_reject,
+                    # algo4_reject0,
+                    # algo4_reject1,
+                    # algo4_reject,
+                    # algo1_var0_reject,
+                    # algo1_var1_reject,
+                    # algo1_var_reject,
+                    # algo2_var0_reject,
+                    # algo2_var1_reject,
+                    # algo2_var_reject,
+                    # algo3_var0_reject,
+                    # algo3_var1_reject,
+                    # algo3_var_reject,
+                    # algo4_var0_reject,
+                    # algo4_var1_reject,
+                    # algo4_var_reject,
                     
                     algo1_price_per_order0,
                     algo1_price_per_order1,
@@ -865,15 +867,15 @@ class EnvRunner(Runner):
                 algo3_eval_overspeed_rate.append([algo3_overspeed0, algo3_overspeed1, algo3_overspeed])
                 algo4_eval_overspeed_rate.append([algo4_overspeed0, algo4_overspeed1, algo4_overspeed])
                 
-                algo1_eval_reject_rate.append(algo1_reject_rate_per_episode)
-                algo2_eval_reject_rate.append(algo2_reject_rate_per_episode)
-                algo3_eval_reject_rate.append(algo3_reject_rate_per_episode)
-                algo4_eval_reject_rate.append(algo4_reject_rate_per_episode)
+                # algo1_eval_reject_rate.append(algo1_reject_rate_per_episode)
+                # algo2_eval_reject_rate.append(algo2_reject_rate_per_episode)
+                # algo3_eval_reject_rate.append(algo3_reject_rate_per_episode)
+                # algo4_eval_reject_rate.append(algo4_reject_rate_per_episode)
 
-                algo1_eval_reject.append([algo1_reject0, algo1_var0_reject, algo1_reject1, algo1_var1_reject, algo1_reject, algo1_var_reject])
-                algo2_eval_reject.append([algo2_reject0, algo2_var0_reject, algo2_reject1, algo2_var1_reject, algo2_reject, algo2_var_reject])
-                algo3_eval_reject.append([algo3_reject0, algo3_var0_reject, algo3_reject1, algo3_var1_reject, algo3_reject, algo3_var_reject])
-                algo4_eval_reject.append([algo4_reject0, algo4_var0_reject, algo4_reject1, algo4_var1_reject, algo4_reject, algo4_var_reject])
+                # algo1_eval_reject.append([algo1_reject0, algo1_var0_reject, algo1_reject1, algo1_var1_reject, algo1_reject, algo1_var_reject])
+                # algo2_eval_reject.append([algo2_reject0, algo2_var0_reject, algo2_reject1, algo2_var1_reject, algo2_reject, algo2_var_reject])
+                # algo3_eval_reject.append([algo3_reject0, algo3_var0_reject, algo3_reject1, algo3_var1_reject, algo3_reject, algo3_var_reject])
+                # algo4_eval_reject.append([algo4_reject0, algo4_var0_reject, algo4_reject1, algo4_var1_reject, algo4_reject, algo4_var_reject])
 
                 algo1_eval_order_price.append([algo1_price_per_order0, algo1_var0_price, algo1_price_per_order1, algo1_var1_price, algo1_price_per_order, algo1_var_price])
                 algo2_eval_order_price.append([algo2_price_per_order0, algo2_var0_price, algo2_price_per_order1, algo2_var1_price, algo2_price_per_order, algo2_var_price])
@@ -979,35 +981,35 @@ class EnvRunner(Runner):
         plt.savefig('Train_rate_of_overspeed.png')
         plt.close()
         
-        plt.figure(figsize=(12, 8))
-        plt.plot(reject_rate)
-        plt.xlabel('Episodes')
-        plt.ylabel('Order Reject Rate')
-        plt.title('Train: order reject rate over Episodes')
-        plt.grid(True)
-        plt.savefig('Train_order_reject_rate.png')
-        plt.close()
+        # plt.figure(figsize=(12, 8))
+        # plt.plot(reject_rate)
+        # plt.xlabel('Episodes')
+        # plt.ylabel('Order Reject Rate')
+        # plt.title('Train: order reject rate over Episodes')
+        # plt.grid(True)
+        # plt.savefig('Train_order_reject_rate.png')
+        # plt.close()
         
-        avg_reject0 = [r[0] for r in courier_reject_num_total]
-        var_reject0 = [r[1] for r in courier_reject_num_total]
-        avg_reject1 = [r[2] for r in courier_reject_num_total]
-        var_reject1 = [r[3] for r in courier_reject_num_total]
-        avg_reject = [r[4] for r in courier_reject_num_total]
-        var_reject = [r[5] for r in courier_reject_num_total]
-        plt.figure(figsize=(12, 8))
-        plt.plot(avg_reject0, label="Hired", color='blue')
-        plt.fill_between(range(len(avg_reject0)), np.array(avg_reject0) - np.array(np.sqrt(var_reject0)), np.array(avg_reject0) + np.array(np.sqrt(var_reject0)), color='blue', alpha=0.2)
-        plt.plot(avg_reject1, label="Crowdsourced Courier", color='orange')
-        plt.fill_between(range(len(avg_reject1)), np.array(avg_reject1) - np.array(np.sqrt(var_reject1)), np.array(avg_reject1) + np.array(np.sqrt(var_reject1)), color='orange', alpha=0.2)
-        plt.plot(avg_reject, label="Courier", color='green')
-        plt.fill_between(range(len(avg_reject)), np.array(avg_reject) - np.array(np.sqrt(var_reject)), np.array(avg_reject) + np.array(np.sqrt(var_reject)), color='green', alpha=0.2)
-        plt.xlabel('Episodes')
-        plt.ylabel('Average Rejection Number')
-        plt.title("Train: courier's average rejection number")
-        plt.grid(True)
-        plt.legend()
-        plt.savefig('Train_avg_rejection_num.png')
-        plt.close()
+        # avg_reject0 = [r[0] for r in courier_reject_num_total]
+        # var_reject0 = [r[1] for r in courier_reject_num_total]
+        # avg_reject1 = [r[2] for r in courier_reject_num_total]
+        # var_reject1 = [r[3] for r in courier_reject_num_total]
+        # avg_reject = [r[4] for r in courier_reject_num_total]
+        # var_reject = [r[5] for r in courier_reject_num_total]
+        # plt.figure(figsize=(12, 8))
+        # plt.plot(avg_reject0, label="Hired", color='blue')
+        # plt.fill_between(range(len(avg_reject0)), np.array(avg_reject0) - np.array(np.sqrt(var_reject0)), np.array(avg_reject0) + np.array(np.sqrt(var_reject0)), color='blue', alpha=0.2)
+        # plt.plot(avg_reject1, label="Crowdsourced Courier", color='orange')
+        # plt.fill_between(range(len(avg_reject1)), np.array(avg_reject1) - np.array(np.sqrt(var_reject1)), np.array(avg_reject1) + np.array(np.sqrt(var_reject1)), color='orange', alpha=0.2)
+        # plt.plot(avg_reject, label="Courier", color='green')
+        # plt.fill_between(range(len(avg_reject)), np.array(avg_reject) - np.array(np.sqrt(var_reject)), np.array(avg_reject) + np.array(np.sqrt(var_reject)), color='green', alpha=0.2)
+        # plt.xlabel('Episodes')
+        # plt.ylabel('Average Rejection Number')
+        # plt.title("Train: courier's average rejection number")
+        # plt.grid(True)
+        # plt.legend()
+        # plt.savefig('Train_avg_rejection_num.png')
+        # plt.close()
         
         price0 = [p[0] for p in order_price_total]
         var_price0 = [p[1] for p in order_price_total]
@@ -1312,75 +1314,75 @@ class EnvRunner(Runner):
         plt.savefig('Eval_Overspeed_Rate.png')
         plt.close()
         
-        plt.figure(figsize=(12, 8))
-        plt.plot(episodes, algo1_eval_reject_rate, label='Algo1', color='blue', linestyle='--', marker='o')
-        plt.plot(episodes, algo2_eval_reject_rate, label='Algo2', color='green', linestyle='--', marker='o')
-        plt.plot(episodes, algo3_eval_reject_rate, label='Algo3', color='yellow', linestyle='--', marker='o')
-        plt.plot(episodes, algo4_eval_reject_rate, label='Algo4', color='red', linestyle='--', marker='o')
-        plt.xlabel('Episodes')
-        plt.ylabel('Reject Rate')
-        plt.title('Eval: Reject Rate over Episodes')
-        plt.grid(True)
-        plt.legend()
-        plt.savefig('Eval_Reject_Rate.png')
-        plt.close()
+        # plt.figure(figsize=(12, 8))
+        # plt.plot(episodes, algo1_eval_reject_rate, label='Algo1', color='blue', linestyle='--', marker='o')
+        # plt.plot(episodes, algo2_eval_reject_rate, label='Algo2', color='green', linestyle='--', marker='o')
+        # plt.plot(episodes, algo3_eval_reject_rate, label='Algo3', color='yellow', linestyle='--', marker='o')
+        # plt.plot(episodes, algo4_eval_reject_rate, label='Algo4', color='red', linestyle='--', marker='o')
+        # plt.xlabel('Episodes')
+        # plt.ylabel('Reject Rate')
+        # plt.title('Eval: Reject Rate over Episodes')
+        # plt.grid(True)
+        # plt.legend()
+        # plt.savefig('Eval_Reject_Rate.png')
+        # plt.close()
 
-        x0 = [x[0] for x in algo1_eval_reject]
-        x0_var = [x[1] for x in algo1_eval_reject]
-        x1 = [x[2] for x in algo1_eval_reject]
-        x1_var = [x[3] for x in algo1_eval_reject]
-        x2 = [x[4] for x in algo1_eval_reject]
-        x2_var = [x[5] for x in algo1_eval_reject]
-        x3 = [x[0] for x in algo2_eval_reject]
-        x3_var = [x[1] for x in algo2_eval_reject]
-        x4 = [x[2] for x in algo2_eval_reject]
-        x4_var = [x[3] for x in algo2_eval_reject]
-        x5 = [x[4] for x in algo2_eval_reject]
-        x5_var = [x[5] for x in algo2_eval_reject]
-        x6 = [x[0] for x in algo3_eval_reject]
-        x6_var = [x[1] for x in algo3_eval_reject]
-        x7 = [x[2] for x in algo3_eval_reject]
-        x7_var = [x[3] for x in algo3_eval_reject]
-        x8 = [x[4] for x in algo3_eval_reject]
-        x8_var = [x[5] for x in algo3_eval_reject]
-        x9 = [x[0] for x in algo4_eval_reject]
-        x9_var = [x[1] for x in algo4_eval_reject]
-        x10 = [x[2] for x in algo4_eval_reject]
-        x10_var = [x[3] for x in algo4_eval_reject]
-        x11 = [x[4] for x in algo4_eval_reject]
-        x11_var = [x[5] for x in algo4_eval_reject]
-        plt.figure(figsize=(12, 8))
-        plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
-        plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
-        plt.plot(episodes, x2, label='Algo1 Courier Reject Number', color='blue', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
-        plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
-        plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
-        plt.plot(episodes, x5, label='Algo2 Courier Reject Number', color='green', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
-        plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
-        plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
-        plt.plot(episodes, x8, label='Algo3 Courier Reject Number', color='yellow', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
-        plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
-        plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
-        plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
-        plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
-        plt.plot(episodes, x11, label='Algo4 Courier Reject Number', color='red', linestyle='-', marker='^')
-        plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
-        plt.xlabel('Episodes')
-        plt.ylabel('Courier Reject Number')
-        plt.title('Eval: Courier Reject Number over Episodes')
-        plt.grid(True)
-        plt.legend()
-        plt.savefig('Eval_Courier_Reject_Number.png')
-        plt.close()
+        # x0 = [x[0] for x in algo1_eval_reject]
+        # x0_var = [x[1] for x in algo1_eval_reject]
+        # x1 = [x[2] for x in algo1_eval_reject]
+        # x1_var = [x[3] for x in algo1_eval_reject]
+        # x2 = [x[4] for x in algo1_eval_reject]
+        # x2_var = [x[5] for x in algo1_eval_reject]
+        # x3 = [x[0] for x in algo2_eval_reject]
+        # x3_var = [x[1] for x in algo2_eval_reject]
+        # x4 = [x[2] for x in algo2_eval_reject]
+        # x4_var = [x[3] for x in algo2_eval_reject]
+        # x5 = [x[4] for x in algo2_eval_reject]
+        # x5_var = [x[5] for x in algo2_eval_reject]
+        # x6 = [x[0] for x in algo3_eval_reject]
+        # x6_var = [x[1] for x in algo3_eval_reject]
+        # x7 = [x[2] for x in algo3_eval_reject]
+        # x7_var = [x[3] for x in algo3_eval_reject]
+        # x8 = [x[4] for x in algo3_eval_reject]
+        # x8_var = [x[5] for x in algo3_eval_reject]
+        # x9 = [x[0] for x in algo4_eval_reject]
+        # x9_var = [x[1] for x in algo4_eval_reject]
+        # x10 = [x[2] for x in algo4_eval_reject]
+        # x10_var = [x[3] for x in algo4_eval_reject]
+        # x11 = [x[4] for x in algo4_eval_reject]
+        # x11_var = [x[5] for x in algo4_eval_reject]
+        # plt.figure(figsize=(12, 8))
+        # plt.plot(episodes, x0, label='Algo1 Hired', color='blue', linestyle='--', marker='o')
+        # plt.fill_between(episodes, np.array(x0) - np.array(np.sqrt(x0_var)), np.array(x0) + np.array(np.sqrt(x0_var)), color='blue', alpha=0.2)
+        # plt.plot(episodes, x1, label='Algo1 Crowdsourced', color='blue', linestyle='-.', marker='s')
+        # plt.fill_between(episodes, np.array(x1) - np.array(np.sqrt(x1_var)), np.array(x1) + np.array(np.sqrt(x1_var)), color='blue', alpha=0.2)
+        # plt.plot(episodes, x2, label='Algo1 Courier Reject Number', color='blue', linestyle='-', marker='^')
+        # plt.fill_between(episodes, np.array(x2) - np.array(np.sqrt(x2_var)), np.array(x2) + np.array(np.sqrt(x2_var)), color='blue', alpha=0.2)
+        # plt.plot(episodes, x3, label='Algo2 Hired', color='green', linestyle='--', marker='o')
+        # plt.fill_between(episodes, np.array(x3) - np.array(np.sqrt(x3_var)), np.array(x3) + np.array(np.sqrt(x3_var)), color='green', alpha=0.2)
+        # plt.plot(episodes, x4, label='Algo2 Crowdsourced', color='green', linestyle='-.', marker='s')
+        # plt.fill_between(episodes, np.array(x4) - np.array(np.sqrt(x4_var)), np.array(x4) + np.array(np.sqrt(x4_var)), color='green', alpha=0.2)
+        # plt.plot(episodes, x5, label='Algo2 Courier Reject Number', color='green', linestyle='-', marker='^')
+        # plt.fill_between(episodes, np.array(x5) - np.array(np.sqrt(x5_var)), np.array(x5) + np.array(np.sqrt(x5_var)), color='green', alpha=0.2)
+        # plt.plot(episodes, x6, label='Algo3 Hired', color='yellow', linestyle='--', marker='o')
+        # plt.fill_between(episodes, np.array(x6) - np.array(np.sqrt(x6_var)), np.array(x6) + np.array(np.sqrt(x6_var)), color='yellow', alpha=0.2)
+        # plt.plot(episodes, x7, label='Algo3 Crowdsourced', color='yellow', linestyle='-.', marker='s')
+        # plt.fill_between(episodes, np.array(x7) - np.array(np.sqrt(x7_var)), np.array(x7) + np.array(np.sqrt(x7_var)), color='yellow', alpha=0.2)
+        # plt.plot(episodes, x8, label='Algo3 Courier Reject Number', color='yellow', linestyle='-', marker='^')
+        # plt.fill_between(episodes, np.array(x8) - np.array(np.sqrt(x8_var)), np.array(x8) + np.array(np.sqrt(x8_var)), color='yellow', alpha=0.2)
+        # plt.plot(episodes, x9, label='Algo4 Hired', color='red', linestyle='--', marker='o')
+        # plt.fill_between(episodes, np.array(x9) - np.array(np.sqrt(x9_var)), np.array(x9) + np.array(np.sqrt(x9_var)), color='red', alpha=0.2)
+        # plt.plot(episodes, x10, label='Algo4 Crowdsourced', color='red', linestyle='-.', marker='s')
+        # plt.fill_between(episodes, np.array(x10) - np.array(np.sqrt(x10_var)), np.array(x10) + np.array(np.sqrt(x10_var)), color='red', alpha=0.2)
+        # plt.plot(episodes, x11, label='Algo4 Courier Reject Number', color='red', linestyle='-', marker='^')
+        # plt.fill_between(episodes, np.array(x11) - np.array(np.sqrt(x11_var)), np.array(x11) + np.array(np.sqrt(x11_var)), color='red', alpha=0.2)
+        # plt.xlabel('Episodes')
+        # plt.ylabel('Courier Reject Number')
+        # plt.title('Eval: Courier Reject Number over Episodes')
+        # plt.grid(True)
+        # plt.legend()
+        # plt.savefig('Eval_Courier_Reject_Number.png')
+        # plt.close()
         
         x0 = [x[0] for x in algo1_eval_order_price]
         x0_var = [x[1] for x in algo1_eval_order_price]
@@ -1868,8 +1870,8 @@ class EnvRunner(Runner):
     @torch.no_grad()
     def eval(self, total_num_steps):
         
-        eval_obs = self.eval_envs.reset(4)
-        
+        # eval_obs = self.eval_envs.reset(4)
+        eval_obs = self.eval_envs.reset(5)
         algo1_Hired_num = 0
         algo1_Crowdsourced_num = 0
         algo1_Crowdsourced_on = 0
@@ -1915,14 +1917,14 @@ class EnvRunner(Runner):
         algo4_num_active_couriers0 = 0
         algo4_num_active_couriers1 = 0
         
-        algo1_count_reject_orders = 0
-        algo1_max_reject_num = 0
-        algo2_count_reject_orders = 0
-        algo2_max_reject_num = 0
-        algo3_count_reject_orders = 0
-        algo3_max_reject_num = 0
-        algo4_count_reject_orders = 0
-        algo4_max_reject_num = 0
+        # algo1_count_reject_orders = 0
+        # algo1_max_reject_num = 0
+        # algo2_count_reject_orders = 0
+        # algo2_max_reject_num = 0
+        # algo3_count_reject_orders = 0
+        # algo3_max_reject_num = 0
+        # algo4_count_reject_orders = 0
+        # algo4_max_reject_num = 0
 
         algo1_late_orders0 = 0
         algo1_late_orders1 = 0
@@ -1977,14 +1979,14 @@ class EnvRunner(Runner):
         platform_cost3 = 0
         platform_cost4 = 0
         
-        algo1_Hired_reject_num = []
-        algo1_Crowdsourced_reject_num = []
-        algo2_Hired_reject_num = []
-        algo2_Crowdsourced_reject_num = []
-        algo3_Hired_reject_num = []
-        algo3_Crowdsourced_reject_num = []
-        algo4_Hired_reject_num = []
-        algo4_Crowdsourced_reject_num = []
+        # algo1_Hired_reject_num = []
+        # algo1_Crowdsourced_reject_num = []
+        # algo2_Hired_reject_num = []
+        # algo2_Crowdsourced_reject_num = []
+        # algo3_Hired_reject_num = []
+        # algo3_Crowdsourced_reject_num = []
+        # algo4_Hired_reject_num = []
+        # algo4_Crowdsourced_reject_num = []
         
         algo1_Hired_finish_num = []
         algo1_Crowdsourced_finish_num = []
@@ -2044,25 +2046,27 @@ class EnvRunner(Runner):
         )
         eval_masks = np.ones((self.n_eval_rollout_threads, self.eval_num_agents, 1), dtype=np.float32)
 
-        for eval_step in range(self.episode_length):
+        for eval_step in range(self.eval_episodes_length):
             if self.eval_num_agents > self.num_agents:
+                print(self.eval_num_agents)
+                print(self.num_agents)
                 break
             
             print("-"*25)
-            print(f"THIS IS STEP {eval_step}")
+            print(f"THIS IS EVAL STEP {eval_step}")
 
             for i in range(self.eval_envs.num_envs):
                 
-                # print(f"ENVIRONMENT {i+1}")
+                print(f"ENVIRONMENT {i+1}")
 
-                # print("Couriers:")
-                # for c in self.eval_envs.envs_discrete[i].couriers:
-                #     if c.state == 'active':
-                #         print(c)
-                # print("Orders:")
-                # for o in self.eval_envs.envs_discrete[i].orders:
-                #     print(o)  
-                # print("\n")
+                print("Couriers:")
+                for c in self.eval_envs.envs_discrete[i].couriers:
+                    if c.state == 'active':
+                        print(c)
+                print("Orders:")
+                for o in self.eval_envs.envs_discrete[i].orders:
+                    print(o)  
+                print("\n")
                 
                 self.log_env(1, eval_step, i, eval=True)
                 
@@ -2193,7 +2197,7 @@ class EnvRunner(Runner):
                     if c.courier_type == 0:
                         algo1_Hired_num += 1
                         algo1_Hired_distance_per_episode.append(c.travel_distance)
-                        algo1_Hired_reject_num.append(c.reject_order_num)
+                        # algo1_Hired_reject_num.append(c.reject_order_num)
                         algo1_Hired_finish_num.append(c.finish_order_num)
                         algo1_Hired_leisure_time.append(c.total_leisure_time)
                         algo1_Hired_running_time.append(c.total_running_time)
@@ -2203,7 +2207,7 @@ class EnvRunner(Runner):
                     else:
                         algo1_Crowdsourced_num += 1
                         algo1_Crowdsourced_distance_per_episode.append(c.travel_distance)
-                        algo1_Crowdsourced_reject_num.append(c.reject_order_num)
+                        # algo1_Crowdsourced_reject_num.append(c.reject_order_num)
                         algo1_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo1_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo1_Crowdsourced_running_time.append(c.total_running_time)
@@ -2250,7 +2254,7 @@ class EnvRunner(Runner):
                     if c.courier_type == 0:
                         algo2_Hired_num += 1
                         algo2_Hired_distance_per_episode.append(c.travel_distance)
-                        algo2_Hired_reject_num.append(c.reject_order_num)
+                        # algo2_Hired_reject_num.append(c.reject_order_num)
                         algo2_Hired_finish_num.append(c.finish_order_num)
                         algo2_Hired_leisure_time.append(c.total_leisure_time)
                         algo2_Hired_running_time.append(c.total_running_time)
@@ -2260,7 +2264,7 @@ class EnvRunner(Runner):
                     else:
                         algo2_Crowdsourced_num += 1
                         algo2_Crowdsourced_distance_per_episode.append(c.travel_distance)
-                        algo2_Crowdsourced_reject_num.append(c.reject_order_num)
+                        # algo2_Crowdsourced_reject_num.append(c.reject_order_num)
                         algo2_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo2_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo2_Crowdsourced_running_time.append(c.total_running_time)
@@ -2305,7 +2309,7 @@ class EnvRunner(Runner):
                     if c.courier_type == 0:
                         algo3_Hired_num += 1
                         algo3_Hired_distance_per_episode.append(c.travel_distance)
-                        algo3_Hired_reject_num.append(c.reject_order_num)
+                        # algo3_Hired_reject_num.append(c.reject_order_num)
                         algo3_Hired_finish_num.append(c.finish_order_num)
                         algo3_Hired_leisure_time.append(c.total_leisure_time)
                         algo3_Hired_running_time.append(c.total_running_time)
@@ -2315,7 +2319,7 @@ class EnvRunner(Runner):
                     else:
                         algo3_Crowdsourced_num += 1
                         algo3_Crowdsourced_distance_per_episode.append(c.travel_distance)
-                        algo3_Crowdsourced_reject_num.append(c.reject_order_num)
+                        # algo3_Crowdsourced_reject_num.append(c.reject_order_num)
                         algo3_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo3_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo3_Crowdsourced_running_time.append(c.total_running_time)
@@ -2360,7 +2364,7 @@ class EnvRunner(Runner):
                     if c.courier_type == 0:
                         algo4_Hired_num += 1
                         algo4_Hired_distance_per_episode.append(c.travel_distance)
-                        algo4_Hired_reject_num.append(c.reject_order_num)
+                        # algo4_Hired_reject_num.append(c.reject_order_num)
                         algo4_Hired_finish_num.append(c.finish_order_num)
                         algo4_Hired_leisure_time.append(c.total_leisure_time)
                         algo4_Hired_running_time.append(c.total_running_time)
@@ -2370,7 +2374,7 @@ class EnvRunner(Runner):
                     else:
                         algo4_Crowdsourced_num += 1
                         algo4_Crowdsourced_distance_per_episode.append(c.travel_distance)
-                        algo4_Crowdsourced_reject_num.append(c.reject_order_num)
+                        # algo4_Crowdsourced_reject_num.append(c.reject_order_num)
                         algo4_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo4_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo4_Crowdsourced_running_time.append(c.total_running_time)
@@ -2395,10 +2399,10 @@ class EnvRunner(Runner):
                             else:
                                 algo4_ETA_usage1.append(o.ETA_usage)
                             
-                    if o.reject_count > 0:
-                        algo4_count_reject_orders += 1
-                        if algo4_max_reject_num <= o.reject_count:
-                            algo4_max_reject_num = o.reject_count
+                    # if o.reject_count > 0:
+                    #     algo4_count_reject_orders += 1
+                    #     if algo4_max_reject_num <= o.reject_count:
+                    #         algo4_max_reject_num = o.reject_count
                     
                     if o.status == 'wait_pair':
                         algo4_order_wait += 1
@@ -2593,87 +2597,87 @@ class EnvRunner(Runner):
         
         # -----------------------
         # Order Reject Rate
-        algo1_reject_rate_per_episode = round(algo1_count_reject_orders / len(self.eval_envs.envs_discrete[0].orders), 2)
-        algo2_reject_rate_per_episode = round(algo2_count_reject_orders / len(self.eval_envs.envs_discrete[1].orders), 2)
-        algo3_reject_rate_per_episode = round(algo3_count_reject_orders / len(self.eval_envs.envs_discrete[2].orders), 2)
+        # algo1_reject_rate_per_episode = round(algo1_count_reject_orders / len(self.eval_envs.envs_discrete[0].orders), 2)
+        # algo2_reject_rate_per_episode = round(algo2_count_reject_orders / len(self.eval_envs.envs_discrete[1].orders), 2)
+        # algo3_reject_rate_per_episode = round(algo3_count_reject_orders / len(self.eval_envs.envs_discrete[2].orders), 2)
         
-        algo4_reject_rate_per_episode = round(algo4_count_reject_orders / len(self.eval_envs.envs_discrete[3].orders), 2)
+        # algo4_reject_rate_per_episode = round(algo4_count_reject_orders / len(self.eval_envs.envs_discrete[3].orders), 2)
 
-        print("Reject Rate for Evaluation Between Algos:")
-        print(f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most")
-        print(f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most")
-        print(f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most")
+        # print("Reject Rate for Evaluation Between Algos:")
+        # print(f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most")
+        # print(f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most")
+        # print(f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most")
         
-        print(f"Algo4: {algo4_reject_rate_per_episode} and the order is rejected by {algo4_max_reject_num} times at most")
+        # print(f"Algo4: {algo4_reject_rate_per_episode} and the order is rejected by {algo4_max_reject_num} times at most")
 
-        self.writter.add_scalar('Eval Reject rate/Algo1', algo1_reject_rate_per_episode, self.eval_num)
-        self.writter.add_scalar('Eval Reject rate/Algo2', algo2_reject_rate_per_episode, self.eval_num)
-        self.writter.add_scalar('Eval Reject rate/Algo3', algo3_reject_rate_per_episode, self.eval_num)
-        self.writter.add_scalar('Eval Reject rate/Algo4', algo4_reject_rate_per_episode, self.eval_num)
+        # self.writter.add_scalar('Eval Reject rate/Algo1', algo1_reject_rate_per_episode, self.eval_num)
+        # self.writter.add_scalar('Eval Reject rate/Algo2', algo2_reject_rate_per_episode, self.eval_num)
+        # self.writter.add_scalar('Eval Reject rate/Algo3', algo3_reject_rate_per_episode, self.eval_num)
+        # self.writter.add_scalar('Eval Reject rate/Algo4', algo4_reject_rate_per_episode, self.eval_num)
         
         # -----------------------
         # Average Courier Reject Number
-        algo1_reject0 = round(np.mean(algo1_Hired_reject_num), 2)
-        algo1_var0_reject = round(np.var(algo1_Hired_reject_num), 2)
-        algo1_reject1 = round(np.mean(algo1_Crowdsourced_reject_num), 2)
-        algo1_var1_reject = round(np.var(algo1_Crowdsourced_reject_num), 2)
-        algo1_reject = round(np.mean(algo1_Hired_reject_num + algo1_Crowdsourced_reject_num), 2)
-        algo1_var_reject = round(np.var(algo1_Hired_reject_num + algo1_Crowdsourced_reject_num), 2)
+        # algo1_reject0 = round(np.mean(algo1_Hired_reject_num), 2)
+        # algo1_var0_reject = round(np.var(algo1_Hired_reject_num), 2)
+        # algo1_reject1 = round(np.mean(algo1_Crowdsourced_reject_num), 2)
+        # algo1_var1_reject = round(np.var(algo1_Crowdsourced_reject_num), 2)
+        # algo1_reject = round(np.mean(algo1_Hired_reject_num + algo1_Crowdsourced_reject_num), 2)
+        # algo1_var_reject = round(np.var(algo1_Hired_reject_num + algo1_Crowdsourced_reject_num), 2)
 
-        algo2_reject0 = round(np.mean(algo2_Hired_reject_num), 2)
-        algo2_var0_reject = round(np.var(algo2_Hired_reject_num), 2)
-        algo2_reject1 = round(np.mean(algo2_Crowdsourced_reject_num), 2)
-        algo2_var1_reject = round(np.var(algo2_Crowdsourced_reject_num), 2)
-        algo2_reject = round(np.mean(algo2_Hired_reject_num + algo2_Crowdsourced_reject_num), 2)
-        algo2_var_reject = round(np.var(algo2_Hired_reject_num + algo2_Crowdsourced_reject_num), 2)
+        # algo2_reject0 = round(np.mean(algo2_Hired_reject_num), 2)
+        # algo2_var0_reject = round(np.var(algo2_Hired_reject_num), 2)
+        # algo2_reject1 = round(np.mean(algo2_Crowdsourced_reject_num), 2)
+        # algo2_var1_reject = round(np.var(algo2_Crowdsourced_reject_num), 2)
+        # algo2_reject = round(np.mean(algo2_Hired_reject_num + algo2_Crowdsourced_reject_num), 2)
+        # algo2_var_reject = round(np.var(algo2_Hired_reject_num + algo2_Crowdsourced_reject_num), 2)
 
-        algo3_reject0 = round(np.mean(algo3_Hired_reject_num), 2)
-        algo3_var0_reject = round(np.var(algo3_Hired_reject_num), 2)
-        algo3_reject1 = round(np.mean(algo3_Crowdsourced_reject_num), 2)
-        algo3_var1_reject = round(np.var(algo3_Crowdsourced_reject_num), 2)
-        algo3_reject = round(np.mean(algo3_Hired_reject_num + algo3_Crowdsourced_reject_num), 2)
-        algo3_var_reject = round(np.var(algo3_Hired_reject_num + algo3_Crowdsourced_reject_num), 2)
+        # algo3_reject0 = round(np.mean(algo3_Hired_reject_num), 2)
+        # algo3_var0_reject = round(np.var(algo3_Hired_reject_num), 2)
+        # algo3_reject1 = round(np.mean(algo3_Crowdsourced_reject_num), 2)
+        # algo3_var1_reject = round(np.var(algo3_Crowdsourced_reject_num), 2)
+        # algo3_reject = round(np.mean(algo3_Hired_reject_num + algo3_Crowdsourced_reject_num), 2)
+        # algo3_var_reject = round(np.var(algo3_Hired_reject_num + algo3_Crowdsourced_reject_num), 2)
 
-        algo4_reject0 = round(np.mean(algo4_Hired_reject_num), 2)
-        algo4_var0_reject = round(np.var(algo4_Hired_reject_num), 2)
-        algo4_reject1 = round(np.mean(algo4_Crowdsourced_reject_num), 2)
-        algo4_var1_reject = round(np.var(algo4_Crowdsourced_reject_num), 2)
-        algo4_reject = round(np.mean(algo4_Hired_reject_num + algo4_Crowdsourced_reject_num), 2)
-        algo4_var_reject = round(np.var(algo4_Hired_reject_num + algo4_Crowdsourced_reject_num), 2)
+        # algo4_reject0 = round(np.mean(algo4_Hired_reject_num), 2)
+        # algo4_var0_reject = round(np.var(algo4_Hired_reject_num), 2)
+        # algo4_reject1 = round(np.mean(algo4_Crowdsourced_reject_num), 2)
+        # algo4_var1_reject = round(np.var(algo4_Crowdsourced_reject_num), 2)
+        # algo4_reject = round(np.mean(algo4_Hired_reject_num + algo4_Crowdsourced_reject_num), 2)
+        # algo4_var_reject = round(np.var(algo4_Hired_reject_num + algo4_Crowdsourced_reject_num), 2)
 
-        print("Average Reject Numbers per Courier for Evaluation Between Algos:")
-        print(f"Algo1: Hired rejects average {algo1_reject0} orders (Var: {algo1_var0_reject}), Crowdsourced rejects average {algo1_reject1} orders (Var: {algo1_var1_reject}), Total reject number per courier is {algo1_reject} orders (Var: {algo1_var_reject})")
-        print(f"Algo2: Hired rejects average {algo2_reject0} orders (Var: {algo2_var0_reject}), Crowdsourced rejects average {algo2_reject1} orders (Var: {algo2_var1_reject}), Total reject number per courier is {algo2_reject} orders (Var: {algo2_var_reject})")
-        print(f"Algo3: Hired rejects average {algo3_reject0} orders (Var: {algo3_var0_reject}), Crowdsourced rejects average {algo3_reject1} orders (Var: {algo3_var1_reject}), Total reject number per courier is {algo3_reject} orders (Var: {algo3_var_reject})")
-        print(f"Algo4: Hired rejects average {algo4_reject0} orders (Var: {algo4_var0_reject}), Crowdsourced rejects average {algo4_reject1} orders (Var: {algo4_var1_reject}), Total reject number per courier is {algo4_reject} orders (Var: {algo4_var_reject})")
+        # print("Average Reject Numbers per Courier for Evaluation Between Algos:")
+        # print(f"Algo1: Hired rejects average {algo1_reject0} orders (Var: {algo1_var0_reject}), Crowdsourced rejects average {algo1_reject1} orders (Var: {algo1_var1_reject}), Total reject number per courier is {algo1_reject} orders (Var: {algo1_var_reject})")
+        # print(f"Algo2: Hired rejects average {algo2_reject0} orders (Var: {algo2_var0_reject}), Crowdsourced rejects average {algo2_reject1} orders (Var: {algo2_var1_reject}), Total reject number per courier is {algo2_reject} orders (Var: {algo2_var_reject})")
+        # print(f"Algo3: Hired rejects average {algo3_reject0} orders (Var: {algo3_var0_reject}), Crowdsourced rejects average {algo3_reject1} orders (Var: {algo3_var1_reject}), Total reject number per courier is {algo3_reject} orders (Var: {algo3_var_reject})")
+        # print(f"Algo4: Hired rejects average {algo4_reject0} orders (Var: {algo4_var0_reject}), Crowdsourced rejects average {algo4_reject1} orders (Var: {algo4_var1_reject}), Total reject number per courier is {algo4_reject} orders (Var: {algo4_var_reject})")
 
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Total', algo1_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Hired', algo1_reject0, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Crowdsourced', algo1_reject1, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Total Var', algo1_var_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Hired Var', algo1_var0_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo1 Crowdsourced Var', algo1_var1_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Total', algo1_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Hired', algo1_reject0, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Crowdsourced', algo1_reject1, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Total Var', algo1_var_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Hired Var', algo1_var0_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo1 Crowdsourced Var', algo1_var1_reject, self.eval_num)
 
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Total', algo2_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Hired', algo2_reject0, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Crowdsourced', algo2_reject1, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Total Var', algo2_var_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Hired Var', algo2_var0_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo2 Crowdsourced Var', algo2_var1_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Total', algo2_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Hired', algo2_reject0, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Crowdsourced', algo2_reject1, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Total Var', algo2_var_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Hired Var', algo2_var0_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo2 Crowdsourced Var', algo2_var1_reject, self.eval_num)
 
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Total', algo3_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Hired', algo3_reject0, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Crowdsourced', algo3_reject1, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Total Var', algo3_var_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Hired Var', algo3_var0_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo3 Crowdsourced Var', algo3_var1_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Total', algo3_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Hired', algo3_reject0, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Crowdsourced', algo3_reject1, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Total Var', algo3_var_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Hired Var', algo3_var0_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo3 Crowdsourced Var', algo3_var1_reject, self.eval_num)
 
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Total', algo4_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Hired', algo4_reject0, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Crowdsourced', algo4_reject1, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Total Var', algo4_var_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Hired Var', algo4_var0_reject, self.eval_num)
-        self.writter.add_scalar('Eval Average Rejection/Algo4 Crowdsourced Var', algo4_var1_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Total', algo4_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Hired', algo4_reject0, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Crowdsourced', algo4_reject1, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Total Var', algo4_var_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Hired Var', algo4_var0_reject, self.eval_num)
+        # self.writter.add_scalar('Eval Average Rejection/Algo4 Crowdsourced Var', algo4_var1_reject, self.eval_num)
         
         # -----------------------
         # Average Order Price
@@ -2781,6 +2785,8 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Income/Algo1 Total Var', algo1_var_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Hired Var', algo1_var0_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced Var', algo1_var1_income, self.eval_num)
+        self.writter.add_scalar('Eval Platform Cost/Algo1', platform_cost1, self.eval_num)
+
 
         self.writter.add_scalar('Eval Average Income/Algo2 Total', algo2_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Hired', algo2_income0, self.eval_num)
@@ -2788,6 +2794,7 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Income/Algo2 Total Var', algo2_var_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Hired Var', algo2_var0_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo2 Crowdsourced Var', algo2_var1_income, self.eval_num)
+        self.writter.add_scalar('Eval Platform Cost/Algo2', platform_cost2, self.eval_num)
 
         self.writter.add_scalar('Eval Average Income/Algo3 Total', algo3_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo3 Hired', algo3_income0, self.eval_num)
@@ -2795,6 +2802,7 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Income/Algo3 Total Var', algo3_var_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo3 Hired Var', algo3_var0_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo3 Crowdsourced Var', algo3_var1_income, self.eval_num)
+        self.writter.add_scalar('Eval Platform Cost/Algo3', platform_cost3, self.eval_num)
 
         self.writter.add_scalar('Eval Average Income/Algo4 Total', algo4_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo4 Hired', algo4_income0, self.eval_num)
@@ -2802,6 +2810,7 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average Income/Algo4 Total Var', algo4_var_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo4 Hired Var', algo4_var0_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo4 Crowdsourced Var', algo4_var1_income, self.eval_num)
+        self.writter.add_scalar('Eval Platform Cost/Algo4', platform_cost4, self.eval_num)
 
         # -----------------------
         # Average Courier Finishing Number
@@ -3015,25 +3024,25 @@ class EnvRunner(Runner):
             f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}\n"
             f"Algo4: Hired - {algo4_overspeed0}, Crowdsourced - {algo4_overspeed1}, Total rate - {algo4_overspeed}\n"
             "Reject Rate for Evaluation Between Algos:\n"
-            f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
-            f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
-            f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most\n"
-            f"Algo4: {algo4_reject_rate_per_episode} and the order is rejected by {algo4_max_reject_num} times at most\n"
-            "Average Reject Numbers per Courier for Evaluation Between Algos:\n"
-            f"Algo1: Hired rejects average {algo1_reject0} orders (Var: {algo1_var0_reject}), Crowdsourced rejects average {algo1_reject1} orders (Var: {algo1_var1_reject}) and Total reject number per courier is {algo1_reject} (Var: {algo1_var_reject})\n"
-            f"Algo2: Hired rejects average {algo2_reject0} orders (Var: {algo2_var0_reject}), Crowdsourced rejects average {algo2_reject1} orders (Var: {algo2_var1_reject}) and Total reject number per courier is {algo2_reject} (Var: {algo2_var_reject})\n"
-            f"Algo3: Hired rejects average {algo3_reject0} orders (Var: {algo3_var0_reject}), Crowdsourced rejects average {algo3_reject1} orders (Var: {algo3_var1_reject}) and Total reject number per courier is {algo3_reject} (Var: {algo3_var_reject})\n"
-            f"Algo4: Hired rejects average {algo4_reject0} orders (Var: {algo4_var0_reject}), Crowdsourced rejects average {algo4_reject1} orders (Var: {algo4_var1_reject}) and Total reject number per courier is {algo4_reject} (Var: {algo4_var_reject})\n"
+            # f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
+            # f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
+            # f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most\n"
+            # f"Algo4: {algo4_reject_rate_per_episode} and the order is rejected by {algo4_max_reject_num} times at most\n"
+            # "Average Reject Numbers per Courier for Evaluation Between Algos:\n"
+            # f"Algo1: Hired rejects average {algo1_reject0} orders (Var: {algo1_var0_reject}), Crowdsourced rejects average {algo1_reject1} orders (Var: {algo1_var1_reject}) and Total reject number per courier is {algo1_reject} (Var: {algo1_var_reject})\n"
+            # f"Algo2: Hired rejects average {algo2_reject0} orders (Var: {algo2_var0_reject}), Crowdsourced rejects average {algo2_reject1} orders (Var: {algo2_var1_reject}) and Total reject number per courier is {algo2_reject} (Var: {algo2_var_reject})\n"
+            # f"Algo3: Hired rejects average {algo3_reject0} orders (Var: {algo3_var0_reject}), Crowdsourced rejects average {algo3_reject1} orders (Var: {algo3_var1_reject}) and Total reject number per courier is {algo3_reject} (Var: {algo3_var_reject})\n"
+            # f"Algo4: Hired rejects average {algo4_reject0} orders (Var: {algo4_var0_reject}), Crowdsourced rejects average {algo4_reject1} orders (Var: {algo4_var1_reject}) and Total reject number per courier is {algo4_reject} (Var: {algo4_var_reject})\n"
             "Average Price per order for Evaluation Between Algos:\n"
             f"Algo1: The average price of Hired's order is {algo1_price_per_order0} dollar (Var: {algo1_var0_price}) with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} dollar (Var: {algo1_var1_price}) with {algo1_order1_num} orders and for all is {algo1_price_per_order} dollar (Var: {algo1_var_price})\n"
             f"Algo2: The average price of Hired's order is {algo2_price_per_order0} dollar (Var: {algo2_var0_price}) with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} dollar (Var: {algo2_var1_price}) with {algo2_order1_num} orders and for all is {algo2_price_per_order} dollar (Var: {algo2_var_price})\n"
             f"Algo3: The average price of Hired's order is {algo3_price_per_order0} dollar (Var: {algo3_var0_price}) with {algo3_order0_num} orders, Crowdsourced's is {algo3_price_per_order1} dollar (Var: {algo3_var1_price}) with {algo3_order1_num} orders and for all is {algo3_price_per_order} dollar (Var: {algo3_var_price})\n"
             f"Algo4: The average price of Hired's order is {algo4_price_per_order0} dollar (Var: {algo4_var0_price}) with {algo4_order0_num} orders, Crowdsourced's is {algo4_price_per_order1} dollar (Var: {algo4_var1_price}) with {algo4_order1_num} orders and for all is {algo4_price_per_order} dollar (Var: {algo4_var_price})\n"
             "Average Income per Courier for Evaluation Between Algos:\n"
-            f"Algo1: Hired's average income is {algo1_income0} dollar (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollar (Var: {algo1_var1_income}) and Total income per courier is {algo1_income} dollar (Var: {algo1_var_income}), The platform total cost is {platform_cost1} dollar\n"
-            f"Algo2: Hired's average income is {algo2_income0} dollar (Var: {algo2_var0_income}), Crowdsourced's average income is {algo2_income1} dollar (Var: {algo2_var1_income}) and Total income per courier is {algo2_income} dollar (Var: {algo2_var_income}), The platform total cost is {platform_cost2} dollar\n"
-            f"Algo3: Hired's average income is {algo3_income0} dollar (Var: {algo3_var0_income}), Crowdsourced's average income is {algo3_income1} dollar (Var: {algo3_var1_income}) and Total income per courier is {algo3_income} dollar (Var: {algo3_var_income}), The platform total cost is {platform_cost3} dollar\n"
-            f"Algo4: Hired's average income is {algo4_income0} dollar (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollar (Var: {algo4_var1_income}) and Total income per courier is {algo4_income} dollar (Var: {algo4_var_income}), The platform total cost is {platform_cost4} dollar\n"
+            f"Algo1: Hired's average income is {algo1_income0} dollar (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollar (Var: {algo1_var1_income}) and Total income per courier is {algo1_income} dollar (Var: {algo1_var_income}), The platform total cost is {round(platform_cost1, 2)} dollar\n"
+            f"Algo2: Hired's average income is {algo2_income0} dollar (Var: {algo2_var0_income}), Crowdsourced's average income is {algo2_income1} dollar (Var: {algo2_var1_income}) and Total income per courier is {algo2_income} dollar (Var: {algo2_var_income}), The platform total cost is {round(platform_cost2, 2)} dollar\n"
+            f"Algo3: Hired's average income is {algo3_income0} dollar (Var: {algo3_var0_income}), Crowdsourced's average income is {algo3_income1} dollar (Var: {algo3_var1_income}) and Total income per courier is {algo3_income} dollar (Var: {algo3_var_income}), The platform total cost is {round(platform_cost3, 2)} dollar\n"
+            f"Algo4: Hired's average income is {algo4_income0} dollar (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollar (Var: {algo4_var1_income}) and Total income per courier is {algo4_income} dollar (Var: {algo4_var_income}), The platform total cost is {round(platform_cost4, 2)} dollar\n"
             "Average Leisure Time per Courier for Evaluation Between Algos:\n"
             f"Algo1: Hired's average leisure time is {algo1_avg0_leisure} minutes (Var: {algo1_var0_leisure}), Crowdsourced's average leisure time is {algo1_avg1_leisure} minutes (Var: {algo1_var1_leisure}) and Total leisure time per courier is {algo1_avg_leisure} minutes (Var: {algo1_var_leisure})\n"
             f"Algo2: Hired's average leisure time is {algo2_avg0_leisure} minutes (Var: {algo2_var0_leisure}), Crowdsourced's average leisure time is {algo2_avg1_leisure} minutes (Var: {algo2_var1_leisure}) and Total leisure time per courier is {algo2_avg_leisure} minutes (Var: {algo2_var_leisure})\n"
@@ -3368,35 +3377,35 @@ class EnvRunner(Runner):
             algo4_overspeed1,
             algo4_overspeed,
             
-            algo1_reject_rate_per_episode,
-            algo2_reject_rate_per_episode,
-            algo3_reject_rate_per_episode,
-            algo4_reject_rate_per_episode,
+            # algo1_reject_rate_per_episode,
+            # algo2_reject_rate_per_episode,
+            # algo3_reject_rate_per_episode,
+            # algo4_reject_rate_per_episode,
             
-            algo1_reject0,
-            algo1_reject1,
-            algo1_reject,
-            algo2_reject0,
-            algo2_reject1,
-            algo2_reject,
-            algo3_reject0,
-            algo3_reject1,
-            algo3_reject,
-            algo4_reject0,
-            algo4_reject1,
-            algo4_reject,
-            algo1_var0_reject,
-            algo1_var1_reject,
-            algo1_var_reject,
-            algo2_var0_reject,
-            algo2_var1_reject,
-            algo2_var_reject,
-            algo3_var0_reject,
-            algo3_var1_reject,
-            algo3_var_reject,
-            algo4_var0_reject,
-            algo4_var1_reject,
-            algo4_var_reject,
+            # algo1_reject0,
+            # algo1_reject1,
+            # algo1_reject,
+            # algo2_reject0,
+            # algo2_reject1,
+            # algo2_reject,
+            # algo3_reject0,
+            # algo3_reject1,
+            # algo3_reject,
+            # algo4_reject0,
+            # algo4_reject1,
+            # algo4_reject,
+            # algo1_var0_reject,
+            # algo1_var1_reject,
+            # algo1_var_reject,
+            # algo2_var0_reject,
+            # algo2_var1_reject,
+            # algo2_var_reject,
+            # algo3_var0_reject,
+            # algo3_var1_reject,
+            # algo3_var_reject,
+            # algo4_var0_reject,
+            # algo4_var1_reject,
+            # algo4_var_reject,
             
             algo1_price_per_order0,
             algo1_price_per_order1,

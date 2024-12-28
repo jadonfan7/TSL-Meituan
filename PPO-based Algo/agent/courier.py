@@ -15,7 +15,7 @@ class Courier:
         self.riding_time = 0
         self.total_running_time = 0
         
-        self.grab_or_deliver = 0
+        # self.grab_or_deliver = 0
         
         self.reject_order_num = 0
         self.finish_order_num = 0
@@ -35,7 +35,7 @@ class Courier:
         self.income = 0
                 
     def __repr__(self):
-        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', type: ' + str(self.courier_type) + ', state: ' + self.state + ', position: ' + str(self.position) + ', travel_distance: ' + str(round(self.travel_distance, 2)) + ', income: ' + str(round(self.income, 2)) + ', total_leisure_time: ' + str(self.total_leisure_time)
+        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', type: ' + str(self.courier_type) + ', state: ' + self.state + ', position: ' + str(self.position) + ', travel_distance: ' + str(round(self.travel_distance, 2)) + ', income: ' + str(round(self.income, 2)) + ', total_leisure_time: ' + str(self.total_leisure_time) + ', total_running_time: ' + str(self.total_running_time)
 
         if self.waybill != []:
             orderid = [o.orderid for o in self.waybill]
@@ -64,21 +64,20 @@ class Courier:
         self.waybill.append(order)
         self.wait_to_pick.remove(order)
         order.status = 'picked_up'
-        self.grab_or_deliver = np.floor(np.random.normal(3, 4) * 60 / interval)
+        # self.grab_or_deliver = np.floor(np.random.normal(3, 4) * 60 / interval)
 
     def drop_order(self, order):
-        interval = 10
+        interval = 20
         self.waybill.remove(order)
         order.status = 'dropped'
         self.finish_order_num += 1
-        self.grab_or_deliver = np.floor(np.random.normal(3, 4) * 60 / interval)
+        # self.grab_or_deliver = np.floor(np.random.normal(3, 4) * 60 / interval)
 
     def move(self, interval):
-        congestion_ratio = 0.8
         if self.speed != 0:
             self.riding_time += interval
             
-            travel_distance = interval * self.speed * congestion_ratio
+            travel_distance = interval * self.speed
             distance_to_target = geodesic(self.target_location, self.position).meters
             
             if travel_distance >= distance_to_target:
@@ -95,4 +94,4 @@ class Courier:
                 self.position = (new_latitude, new_longitude)
 
                 self.travel_distance += travel_distance
-        
+    

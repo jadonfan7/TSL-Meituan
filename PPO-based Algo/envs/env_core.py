@@ -73,7 +73,7 @@ class EnvCore(object):
         
         reward = 0
         
-        if (agent.waybill != [] or agent.wait_to_pick != []) and agent.grab_or_deliver == 0:
+        if agent.waybill != [] or agent.wait_to_pick != []:
 
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
@@ -83,8 +83,6 @@ class EnvCore(object):
             if np.argmax(action[:index]) > total_length - 1:
                 reward -= 100
                 order_index = np.random.randint(0, total_length)
-                # agent.speed = 0
-                # order_index = np.argmax(action[:index])
             else:
                 order_index = np.argmax(action[:index])
 
@@ -114,8 +112,6 @@ class EnvCore(object):
                 agent.move(self.map.interval) 
         else:
             agent.speed = 0
-            if agent.grab_or_deliver != 0:
-                agent.grab_or_deliver -= 1
                 
         for order in agent.wait_to_pick:
             if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
@@ -152,7 +148,7 @@ class EnvCore(object):
                         
                     agent.income += order.price
                     
-        if agent.waybill == [] and agent.wait_to_pick == [] and agent.grab_or_deliver == 0:
+        if agent.waybill == [] and agent.wait_to_pick == []:
             agent.is_leisure = 1
         else:
             agent.is_leisure = 0
