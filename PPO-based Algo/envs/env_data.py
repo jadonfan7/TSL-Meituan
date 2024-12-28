@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -106,6 +106,14 @@ class Map:
         #     4: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
         #     5: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
         # } # 10 min
+        
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
+            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666063800},
+            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666150200},
+            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666236600},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
+        } # half an hour
 
         
         # 根据 env_index 获取相应的日期和时间范围
@@ -152,8 +160,8 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -209,9 +217,25 @@ class Map:
                         courier.state = 'active'
                         courier.start_time = self.clock
                         
-                        # if self.algo_index == 1:
-                        #     courier.wait_to_pick.append(order)
-                        #     order.pair_time = self.clock
+                        if self.algo_index == 4:
+                            if courier.courier_type == 0:
+                                order.price = self._wage_response_model(order, courier)
+                                self.platform_cost += order.price
+                            else:
+                                order.price = self._wage_response_model(order, courier) * 1.5
+                                self.platform_cost += order.price
+
+                            courier.wait_to_pick.append(order)
+                            order.pair_courier = courier
+                            order.pair_time = self.clock
+                            order.status = 'wait_pick'
+                
+                            if courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
+                                courier.pick_order(order)
+
+                                if courier.position == order.drop_off_point:  # dropping off
+                                    courier.drop_order(order)
+
                         self.couriers.append(courier)
                         self.add_new_couriers += 1
             
@@ -248,8 +272,9 @@ class Map:
                 self._Efficiency_allocation(orders_pair)     
             elif self.algo_index == 2:
                 self._fair_allocation(orders_pair)   
-            else:
+            elif self.algo_index == 3:
                 self._EEtradeoff_greedy_allocation(orders_pair)
+            # self.algo_index == 4 is the origin allocation in the dataset                
         
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
@@ -321,7 +346,7 @@ class Map:
                     order.price = self._wage_response_model(order, nearest_courier)
                     self.platform_cost += order.price
                 else:
-                    order.price = self._wage_response_model(order, nearest_courier) * 2
+                    order.price = self._wage_response_model(order, nearest_courier) * 1.5
                     self.platform_cost += order.price
                 
                 nearest_courier.wait_to_pick.append(order)
@@ -583,7 +608,7 @@ class Map:
                         order.price = self._wage_response_model(order, assigned_courier)
                         self.platform_cost += order.price
                     else:
-                        order.price = self._wage_response_model(order, assigned_courier) * 2
+                        order.price = self._wage_response_model(order, assigned_courier) * 1.5
                         self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
@@ -681,7 +706,7 @@ class Map:
                         order.price = self._wage_response_model(order, assigned_courier)
                         self.platform_cost += order.price
                     else:
-                        order.price = self._wage_response_model(order, assigned_courier) * 2
+                        order.price = self._wage_response_model(order, assigned_courier) * 1.5
                         self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
@@ -819,7 +844,7 @@ class Map:
                     order.price = self._wage_response_model(order, assigned_courier)
                     self.platform_cost += order.price
                 else:
-                    order.price = self._wage_response_model(order, assigned_courier) * 2
+                    order.price = self._wage_response_model(order, assigned_courier) * 1.5
                     self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
