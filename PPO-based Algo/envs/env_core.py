@@ -73,7 +73,7 @@ class EnvCore(object):
         
         reward = 0
         
-        if agent.waybill != [] or agent.wait_to_pick != [] and self.stay_duration == 0:
+        if agent.waybill != [] or agent.wait_to_pick != [] and agent.stay_duration == 0:
 
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
