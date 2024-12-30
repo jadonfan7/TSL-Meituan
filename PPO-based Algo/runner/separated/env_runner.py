@@ -2167,11 +2167,11 @@ class EnvRunner(Runner):
         algo3_social_welfare = sum(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
         algo4_social_welfare = sum(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
         algo5_social_welfare = sum(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        print(f"Algo1: Social welfare is {algo1_social_welfare} dollar\n")
-        print(f"Algo2: Social welfare is {algo2_social_welfare} dollar\n")
-        print(f"Algo3: Social welfare is {algo3_social_welfare} dollar\n")
-        print(f"Algo4: Social welfare is {algo4_social_welfare} dollar\n")
-        print(f"Algo5: Social welfare is {algo5_social_welfare} dollar\n")
+        print(f"Algo1: Social welfare is {algo1_social_welfare} dollar")
+        print(f"Algo2: Social welfare is {algo2_social_welfare} dollar")
+        print(f"Algo3: Social welfare is {algo3_social_welfare} dollar")
+        print(f"Algo4: Social welfare is {algo4_social_welfare} dollar")
+        print(f"Algo5: Social welfare is {algo5_social_welfare} dollar")
         message += f"Algo1: Social welfare is {algo1_social_welfare} dollar\n" + f"Algo2: Social welfare is {algo2_social_welfare} dollar\n" + f"Algo3: Social welfare is {algo3_social_welfare} dollar\n" + f"Algo4: Social welfare is {algo4_social_welfare} dollar\n" + f"Algo5: Social welfare is {algo5_social_welfare} dollar\n"
         self.writter.add_scalar('Social Welfare/Algo1', algo1_social_welfare, self.eval_num)
         self.writter.add_scalar('Social Welfare/Algo2', algo2_social_welfare, self.eval_num)

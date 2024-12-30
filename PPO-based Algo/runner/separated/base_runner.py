@@ -60,7 +60,7 @@ class Runner(object):
             os.makedirs(self.save_dir)
 
         logger.remove()
-        logger.add("PPO_logs/env_step_log.log", rotation="500 MB", level="INFO")
+        logger.add("PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
         logger.add("PPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
 
         self.policy = []
