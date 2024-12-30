@@ -138,15 +138,14 @@ class EnvCore(object):
                     agent.income += order.price * 0.7
                     order.is_late = 1
                     
-                    self.map.platform_cost += order.price * 0.3
+                    # self.map.platform_cost += order.price * 0.3
                     
                 else:
                     order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
                     if agent.courier_type == 0:
-                        reward += 1000 * order.ETA_usage
-                        
+                        reward += 1000 * (1 - order.ETA_usage)
                     else:
-                        reward += 1200 * order.ETA_usage
+                        reward += 1200 * (1 - order.ETA_usage)
                         
                     agent.income += order.price
                     

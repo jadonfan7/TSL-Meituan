@@ -166,34 +166,32 @@ class Map:
 
     def step(self, first_time=0):
         
-        self.add_new_couriers = 0
-        
-        if not first_time:
-            if self.clock < self.end_time:
-                self.clock += self.interval 
-
-        orders_failed = [order for order in self.orders if order.status == "wait_pair"]
-        orders_new = []
-
-        while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
-            dt = self.order_data.iloc[self.current_index]
-            order_id = dt['order_id']
+        if self.algo_index == 4:
+            self.add_new_couriers = 0
             
-            if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
-          
-                self.orders_id.add(order_id)
+            if not first_time:
+                if self.clock < self.end_time:
+                    self.clock += self.interval 
+            
+            while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+                dt = self.order_data.iloc[self.current_index]
+                order_id = dt['order_id']
                 
-                is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
-                order_create_time = dt['platform_order_time']
-                pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
-                dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
-                meal_prepare_time = dt['estimate_meal_prepare_time']
-                estimate_arrived_time = dt['estimate_arrived_time']
+                # if dt['is_courier_grabbed'] == 0 and dt['courier_id'] not in self.couriers_id:
+                #     self.current_index += 1
+                #     continue
+            
+                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1:                        
+                          
+                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
+                    order_create_time = dt['platform_order_time']
+                    pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
+                    dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
+                    meal_prepare_time = dt['estimate_meal_prepare_time']
+                    estimate_arrived_time = dt['estimate_arrived_time']
                 
-                order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
-                orders_new.append(order)
+                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
 
-                if dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                     courier_id = dt['courier_id']
                     if courier_id not in self.couriers_id:
                         self.couriers_id.add(courier_id)
@@ -203,65 +201,130 @@ class Map:
                         courier.state = 'active'
                         courier.start_time = self.clock
                         
-                        if self.algo_index == 4:
-                            if courier.courier_type == 0:
-                                order.price = self._wage_response_model(order, courier)
-                                self.platform_cost += order.price
-                            else:
-                                order.price = self._wage_response_model(order, courier) * 1.5
-                                self.platform_cost += order.price
-
-                            courier.wait_to_pick.append(order)
-                            order.pair_courier = courier
-                            order.pair_time = self.clock
-                            order.status = 'wait_pick'
-                
-                            if courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:  # picking up
-                                courier.pick_order(order)
-
-                                if courier.position == order.drop_off_point:  # dropping off
-                                    courier.drop_order(order)
-
                         self.couriers.append(courier)
                         self.add_new_couriers += 1
-            
-            self.current_index += 1
-            
-        # if a courier does not get an order for a period of a time, he will quit the system.
-        for courier in self.couriers:
-            if courier.is_leisure == 1 and courier.state == 'active':
-                courier.total_leisure_time += self.interval
-            elif courier.is_leisure == 0 and courier.state == 'active':
-                courier.total_running_time += self.interval
+                    
+                    else:
+                        courier = next((c for c in self.couriers if c.courierid == courier_id), None)
+                        if len(courier.waybill) + len(courier.wait_to_pick) == courier.capacity:
+                            continue
+                    
+                    self.orders_id.add(order_id)
+                    self.orders.append(order)
 
-            if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
-                courier.state = 'inactive'
-            
-            if courier.start_time != self.clock and courier.courier_type == 0:
-                salary_per_interval = 15 / 3600 * self.interval
-                courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
-                self.platform_cost += salary_per_interval
+                    if courier.courier_type == 0:
+                        order.price = self._wage_response_model(order, courier)
+                        self.platform_cost += order.price
+                    else:
+                        order.price = self._wage_response_model(order, courier) * 1.5
+                        self.platform_cost += order.price
 
-        orders_pair = orders_failed + orders_new
-        if orders_pair != []:
+                    courier.wait_to_pick.append(order)
+                    order.pair_courier = courier
+                    order.pair_time = self.clock
+                    order.status = 'wait_pick'
             
-            self.orders += orders_new
+                    if courier.position == order.pick_up_point and self.clock >= order.meal_prepare_time:
+                        courier.pick_order(order)
 
-            if self.algo_index == 0:
-                self._EEtradeoff_bipartite_allocation(orders_pair)
-            # else:
-            #     nearby_couriers = None
-            #     for i, p in enumerate(orders):
-            #         nearby_couriers = self._get_nearby_couriers(p, 1500)
-            #     gorubi_solver(nearby_couriers, orders, self.clock)
-            elif self.algo_index == 1:
-                self._Efficiency_allocation(orders_pair)     
-            elif self.algo_index == 2:
-                self._fair_allocation(orders_pair)   
-            elif self.algo_index == 3:
-                self._EEtradeoff_greedy_allocation(orders_pair)
-            # self.algo_index == 4 is the origin allocation in the dataset                
+                        if courier.position == order.drop_off_point:
+                            courier.drop_order(order)
+                                   
+                self.current_index += 1
+            
+            # if a courier does not get an order for a period of a time, he will quit the system.
+            for courier in self.couriers:
+                if courier.is_leisure == 1 and courier.state == 'active':
+                    courier.total_leisure_time += self.interval
+                elif courier.is_leisure == 0 and courier.state == 'active':
+                    courier.total_running_time += self.interval
+
+                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                    courier.state = 'inactive'
+                
+                if courier.start_time != self.clock and courier.courier_type == 0:
+                    salary_per_interval = 15 / 3600 * self.interval
+                    courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                    self.platform_cost += salary_per_interval
         
+        else:
+            self.add_new_couriers = 0
+            
+            if not first_time:
+                if self.clock < self.end_time:
+                    self.clock += self.interval 
+
+            orders_failed = [order for order in self.orders if order.status == "wait_pair"]
+            orders_new = []
+
+            while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+                dt = self.order_data.iloc[self.current_index]
+                order_id = dt['order_id']
+                
+                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
+            
+                    self.orders_id.add(order_id)
+                    
+                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
+                    order_create_time = dt['platform_order_time']
+                    pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
+                    dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
+                    meal_prepare_time = dt['estimate_meal_prepare_time']
+                    estimate_arrived_time = dt['estimate_arrived_time']
+                    
+                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    orders_new.append(order)
+
+                courier_id = dt['courier_id']
+                if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
+                    if courier_id not in self.couriers_id:
+                        self.couriers_id.add(courier_id)
+                        courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
+                        courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
+                        courier = Courier(courier_type, courier_id, courier_location, self.clock)
+                        courier.state = 'active'
+                        courier.start_time = self.clock
+                        
+                        self.couriers.append(courier)
+                        self.add_new_couriers += 1
+                
+                self.current_index += 1
+                
+            # if a courier does not get an order for a period of a time, he will quit the system.
+            for courier in self.couriers:
+                if courier.is_leisure == 1 and courier.state == 'active':
+                    courier.total_leisure_time += self.interval
+                elif courier.is_leisure == 0 and courier.state == 'active':
+                    courier.total_running_time += self.interval
+
+                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                    courier.state = 'inactive'
+                
+                if courier.start_time != self.clock and courier.courier_type == 0:
+                    salary_per_interval = 15 / 3600 * self.interval
+                    courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                    self.platform_cost += salary_per_interval
+
+            orders_pair = orders_failed + orders_new
+            if orders_pair != []:
+                
+                self.orders += orders_new
+
+                if self.algo_index == 0:
+                    self._EEtradeoff_bipartite_allocation(orders_pair)
+                # else:
+                #     nearby_couriers = None
+                #     for i, p in enumerate(orders):
+                #         nearby_couriers = self._get_nearby_couriers(p, 1500)
+                #     gorubi_solver(nearby_couriers, orders, self.clock)
+                elif self.algo_index == 1:
+                    self._Efficiency_allocation(orders_pair)     
+                elif self.algo_index == 2:
+                    self._fair_allocation(orders_pair)   
+                elif self.algo_index == 3:
+                    self._EEtradeoff_greedy_allocation(orders_pair)
+                # self.algo_index == 4 is the origin allocation in the dataset                
+            
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
         
@@ -345,6 +408,7 @@ class Map:
 
                     if nearest_courier.position == order.drop_off_point:  # dropping off
                         nearest_courier.drop_order(order)
+            
             elif (self.clock - order.order_create_time <= 120) and ((nearest_courier.courier_type == 1) or (nearest_courier.courier_type == 0 and nearest_courier.reject_order_num <= 5)):
                 decision = self._accept_or_reject(order, courier)
                 if decision == True:

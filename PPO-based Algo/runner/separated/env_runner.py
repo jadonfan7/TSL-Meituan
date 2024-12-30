@@ -77,7 +77,7 @@ class EnvRunner(Runner):
                 for agent_id in range(self.num_agents):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
             
-            obs = self.envs.reset(episode % 5)
+            obs = self.envs.reset(episode % 4)
             # obs = self.envs.reset(1)
             self.reset_courier_num(self.envs.envs_discrete[0].num_couriers)
             self.num_agents = self.envs.envs_discrete[0].num_couriers
@@ -374,7 +374,6 @@ class EnvRunner(Runner):
             if count_dropped_orders0 + count_dropped_orders1 == 0:
                 print("No order is dropped in this episode")
                 message += "No order is dropped in this episode\n"
-                logger.success(message)
                 self.writter.add_scalar('Late Orders Rate/Total', -1, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Hired', -1, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Crowdsourced', -1, episode + 1)
@@ -411,7 +410,6 @@ class EnvRunner(Runner):
                 print(f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})")
                 
                 message += f"Rate of Late Orders for Episode {episode+1}: Hired - {late_rate0}, Crowdsourced - {late_rate1}, Total - {late_rate}\n" + f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})\n"
-                logger.success(message)
                 
                 self.writter.add_scalar('Late Orders Rate/Total', late_rate, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Hired', late_rate0, episode + 1)
@@ -427,14 +425,14 @@ class EnvRunner(Runner):
             social_welfare = sum(Hired_distance_per_episode + Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
             print(f"Social welfare is {social_welfare} dollar\n")
             message += f"Social welfare is {social_welfare} dollar\n"
+            logger.success(message)
             self.writter.add_scalar('Social Welfare', social_welfare, episode + 1)
             
-            print("\n")
-                        
+            print("\n")      
 
             # compute return and update nrk
             self.compute()
-            train_infos = self.train()
+            # train_infos = self.train()
 
             # post process
             total_num_steps = (episode + 1) * self.episode_length * self.n_rollout_threads
@@ -580,8 +578,9 @@ class EnvRunner(Runner):
     @torch.no_grad()
     def eval(self, total_num_steps):
         
-        # eval_obs = self.eval_envs.reset(4)
-        eval_obs = self.eval_envs.reset(5)
+        eval_obs = self.eval_envs.reset(4)
+        # eval_obs = self.eval_envs.reset(5)
+        
         algo1_Hired_num = 0
         algo1_Crowdsourced_num = 0
         algo1_Crowdsourced_on = 0
@@ -776,21 +775,21 @@ class EnvRunner(Runner):
                 print(self.num_agents)
                 break
             
-            print("-"*25)
-            print(f"THIS IS EVAL STEP {eval_step}")
+            # print("-"*25)
+            # print(f"THIS IS EVAL STEP {eval_step}")
 
             for i in range(self.eval_envs.num_envs):
                 
-                print(f"ENVIRONMENT {i+1}")
+                # print(f"ENVIRONMENT {i+1}")
 
-                print("Couriers:")
-                for c in self.eval_envs.envs_discrete[i].couriers:
-                    if c.state == 'active':
-                        print(c)
-                print("Orders:")
-                for o in self.eval_envs.envs_discrete[i].orders:
-                    print(o)  
-                print("\n")
+                # print("Couriers:")
+                # for c in self.eval_envs.envs_discrete[i].couriers:
+                #     if c.state == 'active':
+                #         print(c)
+                # print("Orders:")
+                # for o in self.eval_envs.envs_discrete[i].orders:
+                #     print(o)  
+                # print("\n")
                 
                 self.log_env(1, eval_step, i, eval=True)
                 
@@ -839,7 +838,7 @@ class EnvRunner(Runner):
             algo2_eval_episode_rewards_sum += sum(eval_rewards[1])
             algo3_eval_episode_rewards_sum += sum(eval_rewards[2])
             algo4_eval_episode_rewards_sum += sum(eval_rewards[3])
-            algo5_eval_episode_rewards_sum += sum(eval_rewards[3])
+            algo5_eval_episode_rewards_sum += sum(eval_rewards[4])
 
             eval_rnn_states[eval_dones == True] = np.zeros(
                 ((eval_dones == True).sum(), self.recurrent_N, self.hidden_size),
