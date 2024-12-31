@@ -460,7 +460,7 @@ class EnvRunner(Runner):
                 # self.log_train(train_infos, total_num_steps)
 
             # eval
-            if episode % self.eval_interval == 0 and self.use_eval:
+            if (episode + 1) % self.eval_interval == 0 and self.use_eval:
                 self.eval_num += 1
                                 
                 self.eval(total_num_steps)
