@@ -61,18 +61,16 @@ class Courier:
 
 
     def pick_order(self, order):
-        interval = 20
         self.waybill.append(order)
         self.wait_to_pick.remove(order)
         order.status = 'picked_up'
-        self.stay_duration = np.ceil(np.clip(np.random.normal(60, 20), 0, 120) / interval)
 
     def drop_order(self, order):
         interval = 20
         self.waybill.remove(order)
         order.status = 'dropped'
         self.finish_order_num += 1
-        self.stay_duration = np.ceil(np.clip(np.random.normal(60, 20), 0, 120) / interval)
+        self.stay_duration = np.ceil(np.clip(np.random.normal(180, 40), 0, 300) / interval)
 
     def move(self, interval):
         if self.speed != 0:

@@ -217,7 +217,7 @@ def get_config():
 
     # *************
     # replay buffer parameters
-    parser.add_argument("--episode_length", type=int, default=25, help="Max length for any episode") #200
+    parser.add_argument("--episode_length", type=int, default=10, help="Max length for any episode") #200
 
     # network parameters
     parser.add_argument(
@@ -454,7 +454,7 @@ def get_config():
     parser.add_argument(
         "--eval_episodes_length",
         type=int,
-        default=25,
+        default=10,
         help="number of episodes of a single evaluation.",
     )
 

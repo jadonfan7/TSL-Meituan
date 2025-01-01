@@ -94,11 +94,11 @@ class EnvCore(object):
             else:
                 agent.speed = np.random.uniform(4, 7)
 
-            if agent.speed > 4:
-                if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 50
-                else:
-                    reward -= (agent.speed - 4) ** 2 * 30
+            # if agent.speed > 4:
+            if agent.courier_type == 0:
+                reward -= (agent.speed - 4) ** 2 * 50
+            else:
+                reward -= (agent.speed - 4) ** 2 * 30
 
             if order_index < waybill_length:
                 if agent.target_location == None:

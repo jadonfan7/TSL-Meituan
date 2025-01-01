@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -146,8 +146,8 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -336,7 +336,10 @@ class Map:
             #         self._MaxMin_fairness_allocation(orders_pair)     
             #     elif self.algo_index == 2:
             #         self._Pairwise_fairness_allocation(orders_pair)   
-              
+            #     elif self.algo_index == 3:
+            #         self._Efficiency_allocation(orders_pair)     
+            #     elif self.algo_index == 4:
+            #         self._fair_allocation(orders_pair)               
             
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
@@ -595,6 +598,22 @@ class Map:
                         order.reject_count += 1
                         courier.reject_order_num += 1
     
+    def _is_bipartite_solvable(self, matrix):
+        has_isolated_row = np.any(np.all(np.isinf(matrix), axis=1))
+        has_isolated_col = np.any(np.all(np.isinf(matrix), axis=0))
+
+        if has_isolated_row or has_isolated_col:
+            return False
+        
+        finite_matrix = np.where(np.isinf(matrix), 1e9, matrix)
+        rank = np.linalg.matrix_rank(finite_matrix)
+        rows, cols = matrix.shape
+        
+        if rank < min(rows, cols):
+            return False
+        
+        return True
+    
     def _EEtradeoff_bipartite_allocation(self, orders):
         
         def get_predicted_orders():
@@ -756,29 +775,48 @@ class Map:
         row_ind, col_ind = linear_sum_assignment(cost_matrix)   
         
         fairness_factor = 1.5
-        initial_max_cost = max(cost_matrix[row_ind[i], col_ind[i]] for i in range(len(row_ind)))
-        threshold = fairness_factor * initial_max_cost  
+        filtered_costs = cost_matrix[row_ind, col_ind]
+        filtered_costs = filtered_costs[filtered_costs != M]
+        initial_max_cost = np.max(filtered_costs) if len(filtered_costs) > 0 else M
         
-        order_avg_costs = np.mean(cost_matrix, axis=1)
-        sorted_orders = np.argsort(order_avg_costs)  # Descending order of average cost
-        unmatched_orders = list(sorted_orders)
-        matched_couriers = set()   
+        matched_orders = set()
+        courier_avg_costs = []
         
-        final_matches = []
-        unmatched_results = []
+        if initial_max_cost != M: 
+            row_ind = []
+            col_ind = []
+         
+            threshold = fairness_factor * initial_max_cost  
+        
+            for col in range(cost_matrix.shape[1]):
+                courier_costs = cost_matrix[:, col]
+                courier_costs = courier_costs[courier_costs != M]
+                if len(courier_costs) > 0:
+                    courier_avg_cost = np.mean(courier_costs)
+                    courier_avg_costs.append((couriers[col], courier_avg_cost))
 
-        # Step 4: Match orders iteratively
-        for order_idx in unmatched_orders:
-            for courier_idx in range(len(couriers)):
-                if courier_idx not in matched_couriers:
-                    cost = cost_matrix[order_idx, courier_idx]
-                    if cost <= threshold:
-                        final_matches.append((order_idx, courier_idx))
-                        matched_couriers.add(courier_idx)
-                        break  # Move to the next order
+            sorted_courier_list = sorted(courier_avg_costs, key=lambda x: x[1], reverse=True)
+            sorted_couriers = [courier for courier, _ in sorted_courier_list]
 
+            for courier in sorted_couriers:
+                courier_index = couriers.index(courier)
+                courier_costs = cost_matrix[:, courier_index]
+                valid_costs = courier_costs[~np.isin(np.arange(cost_matrix.shape[0]), list(matched_orders))]
+                
+                if len(valid_costs) == 0:
+                    continue
+                
+                min_cost = np.min(valid_costs)
+                best_order_index_in_valid = np.argmin(valid_costs)
+                best_order_index = np.where(courier_costs == valid_costs[best_order_index_in_valid])[0][0]
+                
+                if min_cost < threshold: 
+                    matched_orders.add(best_order_index)
+                    row_ind.append(best_order_index)
+                    col_ind.append(courier_index)
+                    
         # Assign orders to couriers based on the optimal matching
-        for order_index, courier_index in final_matches:
+        for order_index, courier_index in zip(row_ind, col_ind):
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
@@ -858,10 +896,7 @@ class Map:
             cost_matrix.append(row)
 
         cost_matrix = np.array(cost_matrix)
-        if np.any(np.all(np.isinf(cost_matrix), axis=1)) or np.any(np.all(np.isinf(cost_matrix), axis=0)):
-            cost_matrix[cost_matrix == np.inf] = M
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)   
-        else:            
+        if self._is_bipartite_solvable(cost_matrix):
             cost_matrix += abs(min_cost)
             filtered_elements = cost_matrix[~np.isinf(cost_matrix)]
             sorted_elements = np.sort(filtered_elements)[::-1]
@@ -869,11 +904,15 @@ class Map:
             for element in sorted_list:
                 cost_matrix_copy = cost_matrix.copy()
                 cost_matrix_copy[cost_matrix_copy >= element] = np.inf
-                if np.any(np.all(np.isinf(cost_matrix_copy), axis=1)) or np.any(np.all(np.isinf(cost_matrix_copy), axis=0)):
-                    cost_matrix[cost_matrix >= element] = M
-                    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-                else:
+                if self._is_bipartite_solvable(cost_matrix_copy):
                     continue
+                else:
+                    cost_matrix[cost_matrix > element] = M
+                    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+                    break
+        else:
+            cost_matrix[cost_matrix == np.inf] = M
+            row_ind, col_ind = linear_sum_assignment(cost_matrix)
             
         for order_index, courier_index in zip(row_ind, col_ind):
             if cost_matrix[order_index][courier_index] == float(M):
@@ -956,44 +995,51 @@ class Map:
             cost_matrix.append(row)
 
         cost_matrix = np.array(cost_matrix)
-        if np.any(np.all(np.isinf(cost_matrix), axis=1)) or np.any(np.all(np.isinf(cost_matrix), axis=0)):
+        if not self._is_bipartite_solvable(cost_matrix):
             cost_matrix[cost_matrix == np.inf] = M
             row_ind, col_ind = linear_sum_assignment(cost_matrix)   
         else:            
             cost_matrix += abs(min_cost)
             filtered_elements = cost_matrix[~np.isinf(cost_matrix)]
-            sorted_elements = np.sort(filtered_elements)[::-1]
+            sorted_elements = np.sort(filtered_elements)
             sorted_list = sorted_elements.tolist()
-                            
+            
+            previous_lower_bound = sorted_list[0]
+            previous_upper_bound = sorted_list[-1]
+            origin_list = sorted_list.copy()
+            
             while len(sorted_list) > 1:
                 first_diff = sorted_list[1] - sorted_list[0]
                 last_diff = sorted_list[-1] - sorted_list[-2]
                 if first_diff <= last_diff:
                     cost_matrix_copy_first = cost_matrix.copy()
                     cost_matrix_copy_first[cost_matrix_copy_first <= sorted_list[0]] = np.inf
-                    if np.any(np.all(np.isinf(cost_matrix_copy_first), axis=1)) or np.any(np.all(np.isinf(cost_matrix_copy_first), axis=0)):
+                    if not self._is_bipartite_solvable(cost_matrix_copy_first):
                         cost_matrix_copy_last = cost_matrix.copy()
                         cost_matrix_copy_last[cost_matrix_copy_last >= sorted_list[-1]] = np.inf
-                        if np.any(np.all(np.isinf(cost_matrix_copy_last), axis=1)) or np.any(np.all(np.isinf(cost_matrix_copy_last), axis=0)):
+                        if not self._is_bipartite_solvable(cost_matrix_copy_last):
                             break
                         else:
+                            previous_upper_bound = sorted_list[-1]
                             sorted_list = sorted_list[:-1]
                     else:
                         sorted_list = sorted_list[1:]
                 else:
                     cost_matrix_copy_last = cost_matrix.copy()
                     cost_matrix_copy_last[cost_matrix_copy_last >= sorted_list[-1]] = np.inf
-                    if np.any(np.all(np.isinf(cost_matrix_copy_last), axis=1)) or np.any(np.all(np.isinf(cost_matrix_copy_last), axis=0)):
+                    if not self._is_bipartite_solvable(cost_matrix_copy_last):
                         cost_matrix_copy_first = cost_matrix.copy()
                         cost_matrix_copy_first[cost_matrix_copy_first <= sorted_list[0]] = np.inf
-                        if np.any(np.all(np.isinf(cost_matrix_copy_first), axis=1)) or np.any(np.all(np.isinf(cost_matrix_copy_first), axis=0)):
+                        if not self._is_bipartite_solvable(cost_matrix_copy_first):
                             break
                         else:
+                            previous_lower_bound = sorted_list[0]
                             sorted_list = sorted_list[1:]
                     else:
                         sorted_list = sorted_list[:-1]
-                        
-            cost_matrix[(cost_matrix < sorted_list[0]) & (cost_matrix > sorted_list[-1])] = np.inf
+            if previous_lower_bound != origin_list[0] or previous_upper_bound != origin_list[-1]:            
+                cost_matrix[(cost_matrix <= previous_lower_bound) | (cost_matrix >= previous_upper_bound)] = np.inf
+            
             cost_matrix[cost_matrix == np.inf] = M
             row_ind, col_ind = linear_sum_assignment(cost_matrix)   
 
@@ -1095,7 +1141,7 @@ class Map:
 
                 if matched_order:
                     # 单位为m/s
-                    order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time)
+                    order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300)) if matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300) > 0 else total_dist / (matched_order.ETA - matched_order.order_create_time)
                         
         max_eta = max([o.ETA for o in orders])
         time_window = max_eta - self.clock
@@ -1205,6 +1251,12 @@ class Map:
             r = geodesic(order.pick_up_point, courier.position).meters
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v
+            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
+                wage = wage * 1.5
+            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
+                wage = wage * 1
+            else:
+                wage = wage * 0.6
             return 1.5 * wage
         else:
             wm = courier.income / courier_total_time
@@ -1213,6 +1265,13 @@ class Map:
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v
             
+            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
+                wage = wage * 1.5
+            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
+                wage = wage * 1
+            else:
+                wage = wage * 0.6
+                
             if courier.courier_type == 0:
                 return wage
             else:
@@ -1234,7 +1293,7 @@ class Map:
             #     return wage + 3 # flexible+fixed
             # else:
             #     return wage
-                
+    
     def get_actions(self):
         num_agents = len(self.couriers)
         capacity = self.couriers[0].capacity

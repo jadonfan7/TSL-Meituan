@@ -168,7 +168,8 @@ class EnvRunner(Runner):
                 for c in self.envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         Hired_num += 1
-                        Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            Hired_distance_per_episode.append(c.travel_distance)
                         Hired_finish_num.append(c.finish_order_num)
                         Hired_leisure_time.append(c.total_leisure_time)
                         Hired_running_time.append(c.total_running_time)
@@ -177,7 +178,8 @@ class EnvRunner(Runner):
                         Hired_income.append(c.income)
                     else:
                         Crowdsourced_num += 1
-                        Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            Crowdsourced_distance_per_episode.append(c.travel_distance)
                         Crowdsourced_finish_num.append(c.finish_order_num)
                         Crowdsourced_leisure_time.append(c.total_leisure_time)
                         Crowdsourced_running_time.append(c.total_running_time)
@@ -213,7 +215,7 @@ class EnvRunner(Runner):
                             order1_num += 1              
                             
             print(f"\nThis is Episode {episode+1}\n")                
-            print(f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
+            print(f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} ({Crowdsourced_on / Crowdsourced_num}) on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
             print(f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
             
@@ -358,17 +360,18 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Average running Time/Crowdsourced_Var', var_running1, episode + 1)
             
             message = (
-                f"\nThis is Train Episode {episode+1}\nThere are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired\n"
-                f"Average Travel Distance for Episode {episode+1}: Hired - {distance0} km (Var: {distance_var0}), Crowdsourced - {distance1} km (Var: {distance_var1}), Total - {distance} km (Var: {distance_var})\n"
+                f"\nThis is Train Episode {episode+1}\n"
+                f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired\n"
+                f"Average Travel Distance for Episode {episode+1}: Hired ({len(Hired_distance_per_episode)}) - {distance0} km (Var: {distance_var0}), Crowdsourced ({len(Crowdsourced_distance_per_episode)}) - {distance1} km (Var: {distance_var1}), Total ({len(Hired_distance_per_episode+Crowdsourced_distance_per_episode)}) - {distance} km (Var: {distance_var})\n"
                 f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}\n"
-                f"The average speed for Episode {episode+1}: Hired - {avg0_speed} m/s (Var: {var0_speed}), Crowdsourced - {avg1_speed} m/s (Var: {var1_speed}), Total - {avg_speed} m/s (Var: {var_speed})\n"
-                f"Rate of Overspeed for Episode {episode+1}: Hired - {overspeed0}, Crowdsourced - {overspeed1}, Total - {overspeed}\n"
-                f"The average price for Episode {episode+1}: Hired - {price_per_order0} dollar (Var: {var_price0}) with {order0_num} orders, Crowdsourced - {price_per_order1} dollar (Var: {var_price1}) with {order1_num} orders, Total - {price_per_order} dollar (Var: {var_price})\n"
-                f"The average income for Episode {episode+1}: Hired - {income0} dollar (Var: {var_income0}), Crowdsourced - {income1} dollar (Var: {var_income1}), Total - {income} dollar (Var: {var_income})\n"
+                f"The average speed for Episode {episode+1}: Hired ({len(Hired_avg_speed)}) - {avg0_speed} m/s (Var: {var0_speed}), Crowdsourced ({len(Crowdsourced_avg_speed)}) - {avg1_speed} m/s (Var: {var1_speed}), Total ({len(Hired_avg_speed+Crowdsourced_avg_speed)}) - {avg_speed} m/s (Var: {var_speed})\n"
+                f"Rate of Overspeed for Episode {episode+1}: Hired ({num_active_Hired}) - {overspeed0}, Crowdsourced ({num_active_Crowdsourced}) - {overspeed1}, Total ({num_active_Hired+num_active_Crowdsourced}) - {overspeed}\n"
+                f"The average price for Episode {episode+1}: Hired ({len(order0_price)}) - {price_per_order0} dollar (Var: {var_price0}) with {order0_num} orders, Crowdsourced ({len(order1_price)}) - {price_per_order1} dollar (Var: {var_price1}) with {order1_num} orders, Total ({len(order0_price+order1_price)}) - {price_per_order} dollar (Var: {var_price})\n"
+                f"The average income for Episode {episode+1}: Hired ({len(Hired_income)}) - {income0} dollar (Var: {var_income0}), Crowdsourced ({len(Crowdsourced_income)}) - {income1} dollar (Var: {var_income1}), Total ({len(Hired_income+Crowdsourced_income)}) - {income} dollar (Var: {var_income})\n"
                 f"The platform total cost is {platform_cost} dollar\n"
-                f"The average finish number for Episode {episode+1}: Hired - {avg_finish0} (Var: {var_finish0}), Crowdsourced - {avg_finish1} (Var: {var_finish1}), Total - {avg_finish} (Var: {var_finish})\n"
-                f"The average leisure time for Episode {episode+1}: Hired - {avg0_leisure} minutes (Var: {var_leisure0}), Crowdsourced - {avg1_leisure} minutes (Var: {var_leisure1}), Total - {avg_leisure} minutes (Var: {var_leisure})\n"
-                f"The average running time for Episode {episode+1}: Hired - {avg0_running} minutes (Var: {var_running0}), Crowdsourced - {avg1_running} minutes (Var: {var_running1}), Total - {avg_running} minutes (Var: {var_running})\n"
+                f"The average finish number for Episode {episode+1}: Hired ({len(Hired_finish_num)}) - {avg_finish0} (Var: {var_finish0}), Crowdsourced ({len(Crowdsourced_finish_num)}) - {avg_finish1} (Var: {var_finish1}), Total ({len(Hired_finish_num+Crowdsourced_finish_num)}) - {avg_finish} (Var: {var_finish})\n"
+                f"The average leisure time for Episode {episode+1}: Hired ({len(Hired_leisure_time)}) - {avg0_leisure} minutes (Var: {var_leisure0}), Crowdsourced ({len(Crowdsourced_leisure_time)}) - {avg1_leisure} minutes (Var: {var_leisure1}), Total ({len(Hired_leisure_time+Crowdsourced_leisure_time)}) - {avg_leisure} minutes (Var: {var_leisure})\n"
+                f"The average running time for Episode {episode+1}: Hired ({len(Hired_running_time)}) - {avg0_running} minutes (Var: {var_running0}), Crowdsourced ({len(Crowdsourced_running_time)}) - {avg1_running} minutes (Var: {var_running1}), Total ({len(Hired_running_time+Crowdsourced_running_time)}) - {avg_running} minutes (Var: {var_running})\n"
             )
 
             if count_dropped_orders0 + count_dropped_orders1 == 0:
@@ -409,7 +412,7 @@ class EnvRunner(Runner):
                 Var_ETA = round(np.var(ETA_usage0 + ETA_usage1), 2)
                 print(f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})")
                 
-                message += f"Rate of Late Orders for Episode {episode+1}: Hired - {late_rate0}, Crowdsourced - {late_rate1}, Total - {late_rate}\n" + f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})\n"
+                message += f"Rate of Late Orders for Episode {episode+1}: Hired - {late_rate0} out of {count_dropped_orders0} orders, Crowdsourced - {late_rate1} out of {count_dropped_orders1} orders, Total - {late_rate} out of {count_dropped_orders0 + count_dropped_orders1} orders\n" + f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})\n"
                 
                 self.writter.add_scalar('Late Orders Rate/Total', late_rate, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Hired', late_rate0, episode + 1)
@@ -421,12 +424,11 @@ class EnvRunner(Runner):
                 self.writter.add_scalar('ETA Usage Rate/Crowdsourced', ETA_usage_rate1, episode + 1)
                 self.writter.add_scalar('ETA Usage Rate/Crowdsourced', Var_ETA1, episode + 1)
 
-            # social_welfare = sum(Hired_income + Crowdsourced_income) - platform_cost - sum(Hired_distance_per_episode + Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105 + sum(order0_price + order1_price) - np.floor((count_overspeed0 + count_overspeed1) / self.envs.num_envs) * 50
-            social_welfare = sum(Hired_distance_per_episode + Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-            print(f"Social welfare is {social_welfare} dollar\n")
-            message += f"Social welfare is {social_welfare} dollar\n"
-            logger.success(message)
-            self.writter.add_scalar('Social Welfare', social_welfare, episode + 1)
+            # social_welfare = sum(Hired_distance_per_episode + Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+            # print(f"Social welfare is {social_welfare} dollar\n")
+            # message += f"Social welfare is {social_welfare} dollar\n"
+            # logger.success(message)
+            # self.writter.add_scalar('Social Welfare', social_welfare, episode + 1)
             
             print("\n")      
 
@@ -460,7 +462,7 @@ class EnvRunner(Runner):
                 # self.log_train(train_infos, total_num_steps)
 
             # eval
-            if (episode + 1) % self.eval_interval == 0 and self.use_eval:
+            if episode % self.eval_interval == 0 and self.use_eval:
                 self.eval_num += 1
                                 
                 self.eval(total_num_steps)
@@ -1171,11 +1173,11 @@ class EnvRunner(Runner):
                             algo5_order1_num += 1   
             
                             
-        print(f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired")
-        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired")  
-        print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired")       
-        print(f"In Algo4 there are {algo4_Hired_num} Hired, {algo4_Crowdsourced_num} Crowdsourced with {algo4_Crowdsourced_on} on, {algo4_order0_num} Order0, {algo4_order1_num} Order1, {algo4_order_wait} ({round(100 * algo4_order_wait / (algo4_order_wait + algo4_order0_num + algo4_order1_num), 2)}%) Orders waiting to be paired")
-        print(f"In Algo5 there are {algo5_Hired_num} Hired, {algo5_Crowdsourced_num} Crowdsourced with {algo5_Crowdsourced_on} on, {algo5_order0_num} Order0, {algo5_order1_num} Order1, {algo5_order_wait} ({round(100 * algo5_order_wait / (algo5_order_wait + algo5_order0_num + algo5_order1_num), 2)}%) Orders waiting to be paired")
+        print(f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} ({algo1_Crowdsourced_on / algo1_Crowdsourced_num}) on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired")
+        print(f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} ({algo2_Crowdsourced_on / algo2_Crowdsourced_num}) on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired")  
+        print(f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} ({algo3_Crowdsourced_on / algo3_Crowdsourced_num}) on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired")       
+        print(f"In Algo4 there are {algo4_Hired_num} Hired, {algo4_Crowdsourced_num} Crowdsourced with {algo4_Crowdsourced_on} ({algo4_Crowdsourced_on / algo4_Crowdsourced_num}) on, {algo4_order0_num} Order0, {algo4_order1_num} Order1, {algo4_order_wait} ({round(100 * algo4_order_wait / (algo4_order_wait + algo4_order0_num + algo4_order1_num), 2)}%) Orders waiting to be paired")
+        print(f"In Algo5 there are {algo5_Hired_num} Hired, {algo5_Crowdsourced_num} Crowdsourced with {algo5_Crowdsourced_on} {algo5_Crowdsourced_on / algo5_Crowdsourced_num} on, {algo5_order0_num} Order0, {algo5_order1_num} Order1, {algo5_order_wait} ({round(100 * algo5_order_wait / (algo5_order_wait + algo5_order0_num + algo5_order1_num), 2)}%) Orders waiting to be paired")
 
         # -----------------------
         # Reward
@@ -1194,6 +1196,7 @@ class EnvRunner(Runner):
         algo1_var1_distance = round(np.var(algo1_Crowdsourced_distance_per_episode) / 1000000, 2)
         algo1_distance = round(np.mean(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000, 2)
         algo1_var_distance = round(np.var(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000000, 2)
+        algo1_distance_courier_num = len(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode)
         
         algo2_distance0 = round(np.mean(algo2_Hired_distance_per_episode) / 1000, 2)
         algo2_var0_distance = round(np.var(algo2_Hired_distance_per_episode) / 1000000, 2)
@@ -1201,6 +1204,7 @@ class EnvRunner(Runner):
         algo2_var1_distance = round(np.var(algo2_Crowdsourced_distance_per_episode) / 1000000, 2)
         algo2_distance = round(np.mean(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode) / 1000, 2)
         algo2_var_distance = round(np.var(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode) / 1000000, 2)
+        algo2_distance_courier_num = len(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode)
 
         algo3_distance0 = round(np.mean(algo3_Hired_distance_per_episode) / 1000, 2)
         algo3_var0_distance = round(np.var(algo3_Hired_distance_per_episode) / 1000000, 2)
@@ -1208,6 +1212,7 @@ class EnvRunner(Runner):
         algo3_var1_distance = round(np.var(algo3_Crowdsourced_distance_per_episode) / 1000000, 2)
         algo3_distance = round(np.mean(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000, 2)
         algo3_var_distance = round(np.var(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000000, 2)
+        algo3_distance_courier_num = len(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode)
 
         algo4_distance0 = round(np.mean(algo4_Hired_distance_per_episode) / 1000, 2)
         algo4_var0_distance = round(np.var(algo4_Hired_distance_per_episode) / 1000000, 2)
@@ -1215,6 +1220,7 @@ class EnvRunner(Runner):
         algo4_var1_distance = round(np.var(algo4_Crowdsourced_distance_per_episode) / 1000000, 2)
         algo4_distance = round(np.mean(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode) / 1000, 2)
         algo4_var_distance = round(np.var(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode) / 1000000, 2)
+        algo4_distance_courier_num = len(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode)
 
         algo5_distance0 = round(np.mean(algo5_Hired_distance_per_episode) / 1000, 2)
         algo5_var0_distance = round(np.var(algo5_Hired_distance_per_episode) / 1000000, 2)
@@ -1222,6 +1228,7 @@ class EnvRunner(Runner):
         algo5_var1_distance = round(np.var(algo5_Crowdsourced_distance_per_episode) / 1000000, 2)
         algo5_distance = round(np.mean(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode) / 1000, 2)
         algo5_var_distance = round(np.var(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode) / 1000000, 2)
+        algo5_distance_courier_num = len(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode)
 
         print("Average Travel Distance and Var per Courier Between Algos:")
         print(f"Algo1: Hired - {algo1_distance0} km (Var: {algo1_var0_distance}), Crowdsourced - {algo1_distance1} km (Var: {algo1_var1_distance}), Total - {algo1_distance} km (Var: {algo1_var_distance})")
@@ -1490,6 +1497,7 @@ class EnvRunner(Runner):
         algo1_var1_income = round(np.var(algo1_Crowdsourced_income), 2)
         algo1_income = round(np.mean(algo1_Hired_income + algo1_Crowdsourced_income), 2)
         algo1_var_income = round(np.var(algo1_Hired_income + algo1_Crowdsourced_income), 2)
+        algo1_income_courier_num = len(algo1_Hired_income + algo1_Crowdsourced_income)
 
         algo2_income0 = round(np.mean(algo2_Hired_income), 2)
         algo2_var0_income = round(np.var(algo2_Hired_income), 2)
@@ -1497,6 +1505,7 @@ class EnvRunner(Runner):
         algo2_var1_income = round(np.var(algo2_Crowdsourced_income), 2)
         algo2_income = round(np.mean(algo2_Hired_income + algo2_Crowdsourced_income), 2)
         algo2_var_income = round(np.var(algo2_Hired_income + algo2_Crowdsourced_income), 2)
+        algo2_income_courier_num = len(algo2_Hired_income + algo2_Crowdsourced_income)
 
         algo3_income0 = round(np.mean(algo3_Hired_income), 2)
         algo3_var0_income = round(np.var(algo3_Hired_income), 2)
@@ -1504,6 +1513,7 @@ class EnvRunner(Runner):
         algo3_var1_income = round(np.var(algo3_Crowdsourced_income), 2)
         algo3_income = round(np.mean(algo3_Hired_income + algo3_Crowdsourced_income), 2)
         algo3_var_income = round(np.var(algo3_Hired_income + algo3_Crowdsourced_income), 2)
+        algo3_income_courier_num = len(algo3_Hired_income + algo3_Crowdsourced_income)
 
         algo4_income0 = round(np.mean(algo4_Hired_income), 2)
         algo4_var0_income = round(np.var(algo4_Hired_income), 2)
@@ -1511,6 +1521,7 @@ class EnvRunner(Runner):
         algo4_var1_income = round(np.var(algo4_Crowdsourced_income), 2)
         algo4_income = round(np.mean(algo4_Hired_income + algo4_Crowdsourced_income), 2)
         algo4_var_income = round(np.var(algo4_Hired_income + algo4_Crowdsourced_income), 2)
+        algo4_income_courier_num = (algo4_Hired_income + algo4_Crowdsourced_income)
 
         algo5_income0 = round(np.mean(algo5_Hired_income), 2)
         algo5_var0_income = round(np.var(algo5_Hired_income), 2)
@@ -1518,6 +1529,7 @@ class EnvRunner(Runner):
         algo5_var1_income = round(np.var(algo5_Crowdsourced_income), 2)
         algo5_income = round(np.mean(algo5_Hired_income + algo5_Crowdsourced_income), 2)
         algo5_var_income = round(np.var(algo5_Hired_income + algo5_Crowdsourced_income), 2)
+        algo5_income_courier_num = (algo5_Hired_income + algo5_Crowdsourced_income)
 
         print("Average Income per Courier for Evaluation Between Algos:")
         print(f"Algo1: Hired's average income is {algo1_income0} dollars (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollars (Var: {algo1_var1_income}), Total income per courier is {algo1_income} dollars (Var: {algo1_var_income})")
@@ -1525,7 +1537,7 @@ class EnvRunner(Runner):
         print(f"Algo3: Hired's average income is {algo3_income0} dollars (Var: {algo3_var0_income}), Crowdsourced's average income is {algo3_income1} dollars (Var: {algo3_var1_income}), Total income per courier is {algo3_income} dollars (Var: {algo3_var_income})")
         print(f"Algo4: Hired's average income is {algo4_income0} dollars (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollars (Var: {algo4_var1_income}), Total income per courier is {algo4_income} dollars (Var: {algo4_var_income})")
         print(f"Algo5: Hired's average income is {algo5_income0} dollars (Var: {algo5_var0_income}), Crowdsourced's average income is {algo5_income1} dollars (Var: {algo5_var1_income}), Total income per courier is {algo5_income} dollars (Var: {algo5_var_income})")
-
+        
         self.writter.add_scalar('Eval Average Income/Algo1 Total', algo1_income, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Hired', algo1_income0, self.eval_num)
         self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced', algo1_income1, self.eval_num)
@@ -1574,6 +1586,7 @@ class EnvRunner(Runner):
         algo1_var1_finish = round(np.var(algo1_Crowdsourced_finish_num), 2)
         algo1_finish = round(np.mean(algo1_Hired_finish_num + algo1_Crowdsourced_finish_num), 2)
         algo1_var_finish = round(np.var(algo1_Hired_finish_num + algo1_Crowdsourced_finish_num), 2)
+        algo1_finished_num = np.sum(algo1_Hired_finish_num + algo1_Crowdsourced_finish_num)
 
         algo2_finish0 = round(np.mean(algo2_Hired_finish_num), 2)
         algo2_var0_finish = round(np.var(algo2_Hired_finish_num), 2)
@@ -1581,6 +1594,7 @@ class EnvRunner(Runner):
         algo2_var1_finish = round(np.var(algo2_Crowdsourced_finish_num), 2)
         algo2_finish = round(np.mean(algo2_Hired_finish_num + algo2_Crowdsourced_finish_num), 2)
         algo2_var_finish = round(np.var(algo2_Hired_finish_num + algo2_Crowdsourced_finish_num), 2)
+        algo2_finished_num = np.sum(algo2_Hired_finish_num + algo2_Crowdsourced_finish_num)
 
         algo3_finish0 = round(np.mean(algo3_Hired_finish_num), 2)
         algo3_var0_finish = round(np.var(algo3_Hired_finish_num), 2)
@@ -1588,6 +1602,7 @@ class EnvRunner(Runner):
         algo3_var1_finish = round(np.var(algo3_Crowdsourced_finish_num), 2)
         algo3_finish = round(np.mean(algo3_Hired_finish_num + algo3_Crowdsourced_finish_num), 2)
         algo3_var_finish = round(np.var(algo3_Hired_finish_num + algo3_Crowdsourced_finish_num), 2)
+        algo3_finished_num = np.sum(algo3_Hired_finish_num + algo3_Crowdsourced_finish_num)
 
         algo4_finish0 = round(np.mean(algo4_Hired_finish_num), 2)
         algo4_var0_finish = round(np.var(algo4_Hired_finish_num), 2)
@@ -1595,6 +1610,7 @@ class EnvRunner(Runner):
         algo4_var1_finish = round(np.var(algo4_Crowdsourced_finish_num), 2)
         algo4_finish = round(np.mean(algo4_Hired_finish_num + algo4_Crowdsourced_finish_num), 2)
         algo4_var_finish = round(np.var(algo4_Hired_finish_num + algo4_Crowdsourced_finish_num), 2)
+        algo4_finished_num = np.sum(algo4_Hired_finish_num + algo4_Crowdsourced_finish_num)
 
         algo5_finish0 = round(np.mean(algo5_Hired_finish_num), 2)
         algo5_var0_finish = round(np.var(algo5_Hired_finish_num), 2)
@@ -1602,6 +1618,7 @@ class EnvRunner(Runner):
         algo5_var1_finish = round(np.var(algo5_Crowdsourced_finish_num), 2)
         algo5_finish = round(np.mean(algo5_Hired_finish_num + algo5_Crowdsourced_finish_num), 2)
         algo5_var_finish = round(np.var(algo5_Hired_finish_num + algo5_Crowdsourced_finish_num), 2)
+        algo5_finished_num = np.sum(algo5_Hired_finish_num + algo5_Crowdsourced_finish_num)
 
         print("Average Finished Orders per Courier for Evaluation Between Algos:")
         print(f"Algo1: Hired finishes average {algo1_finish0} orders (Var: {algo1_var0_finish}), Crowdsourced finishes average {algo1_finish1} orders (Var: {algo1_var1_finish}), Total finish number per courier is {algo1_finish} orders (Var: {algo1_var_finish})")
@@ -1653,6 +1670,7 @@ class EnvRunner(Runner):
         algo1_var1_leisure = round(np.var(algo1_Crowdsourced_leisure_time) / 60**2, 2)
         algo1_avg_leisure = round(np.mean(algo1_Hired_leisure_time + algo1_Crowdsourced_leisure_time) / 60, 2)
         algo1_var_leisure = round(np.var(algo1_Hired_leisure_time + algo1_Crowdsourced_leisure_time) / 60**2, 2)
+        algo1_leisure_courier_num = len(algo1_Hired_leisure_time + algo1_Crowdsourced_leisure_time)
 
         algo2_avg0_leisure = round(np.mean(algo2_Hired_leisure_time) / 60, 2)
         algo2_var0_leisure = round(np.var(algo2_Hired_leisure_time) / 60**2, 2)
@@ -1660,6 +1678,7 @@ class EnvRunner(Runner):
         algo2_var1_leisure = round(np.var(algo2_Crowdsourced_leisure_time) / 60**2, 2)
         algo2_avg_leisure = round(np.mean(algo2_Hired_leisure_time + algo2_Crowdsourced_leisure_time) / 60, 2)
         algo2_var_leisure = round(np.var(algo2_Hired_leisure_time + algo2_Crowdsourced_leisure_time) / 60**2, 2)
+        algo2_leisure_courier_num = len(algo2_Hired_leisure_time + algo2_Crowdsourced_leisure_time)
 
         algo3_avg0_leisure = round(np.mean(algo3_Hired_leisure_time) / 60, 2)
         algo3_var0_leisure = round(np.var(algo3_Hired_leisure_time) / 60**2, 2)
@@ -1667,6 +1686,7 @@ class EnvRunner(Runner):
         algo3_var1_leisure = round(np.var(algo3_Crowdsourced_leisure_time) / 60**2, 2)
         algo3_avg_leisure = round(np.mean(algo3_Hired_leisure_time + algo3_Crowdsourced_leisure_time) / 60, 2)
         algo3_var_leisure = round(np.var(algo3_Hired_leisure_time + algo3_Crowdsourced_leisure_time) / 60**2, 2)
+        algo3_leisure_courier_num = len(algo3_Hired_leisure_time + algo3_Crowdsourced_leisure_time)
 
         algo4_avg0_leisure = round(np.mean(algo4_Hired_leisure_time) / 60, 2)
         algo4_var0_leisure = round(np.var(algo4_Hired_leisure_time) / 60**2, 2)
@@ -1674,6 +1694,7 @@ class EnvRunner(Runner):
         algo4_var1_leisure = round(np.var(algo4_Crowdsourced_leisure_time) / 60**2, 2)
         algo4_avg_leisure = round(np.mean(algo4_Hired_leisure_time + algo4_Crowdsourced_leisure_time) / 60, 2)
         algo4_var_leisure = round(np.var(algo4_Hired_leisure_time + algo4_Crowdsourced_leisure_time) / 60**2, 2)
+        algo4_leisure_courier_num = len(algo4_Hired_leisure_time + algo4_Crowdsourced_leisure_time)
 
         algo5_avg0_leisure = round(np.mean(algo5_Hired_leisure_time) / 60, 2)
         algo5_var0_leisure = round(np.var(algo5_Hired_leisure_time) / 60**2, 2)
@@ -1681,6 +1702,7 @@ class EnvRunner(Runner):
         algo5_var1_leisure = round(np.var(algo5_Crowdsourced_leisure_time) / 60**2, 2)
         algo5_avg_leisure = round(np.mean(algo5_Hired_leisure_time + algo5_Crowdsourced_leisure_time) / 60, 2)
         algo5_var_leisure = round(np.var(algo5_Hired_leisure_time + algo5_Crowdsourced_leisure_time) / 60**2, 2)
+        algo5_leisure_courier_num = len(algo5_Hired_leisure_time + algo5_Crowdsourced_leisure_time)
 
         print("Average leisure time per courier for Evaluation Between Algos:")
         print(f"Algo1: Hired leisure time is {algo1_avg0_leisure} minutes (Var: {algo1_var0_leisure}), Crowdsourced leisure time is {algo1_avg1_leisure} minutes (Var: {algo1_var1_leisure}), Total leisure time per courier is {algo1_avg_leisure} minutes (Var: {algo1_var_leisure})")
@@ -1728,6 +1750,7 @@ class EnvRunner(Runner):
         algo1_var1_running = round(np.var(algo1_Crowdsourced_running_time) / 60**2, 2)
         algo1_avg_running = round(np.mean(algo1_Hired_running_time + algo1_Crowdsourced_running_time) / 60, 2)
         algo1_var_running = round(np.var(algo1_Hired_running_time + algo1_Crowdsourced_running_time) / 60**2, 2)
+        algo1_running_courier_num = len(algo1_Hired_running_time + algo1_Crowdsourced_running_time)
 
         algo2_avg0_running = round(np.mean(algo2_Hired_running_time) / 60, 2)
         algo2_var0_running = round(np.var(algo2_Hired_running_time) / 60**2, 2)
@@ -1735,6 +1758,7 @@ class EnvRunner(Runner):
         algo2_var1_running = round(np.var(algo2_Crowdsourced_running_time) / 60**2, 2)
         algo2_avg_running = round(np.mean(algo2_Hired_running_time + algo2_Crowdsourced_running_time) / 60, 2)
         algo2_var_running = round(np.var(algo2_Hired_running_time + algo2_Crowdsourced_running_time) / 60**2, 2)
+        algo2_running_courier_num = len(algo2_Hired_running_time + algo2_Crowdsourced_running_time)
 
         algo3_avg0_running = round(np.mean(algo3_Hired_running_time) / 60, 2)
         algo3_var0_running = round(np.var(algo3_Hired_running_time) / 60**2, 2)
@@ -1742,6 +1766,7 @@ class EnvRunner(Runner):
         algo3_var1_running = round(np.var(algo3_Crowdsourced_running_time) / 60**2, 2)
         algo3_avg_running = round(np.mean(algo3_Hired_running_time + algo3_Crowdsourced_running_time) / 60, 2)
         algo3_var_running = round(np.var(algo3_Hired_running_time + algo3_Crowdsourced_running_time) / 60**2, 2)
+        algo3_running_courier_num = len(algo3_Hired_running_time + algo3_Crowdsourced_running_time)
 
         algo4_avg0_running = round(np.mean(algo4_Hired_running_time) / 60, 2)
         algo4_var0_running = round(np.var(algo4_Hired_running_time) / 60**2, 2)
@@ -1749,6 +1774,7 @@ class EnvRunner(Runner):
         algo4_var1_running = round(np.var(algo4_Crowdsourced_running_time) / 60**2, 2)
         algo4_avg_running = round(np.mean(algo4_Hired_running_time + algo4_Crowdsourced_running_time) / 60, 2)
         algo4_var_running = round(np.var(algo4_Hired_running_time + algo4_Crowdsourced_running_time) / 60**2, 2)
+        algo4_running_courier_num = len(algo4_Hired_running_time + algo4_Crowdsourced_running_time)
 
         algo5_avg0_running = round(np.mean(algo5_Hired_running_time) / 60, 2)
         algo5_var0_running = round(np.var(algo5_Hired_running_time) / 60**2, 2)
@@ -1756,6 +1782,7 @@ class EnvRunner(Runner):
         algo5_var1_running = round(np.var(algo5_Crowdsourced_running_time) / 60**2, 2)
         algo5_avg_running = round(np.mean(algo5_Hired_running_time + algo5_Crowdsourced_running_time) / 60, 2)
         algo5_var_running = round(np.var(algo5_Hired_running_time + algo5_Crowdsourced_running_time) / 60**2, 2)
+        algo5_running_courier_num = len(algo5_Hired_running_time + algo5_Crowdsourced_running_time)
 
         print("Average running time per courier for Evaluation Between Algos:")
         print(f"Algo1: Hired running time is {algo1_avg0_running} minutes (Var: {algo1_var0_running}), Crowdsourced running time is {algo1_avg1_running} minutes (Var: {algo1_var1_running}), Total running time per courier is {algo1_avg_running} minutes (Var: {algo1_var_running})")
@@ -1796,11 +1823,11 @@ class EnvRunner(Runner):
         self.writter.add_scalar('Eval Average running Time/Algo5 Crowdsourced Var', algo5_var1_running, self.eval_num)
 
         message = (
-            f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} on, {algo1_order0_num} Order0, {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired\n"
-            f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} on, {algo2_order0_num} Order0, {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired\n"
-            f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} on, {algo3_order0_num} Order0, {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired\n"
-            f"In Algo4 there are {algo4_Hired_num} Hired, {algo4_Crowdsourced_num} Crowdsourced with {algo4_Crowdsourced_on} on, {algo4_order0_num} Order0, {algo4_order1_num} Order1, {algo4_order_wait} ({round(100 * algo4_order_wait / (algo4_order_wait + algo4_order0_num + algo4_order1_num), 2)}%) Orders waiting to be paired\n"
-            f"In Algo5 there are {algo5_Hired_num} Hired, {algo5_Crowdsourced_num} Crowdsourced with {algo5_Crowdsourced_on} on, {algo5_order0_num} Order0, {algo5_order1_num} Order1, {algo5_order_wait} ({round(100 * algo5_order_wait / (algo5_order_wait + algo5_order0_num + algo5_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} ({algo1_Crowdsourced_on / algo1_Crowdsourced_num}) on, finishing {algo1_finished_num} orders in {algo1_order0_num} Order0 and {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo2 there are {algo2_Hired_num} Hired, {algo2_Crowdsourced_num} Crowdsourced with {algo2_Crowdsourced_on} ({algo2_Crowdsourced_on / algo2_Crowdsourced_num}) on, finishing {algo2_finished_num} orders in {algo2_order0_num} Order0 and {algo2_order1_num} Order1, {algo2_order_wait} ({round(100 * algo2_order_wait / (algo2_order_wait + algo2_order0_num + algo2_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo3 there are {algo3_Hired_num} Hired, {algo3_Crowdsourced_num} Crowdsourced with {algo3_Crowdsourced_on} ({algo3_Crowdsourced_on / algo3_Crowdsourced_num}) on, finishing {algo3_finished_num} orders in {algo3_order0_num} Order0 and {algo3_order1_num} Order1, {algo3_order_wait} ({round(100 * algo3_order_wait / (algo3_order_wait + algo3_order0_num + algo3_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo4 there are {algo4_Hired_num} Hired, {algo4_Crowdsourced_num} Crowdsourced with {algo4_Crowdsourced_on} ({algo4_Crowdsourced_on / algo4_Crowdsourced_num}) on, finishing {algo4_finished_num} orders in {algo4_order0_num} Order0 and {algo4_order1_num} Order1, {algo4_order_wait} ({round(100 * algo4_order_wait / (algo4_order_wait + algo4_order0_num + algo4_order1_num), 2)}%) Orders waiting to be paired\n"
+            f"In Algo5 there are {algo5_Hired_num} Hired, {algo5_Crowdsourced_num} Crowdsourced with {algo5_Crowdsourced_on} ({algo5_Crowdsourced_on / algo5_Crowdsourced_num}) on, finishing {algo2_finished_num} orders in {algo5_order0_num} Order0 and {algo5_order1_num} Order1, {algo5_order_wait} ({round(100 * algo5_order_wait / (algo5_order_wait + algo5_order0_num + algo5_order1_num), 2)}%) Orders waiting to be paired\n"
             f"Total Reward for Evaluation Between Algos:\n"
             f"Algo1: {round(algo1_eval_episode_rewards_sum, 2)}\n"
             f"Algo2: {round(algo2_eval_episode_rewards_sum, 2)}\n"
@@ -1808,11 +1835,11 @@ class EnvRunner(Runner):
             f"Algo4: {round(algo4_eval_episode_rewards_sum, 2)}\n"
             f"Algo5: {round(algo5_eval_episode_rewards_sum, 2)}\n"
             f"Average Travel Distance per Courier Between Algos:\n"
-            f"Algo1: Hired - {algo1_distance0} km (Var: {algo1_var0_distance}), Crowdsourced - {algo1_distance1} km (Var: {algo1_var1_distance}), Total - {algo1_distance} km (Var: {algo1_var_distance})\n"
-            f"Algo2: Hired - {algo2_distance0} km (Var: {algo2_var0_distance}), Crowdsourced - {algo2_distance1} km (Var: {algo2_var1_distance}), Total - {algo2_distance} km (Var: {algo2_var_distance})\n"
-            f"Algo3: Hired - {algo3_distance0} km (Var: {algo3_var0_distance}), Crowdsourced - {algo3_distance1} km (Var: {algo3_var1_distance}), Total - {algo3_distance} km (Var: {algo3_var_distance})\n"
-            f"Algo4: Hired - {algo4_distance0} km (Var: {algo4_var0_distance}), Crowdsourced - {algo4_distance1} km (Var: {algo4_var1_distance}), Total - {algo4_distance} km (Var: {algo4_var_distance})\n"
-            f"Algo5: Hired - {algo5_distance0} km (Var: {algo5_var0_distance}), Crowdsourced - {algo5_distance1} km (Var: {algo5_var1_distance}), Total - {algo5_distance} km (Var: {algo5_var_distance})\n"
+            f"Algo1: Hired - {algo1_distance0} km (Var: {algo1_var0_distance}), Crowdsourced - {algo1_distance1} km (Var: {algo1_var1_distance}), Total ({algo1_distance_courier_num}) - {algo1_distance} km (Var: {algo1_var_distance})\n"
+            f"Algo2: Hired - {algo2_distance0} km (Var: {algo2_var0_distance}), Crowdsourced - {algo2_distance1} km (Var: {algo2_var1_distance}), Total ({algo2_distance_courier_num}) - {algo2_distance} km (Var: {algo2_var_distance})\n"
+            f"Algo3: Hired - {algo3_distance0} km (Var: {algo3_var0_distance}), Crowdsourced - {algo3_distance1} km (Var: {algo3_var1_distance}), Total ({algo3_distance_courier_num}) - {algo3_distance} km (Var: {algo3_var_distance})\n"
+            f"Algo4: Hired - {algo4_distance0} km (Var: {algo4_var0_distance}), Crowdsourced - {algo4_distance1} km (Var: {algo4_var1_distance}), Total ({algo4_distance_courier_num}) - {algo4_distance} km (Var: {algo4_var_distance})\n"
+            f"Algo5: Hired - {algo5_distance0} km (Var: {algo5_var0_distance}), Crowdsourced - {algo5_distance1} km (Var: {algo5_var1_distance}), Total ({algo5_distance_courier_num}) - {algo5_distance} km (Var: {algo5_var_distance})\n"
             "Average Speed per Courier Between Algos:\n"
             f"Algo1: Hired average speed is {algo1_avg0_speed} m/s (Var: {algo1_var0_speed}), Crowdsourced average speed is {algo1_avg1_speed} m/s (Var: {algo1_var1_speed}) and average speed per courier is {algo1_avg_speed} m/s (Var: {algo1_var_speed})\n"
             f"Algo2: Hired average speed is {algo2_avg0_speed} m/s (Var: {algo2_var0_speed}), Crowdsourced average speed is {algo2_avg1_speed} m/s (Var: {algo2_var1_speed}) and average speed per courier is {algo2_avg_speed} m/s (Var: {algo2_var_speed})\n"
@@ -1832,23 +1859,23 @@ class EnvRunner(Runner):
             f"Algo4: The average price of Hired's order is {algo4_price_per_order0} dollar (Var: {algo4_var0_price}) with {algo4_order0_num} orders, Crowdsourced's is {algo4_price_per_order1} dollar (Var: {algo4_var1_price}) with {algo4_order1_num} orders and for all is {algo4_price_per_order} dollar (Var: {algo4_var_price})\n"
             f"Algo5: The average price of Hired's order is {algo5_price_per_order0} dollar (Var: {algo5_var0_price}) with {algo5_order0_num} orders, Crowdsourced's is {algo5_price_per_order1} dollar (Var: {algo5_var1_price}) with {algo5_order1_num} orders and for all is {algo5_price_per_order} dollar (Var: {algo5_var_price})\n"
             "Average Income per Courier for Evaluation Between Algos:\n"
-            f"Algo1: Hired's average income is {algo1_income0} dollar (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollar (Var: {algo1_var1_income}) and Total income per courier is {algo1_income} dollar (Var: {algo1_var_income}), The platform total cost is {round(platform_cost1, 2)} dollar\n"
-            f"Algo2: Hired's average income is {algo2_income0} dollar (Var: {algo2_var0_income}), Crowdsourced's average income is {algo2_income1} dollar (Var: {algo2_var1_income}) and Total income per courier is {algo2_income} dollar (Var: {algo2_var_income}), The platform total cost is {round(platform_cost2, 2)} dollar\n"
-            f"Algo3: Hired's average income is {algo3_income0} dollar (Var: {algo3_var0_income}), Crowdsourced's average income is {algo3_income1} dollar (Var: {algo3_var1_income}) and Total income per courier is {algo3_income} dollar (Var: {algo3_var_income}), The platform total cost is {round(platform_cost3, 2)} dollar\n"
-            f"Algo4: Hired's average income is {algo4_income0} dollar (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollar (Var: {algo4_var1_income}) and Total income per courier is {algo4_income} dollar (Var: {algo4_var_income}), The platform total cost is {round(platform_cost4, 2)} dollar\n"
-            f"Algo5: Hired's average income is {algo5_income0} dollar (Var: {algo5_var0_income}), Crowdsourced's average income is {algo5_income1} dollar (Var: {algo5_var1_income}) and Total income per courier is {algo5_income} dollar (Var: {algo5_var_income}), The platform total cost is {round(platform_cost5, 2)} dollar\n"
+            f"Algo1: Hired's average income is {algo1_income0} dollar (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollar (Var: {algo1_var1_income}) and Total income per ({algo1_income_courier_num}) courier is {algo1_income} dollar (Var: {algo1_var_income}), The platform total cost is {round(platform_cost1, 2)} dollar\n"
+            f"Algo2: Hired's average income is {algo2_income0} dollar (Var: {algo2_var0_income}), Crowdsourced's average income is {algo2_income1} dollar (Var: {algo2_var1_income}) and Total income per ({algo2_income_courier_num}) courier is {algo2_income} dollar (Var: {algo2_var_income}), The platform total cost is {round(platform_cost2, 2)} dollar\n"
+            f"Algo3: Hired's average income is {algo3_income0} dollar (Var: {algo3_var0_income}), Crowdsourced's average income is {algo3_income1} dollar (Var: {algo3_var1_income}) and Total income per ({algo3_income_courier_num}) courier is {algo3_income} dollar (Var: {algo3_var_income}), The platform total cost is {round(platform_cost3, 2)} dollar\n"
+            f"Algo4: Hired's average income is {algo4_income0} dollar (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollar (Var: {algo4_var1_income}) and Total income per ({algo4_income_courier_num}) courier is {algo4_income} dollar (Var: {algo4_var_income}), The platform total cost is {round(platform_cost4, 2)} dollar\n"
+            f"Algo5: Hired's average income is {algo5_income0} dollar (Var: {algo5_var0_income}), Crowdsourced's average income is {algo5_income1} dollar (Var: {algo5_var1_income}) and Total income per ({algo5_income_courier_num}) courier is {algo5_income} dollar (Var: {algo5_var_income}), The platform total cost is {round(platform_cost5, 2)} dollar\n"
             "Average Leisure Time per Courier for Evaluation Between Algos:\n"
-            f"Algo1: Hired's average leisure time is {algo1_avg0_leisure} minutes (Var: {algo1_var0_leisure}), Crowdsourced's average leisure time is {algo1_avg1_leisure} minutes (Var: {algo1_var1_leisure}) and Total leisure time per courier is {algo1_avg_leisure} minutes (Var: {algo1_var_leisure})\n"
-            f"Algo2: Hired's average leisure time is {algo2_avg0_leisure} minutes (Var: {algo2_var0_leisure}), Crowdsourced's average leisure time is {algo2_avg1_leisure} minutes (Var: {algo2_var1_leisure}) and Total leisure time per courier is {algo2_avg_leisure} minutes (Var: {algo2_var_leisure})\n"
-            f"Algo3: Hired's average leisure time is {algo3_avg0_leisure} minutes (Var: {algo3_var0_leisure}), Crowdsourced's average leisure time is {algo3_avg1_leisure} minutes (Var: {algo3_var1_leisure}) and Total leisure time per courier is {algo3_avg_leisure} minutes (Var: {algo3_var_leisure})\n"
-            f"Algo4: Hired's average leisure time is {algo4_avg0_leisure} minutes (Var: {algo4_var0_leisure}), Crowdsourced's average leisure time is {algo4_avg1_leisure} minutes (Var: {algo4_var1_leisure}) and Total leisure time per courier is {algo4_avg_leisure} minutes (Var: {algo4_var_leisure})\n"
-            f"Algo5: Hired's average leisure time is {algo5_avg0_leisure} minutes (Var: {algo5_var0_leisure}), Crowdsourced's average leisure time is {algo5_avg1_leisure} minutes (Var: {algo5_var1_leisure}) and Total leisure time per courier is {algo5_avg_leisure} minutes (Var: {algo5_var_leisure})\n"
+            f"Algo1: Hired's average leisure time is {algo1_avg0_leisure} minutes (Var: {algo1_var0_leisure}), Crowdsourced's average leisure time is {algo1_avg1_leisure} minutes (Var: {algo1_var1_leisure}) and Total leisure time per ({algo1_leisure_courier_num}) courier is {algo1_avg_leisure} minutes (Var: {algo1_var_leisure})\n"
+            f"Algo2: Hired's average leisure time is {algo2_avg0_leisure} minutes (Var: {algo2_var0_leisure}), Crowdsourced's average leisure time is {algo2_avg1_leisure} minutes (Var: {algo2_var1_leisure}) and Total leisure time per ({algo2_leisure_courier_num}) courier is {algo2_avg_leisure} minutes (Var: {algo2_var_leisure})\n"
+            f"Algo3: Hired's average leisure time is {algo3_avg0_leisure} minutes (Var: {algo3_var0_leisure}), Crowdsourced's average leisure time is {algo3_avg1_leisure} minutes (Var: {algo3_var1_leisure}) and Total leisure time per ({algo3_leisure_courier_num}) courier is {algo3_avg_leisure} minutes (Var: {algo3_var_leisure})\n"
+            f"Algo4: Hired's average leisure time is {algo4_avg0_leisure} minutes (Var: {algo4_var0_leisure}), Crowdsourced's average leisure time is {algo4_avg1_leisure} minutes (Var: {algo4_var1_leisure}) and Total leisure time per ({algo4_leisure_courier_num}) courier is {algo4_avg_leisure} minutes (Var: {algo4_var_leisure})\n"
+            f"Algo5: Hired's average leisure time is {algo5_avg0_leisure} minutes (Var: {algo5_var0_leisure}), Crowdsourced's average leisure time is {algo5_avg1_leisure} minutes (Var: {algo5_var1_leisure}) and Total leisure time per ({algo5_leisure_courier_num}) courier is {algo5_avg_leisure} minutes (Var: {algo5_var_leisure})\n"
             "Average Running Time per Courier for Evaluation Between Algos:\n"
-            f"Algo1: Hired's average running time is {algo1_avg0_running} minutes (Var: {algo1_var0_running}), Crowdsourced's average running time is {algo1_avg1_running} minutes (Var: {algo1_var1_running}) and Total running time per courier is {algo1_avg_running} minutes (Var: {algo1_var_running})\n"
-            f"Algo2: Hired's average running time is {algo2_avg0_running} minutes (Var: {algo2_var0_running}), Crowdsourced's average running time is {algo2_avg1_running} minutes (Var: {algo2_var1_running}) and Total running time per courier is {algo2_avg_running} minutes (Var: {algo2_var_running})\n"
-            f"Algo3: Hired's average running time is {algo3_avg0_running} minutes (Var: {algo3_var0_running}), Crowdsourced's average running time is {algo3_avg1_running} minutes (Var: {algo3_var1_running}) and Total running time per courier is {algo3_avg_running} minutes (Var: {algo3_var_running})\n"
-            f"Algo4: Hired's average running time is {algo4_avg0_running} minutes (Var: {algo4_var0_running}), Crowdsourced's average running time is {algo4_avg1_running} minutes (Var: {algo4_var1_running}) and Total running time per courier is {algo4_avg_running} minutes (Var: {algo4_var_running})\n"
-            f"Algo5: Hired's average running time is {algo5_avg0_running} minutes (Var: {algo5_var0_running}), Crowdsourced's average running time is {algo5_avg1_running} minutes (Var: {algo5_var1_running}) and Total running time per courier is {algo5_avg_running} minutes (Var: {algo5_var_running})\n"
+            f"Algo1: Hired's average running time is {algo1_avg0_running} minutes (Var: {algo1_var0_running}), Crowdsourced's average running time is {algo1_avg1_running} minutes (Var: {algo1_var1_running}) and Total running time per ({algo1_running_courier_num}) courier is {algo1_avg_running} minutes (Var: {algo1_var_running})\n"
+            f"Algo2: Hired's average running time is {algo2_avg0_running} minutes (Var: {algo2_var0_running}), Crowdsourced's average running time is {algo2_avg1_running} minutes (Var: {algo2_var1_running}) and Total running time per ({algo2_running_courier_num}) courier is {algo2_avg_running} minutes (Var: {algo2_var_running})\n"
+            f"Algo3: Hired's average running time is {algo3_avg0_running} minutes (Var: {algo3_var0_running}), Crowdsourced's average running time is {algo3_avg1_running} minutes (Var: {algo3_var1_running}) and Total running time per ({algo3_running_courier_num}) courier is {algo3_avg_running} minutes (Var: {algo3_var_running})\n"
+            f"Algo4: Hired's average running time is {algo4_avg0_running} minutes (Var: {algo4_var0_running}), Crowdsourced's average running time is {algo4_avg1_running} minutes (Var: {algo4_var1_running}) and Total running time per ({algo4_running_courier_num}) courier is {algo4_avg_running} minutes (Var: {algo4_var_running})\n"
+            f"Algo5: Hired's average running time is {algo5_avg0_running} minutes (Var: {algo5_var0_running}), Crowdsourced's average running time is {algo5_avg1_running} minutes (Var: {algo5_var1_running}) and Total running time per ({algo5_running_courier_num}) courier is {algo5_avg_running} minutes (Var: {algo5_var_running})\n"
             "Average Order Finished per Courier for Evaluation Between Algos:\n"
             f"Algo1: Hired courier finishes average {algo1_finish0} orders (Var: {algo1_var0_finish}), Crowdsourced courier finishes average {algo1_finish1} orders (Var: {algo1_var1_finish}) and Total is {algo1_finish} orders (Var: {algo1_var_finish})\n"
             f"Algo2: Hired courier finishes average {algo2_finish0} orders (Var: {algo2_var0_finish}), Crowdsourced courier finishes average {algo2_finish1} orders (Var: {algo2_var1_finish}) and Total is {algo2_finish} orders (Var: {algo2_var_finish})\n"
@@ -1900,7 +1927,7 @@ class EnvRunner(Runner):
                 algo1_var1_ETA = 0
                 
             algo1_late_rate = round((algo1_late_orders0 + algo1_late_orders1) / (algo1_count_dropped_orders0 +algo1_count_dropped_orders1), 2)
-            print(f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate}")
+            print(f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate} out of ({algo1_count_dropped_orders0 +algo1_count_dropped_orders1})")
 
             algo1_ETA_usage_rate = round(np.mean(algo1_ETA_usage0 + algo1_ETA_usage1), 2)
             algo1_var_ETA = round(np.var(algo1_ETA_usage0 + algo1_ETA_usage1), 2)
@@ -1916,7 +1943,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Hired Var', algo1_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Crowdsourced Var', algo1_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate} out of ({algo1_count_dropped_orders0 +algo1_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})\n"
         
         if algo2_count_dropped_orders0 + algo2_count_dropped_orders1 == 0:
             print("No order is dropped in Algo2")
@@ -1961,7 +1988,7 @@ class EnvRunner(Runner):
                 algo2_var1_ETA = 0
                 
             algo2_late_rate = round((algo2_late_orders0 + algo2_late_orders1) / (algo2_count_dropped_orders0 +algo2_count_dropped_orders1), 2)
-            print(f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate}")
+            print(f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate} out of ({algo2_count_dropped_orders0 +algo2_count_dropped_orders1})")
 
             algo2_ETA_usage_rate = round(np.mean(algo2_ETA_usage0 + algo2_ETA_usage1), 2)
             algo2_var_ETA = round(np.var(algo2_ETA_usage0 + algo2_ETA_usage1), 2)
@@ -1977,7 +2004,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Hired Var', algo2_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Crowdsourced Var', algo2_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo2: Hired - {algo2_ETA_usage_rate0} (Var: {algo2_var0_ETA}), Crowdsourced - {algo2_ETA_usage_rate1} (Var: {algo2_var1_ETA}), Total - {algo2_ETA_usage_rate} (Var: {algo2_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate} out of ({algo2_count_dropped_orders0 +algo2_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo2: Hired - {algo2_ETA_usage_rate0} (Var: {algo2_var0_ETA}), Crowdsourced - {algo2_ETA_usage_rate1} (Var: {algo2_var1_ETA}), Total - {algo2_ETA_usage_rate} (Var: {algo2_var_ETA})\n"
 
         if algo3_count_dropped_orders0 + algo3_count_dropped_orders1 == 0:
             print("No order is dropped in Algo3")
@@ -2022,7 +2049,7 @@ class EnvRunner(Runner):
                 algo3_var1_ETA = 0
                 
             algo3_late_rate = round((algo3_late_orders0 + algo3_late_orders1) / (algo3_count_dropped_orders0 +algo3_count_dropped_orders1), 2)
-            print(f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate}")
+            print(f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate} out of ({algo3_count_dropped_orders0 +algo3_count_dropped_orders1})")
 
             algo3_ETA_usage_rate = round(np.mean(algo3_ETA_usage0 + algo3_ETA_usage1), 2)
             algo3_var_ETA = round(np.var(algo3_ETA_usage0 + algo3_ETA_usage1), 2)
@@ -2038,7 +2065,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired Var', algo3_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced Var', algo3_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0} (Var: {algo3_var0_ETA}), Crowdsourced - {algo3_ETA_usage_rate1} (Var: {algo3_var1_ETA}), Total - {algo3_ETA_usage_rate} (Var: {algo3_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate} out of ({algo3_count_dropped_orders0 +algo3_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0} (Var: {algo3_var0_ETA}), Crowdsourced - {algo3_ETA_usage_rate1} (Var: {algo3_var1_ETA}), Total - {algo3_ETA_usage_rate} (Var: {algo3_var_ETA})\n"
 
         if algo4_count_dropped_orders0 + algo4_count_dropped_orders1 == 0:
             print("No order is dropped in Algo4")
@@ -2083,7 +2110,7 @@ class EnvRunner(Runner):
                 algo4_var1_ETA = 0
                 
             algo4_late_rate = round((algo4_late_orders0 + algo4_late_orders1) / (algo4_count_dropped_orders0 +algo4_count_dropped_orders1), 2)
-            print(f"Rate of Late Orders for Evaluation in Algo4: Hired - {algo4_late_rate0}, Crowdsourced - {algo4_late_rate1}, Total - {algo4_late_rate}")
+            print(f"Rate of Late Orders for Evaluation in Algo4: Hired - {algo4_late_rate0}, Crowdsourced - {algo4_late_rate1}, Total - {algo4_late_rate} out of ({algo4_count_dropped_orders0 +algo4_count_dropped_orders1})")
 
             algo4_ETA_usage_rate = round(np.mean(algo4_ETA_usage0 + algo4_ETA_usage1), 2)
             algo4_var_ETA = round(np.var(algo4_ETA_usage0 + algo4_ETA_usage1), 2)
@@ -2099,7 +2126,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Hired Var', algo4_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Crowdsourced Var', algo4_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo4: Hired - {algo4_late_rate0}, Crowdsourced - {algo4_late_rate1}, Total - {algo4_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo4: Hired - {algo4_ETA_usage_rate0} (Var: {algo4_var0_ETA}), Crowdsourced - {algo4_ETA_usage_rate1} (Var: {algo4_var1_ETA}), Total - {algo4_ETA_usage_rate} (Var: {algo4_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo4: Hired - {algo4_late_rate0}, Crowdsourced - {algo4_late_rate1}, Total - {algo4_late_rate} out of ({algo4_count_dropped_orders0 +algo4_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo4: Hired - {algo4_ETA_usage_rate0} (Var: {algo4_var0_ETA}), Crowdsourced - {algo4_ETA_usage_rate1} (Var: {algo4_var1_ETA}), Total - {algo4_ETA_usage_rate} (Var: {algo4_var_ETA})\n"
             
         if algo5_count_dropped_orders0 + algo5_count_dropped_orders1 == 0:
             print("No order is dropped in Algo5")
@@ -2144,7 +2171,7 @@ class EnvRunner(Runner):
                 algo5_var1_ETA = 0
                 
             algo5_late_rate = round((algo5_late_orders0 + algo5_late_orders1) / (algo5_count_dropped_orders0 +algo5_count_dropped_orders1), 2)
-            print(f"Rate of Late Orders for Evaluation in Algo5: Hired - {algo5_late_rate0}, Crowdsourced - {algo5_late_rate1}, Total - {algo5_late_rate}")
+            print(f"Rate of Late Orders for Evaluation in Algo5: Hired - {algo5_late_rate0}, Crowdsourced - {algo5_late_rate1}, Total - {algo5_late_rate} out of ({algo5_count_dropped_orders0 +algo5_count_dropped_orders1})")
 
             algo5_ETA_usage_rate = round(np.mean(algo5_ETA_usage0 + algo5_ETA_usage1), 2)
             algo5_var_ETA = round(np.var(algo5_ETA_usage0 + algo5_ETA_usage1), 2)
@@ -2160,24 +2187,24 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Hired Var', algo5_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Crowdsourced Var', algo5_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo5: Hired - {algo5_late_rate0}, Crowdsourced - {algo5_late_rate1}, Total - {algo5_late_rate}\n" + f"Rate of ETA Usage for Evaluation in Algo5: Hired - {algo5_ETA_usage_rate0} (Var: {algo5_var0_ETA}), Crowdsourced - {algo5_ETA_usage_rate1} (Var: {algo5_var1_ETA}), Total - {algo5_ETA_usage_rate} (Var: {algo5_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo5: Hired - {algo5_late_rate0}, Crowdsourced - {algo5_late_rate1}, Total - {algo5_late_rate} out of ({algo5_count_dropped_orders0 +algo5_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo5: Hired - {algo5_ETA_usage_rate0} (Var: {algo5_var0_ETA}), Crowdsourced - {algo5_ETA_usage_rate1} (Var: {algo5_var1_ETA}), Total - {algo5_ETA_usage_rate} (Var: {algo5_var_ETA})\n"
 
-        algo1_social_welfare = sum(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        algo2_social_welfare = sum(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        algo3_social_welfare = sum(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        algo4_social_welfare = sum(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        algo5_social_welfare = sum(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
-        print(f"Algo1: Social welfare is {algo1_social_welfare} dollar")
-        print(f"Algo2: Social welfare is {algo2_social_welfare} dollar")
-        print(f"Algo3: Social welfare is {algo3_social_welfare} dollar")
-        print(f"Algo4: Social welfare is {algo4_social_welfare} dollar")
-        print(f"Algo5: Social welfare is {algo5_social_welfare} dollar")
-        message += f"Algo1: Social welfare is {algo1_social_welfare} dollar\n" + f"Algo2: Social welfare is {algo2_social_welfare} dollar\n" + f"Algo3: Social welfare is {algo3_social_welfare} dollar\n" + f"Algo4: Social welfare is {algo4_social_welfare} dollar\n" + f"Algo5: Social welfare is {algo5_social_welfare} dollar\n"
-        self.writter.add_scalar('Social Welfare/Algo1', algo1_social_welfare, self.eval_num)
-        self.writter.add_scalar('Social Welfare/Algo2', algo2_social_welfare, self.eval_num)
-        self.writter.add_scalar('Social Welfare/Algo3', algo3_social_welfare, self.eval_num)
-        self.writter.add_scalar('Social Welfare/Algo4', algo4_social_welfare, self.eval_num)
-        self.writter.add_scalar('Social Welfare/Algo5', algo5_social_welfare, self.eval_num)
+        # algo1_social_welfare = sum(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+        # algo2_social_welfare = sum(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+        # algo3_social_welfare = sum(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+        # algo4_social_welfare = sum(algo4_Hired_distance_per_episode + algo4_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+        # algo5_social_welfare = sum(algo5_Hired_distance_per_episode + algo5_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
+        # print(f"Algo1: The platform total cost is {round(platform_cost1, 2)} dollar, and social welfare is {algo1_social_welfare} dollar")
+        # print(f"Algo2: The platform total cost is {round(platform_cost2, 2)} dollar, and social welfare is {algo2_social_welfare} dollar")
+        # print(f"Algo3: The platform total cost is {round(platform_cost3, 2)} dollar, and social welfare is {algo3_social_welfare} dollar")
+        # print(f"Algo4: The platform total cost is {round(platform_cost4, 2)} dollar, and social welfare is {algo4_social_welfare} dollar")
+        # print(f"Algo5: The platform total cost is {round(platform_cost5, 2)} dollar, and social welfare is {algo5_social_welfare} dollar")
+        # message += f"Algo1: Social welfare is {algo1_social_welfare} dollar\n" + f"Algo2: Social welfare is {algo2_social_welfare} dollar\n" + f"Algo3: Social welfare is {algo3_social_welfare} dollar\n" + f"Algo4: Social welfare is {algo4_social_welfare} dollar\n" + f"Algo5: Social welfare is {algo5_social_welfare} dollar\n"
+        # self.writter.add_scalar('Social Welfare/Algo1', algo1_social_welfare, self.eval_num)
+        # self.writter.add_scalar('Social Welfare/Algo2', algo2_social_welfare, self.eval_num)
+        # self.writter.add_scalar('Social Welfare/Algo3', algo3_social_welfare, self.eval_num)
+        # self.writter.add_scalar('Social Welfare/Algo4', algo4_social_welfare, self.eval_num)
+        # self.writter.add_scalar('Social Welfare/Algo5', algo5_social_welfare, self.eval_num)
 
         logger.success(message)
             
