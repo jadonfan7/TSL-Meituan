@@ -107,7 +107,7 @@ class EnvRunner(Runner):
                 # if dead_count == 5:
                 #     break
                 
-                available_actions = self.envs.get_available_actions()
+                # available_actions = self.envs.get_available_actions()
                 # Sample actions
                 (
                     values,
@@ -116,7 +116,7 @@ class EnvRunner(Runner):
                     rnn_states,
                     rnn_states_critic,
                     actions_env,
-                ) = self.collect(step, available_actions)
+                ) = self.collect(step)
                 # print(actions)
 
                 # Obser reward and next obs
@@ -377,6 +377,7 @@ class EnvRunner(Runner):
             if count_dropped_orders0 + count_dropped_orders1 == 0:
                 print("No order is dropped in this episode")
                 message += "No order is dropped in this episode\n"
+                logger.success(message)
                 self.writter.add_scalar('Late Orders Rate/Total', -1, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Hired', -1, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Crowdsourced', -1, episode + 1)
@@ -413,7 +414,7 @@ class EnvRunner(Runner):
                 print(f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})")
                 
                 message += f"Rate of Late Orders for Episode {episode+1}: Hired - {late_rate0} out of {count_dropped_orders0} orders, Crowdsourced - {late_rate1} out of {count_dropped_orders1} orders, Total - {late_rate} out of {count_dropped_orders0 + count_dropped_orders1} orders\n" + f"Rate of ETA Usage for Episode {episode+1}: Hired - {ETA_usage_rate0} (Var: {Var_ETA0}), Crowdsourced - {ETA_usage_rate1} (Var: {Var_ETA1}), Total - {ETA_usage_rate} (Var: {Var_ETA})\n"
-                
+                logger.success(message)
                 self.writter.add_scalar('Late Orders Rate/Total', late_rate, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Hired', late_rate0, episode + 1)
                 self.writter.add_scalar('Late Orders Rate/Crowdsourced', late_rate1, episode + 1)
@@ -471,7 +472,8 @@ class EnvRunner(Runner):
         self.writter.close()
         
     @torch.no_grad()
-    def collect(self, step, available_actions):
+    # def collect(self, step, available_actions):
+    def collect(self, step):
         values = []
         actions = []
         temp_actions_env = []
@@ -490,7 +492,7 @@ class EnvRunner(Runner):
                 self.buffer[agent_id].rnn_states[step],
                 self.buffer[agent_id].rnn_states_critic[step],
                 self.buffer[agent_id].masks[step],
-                torch.tensor(available_actions[agent_id]),
+                # torch.tensor(available_actions[agent_id]),
             )
             # [agents, envs, dim]
             values.append(_t2n(value))
@@ -1521,7 +1523,7 @@ class EnvRunner(Runner):
         algo4_var1_income = round(np.var(algo4_Crowdsourced_income), 2)
         algo4_income = round(np.mean(algo4_Hired_income + algo4_Crowdsourced_income), 2)
         algo4_var_income = round(np.var(algo4_Hired_income + algo4_Crowdsourced_income), 2)
-        algo4_income_courier_num = (algo4_Hired_income + algo4_Crowdsourced_income)
+        algo4_income_courier_num = len(algo4_Hired_income + algo4_Crowdsourced_income)
 
         algo5_income0 = round(np.mean(algo5_Hired_income), 2)
         algo5_var0_income = round(np.var(algo5_Hired_income), 2)
@@ -1529,7 +1531,7 @@ class EnvRunner(Runner):
         algo5_var1_income = round(np.var(algo5_Crowdsourced_income), 2)
         algo5_income = round(np.mean(algo5_Hired_income + algo5_Crowdsourced_income), 2)
         algo5_var_income = round(np.var(algo5_Hired_income + algo5_Crowdsourced_income), 2)
-        algo5_income_courier_num = (algo5_Hired_income + algo5_Crowdsourced_income)
+        algo5_income_courier_num = len(algo5_Hired_income + algo5_Crowdsourced_income)
 
         print("Average Income per Courier for Evaluation Between Algos:")
         print(f"Algo1: Hired's average income is {algo1_income0} dollars (Var: {algo1_var0_income}), Crowdsourced's average income is {algo1_income1} dollars (Var: {algo1_var1_income}), Total income per courier is {algo1_income} dollars (Var: {algo1_var_income})")

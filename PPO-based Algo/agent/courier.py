@@ -73,11 +73,12 @@ class Courier:
         self.stay_duration = np.ceil(np.clip(np.random.normal(180, 40), 0, 300) / interval)
 
     def move(self, interval):
+        
         if self.speed != 0:
             congestion_rate = random.uniform(1, 1.5)
             speed = self.speed / congestion_rate
             
-            self.riding_time += interval
+            self.riding_time += interval / congestion_rate
             
             travel_distance = interval * speed
             distance_to_target = geodesic(self.target_location, self.position).meters

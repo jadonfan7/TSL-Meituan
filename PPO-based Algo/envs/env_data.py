@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -101,7 +101,6 @@ class Map:
             4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
         } # half an hour
 
-        
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
             config = config_mapping[self.env_index]
@@ -117,7 +116,6 @@ class Map:
             
             self.predicted_count = order_estimate_30min[order_estimate_30min['dt'] == date_value]['predicted_count']
             
-
         lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
         lat_values_non_zero = lat_values[lat_values > 0].dropna()
 
@@ -146,8 +144,8 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
 
         self.step(first_time=1)
     
@@ -321,7 +319,7 @@ class Map:
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
                 elif self.algo_index == 2:
-                    self._fair_allocation(orders_pair)   
+                    self._MaxMin_fairness_allocation(orders_pair)   
                 elif self.algo_index == 3:
                     self._EEtradeoff_greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset  
@@ -691,6 +689,7 @@ class Map:
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
+            
             order = all_orders[order_index]
             assigned_courier = couriers[courier_index]
             
@@ -736,12 +735,45 @@ class Map:
                     courier.reject_order_num += 1
     
     def _fairness_threshold_allocation(self, orders):
+        
+        def get_predicted_orders():
+            
+            index = (self.clock - self.start_time) // self.interval - 1
+            predicted_count = int(self.predicted_count.iloc[index])
+
+            predicted_orders = []
+
+            assigned_poi_ids = np.random.choice(
+                self.poi_frequency['poi_id'],
+                size=predicted_count,
+                p=self.poi_frequency['frequency_ratio']
+            )
+            order_id_index = 0
+            for poi_id in assigned_poi_ids:
+                data = self.poi_frequency[self.poi_frequency['poi_id'] == poi_id]
+                
+                eta = data['avg_delivery_time'].values[0] + self.clock
+
+                order_create_time = self.clock
+                pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
+                dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
+        
+                order = Order(order_id_index, 0, order_create_time, pickup_point, dropoff_point, 0, eta)
+                predicted_orders.append(order)
+                
+                order_id_index += 1
+
+            return predicted_orders
+
         speed_upper_bound = 4
         
         # Create a cost matrix
         cost_matrix = []
         couriers = set()
         
+        predicted_orders = get_predicted_orders()
+        all_orders = orders + predicted_orders
+
         for order in orders:
             nearby_couriers = self._get_nearby_couriers(order)
             couriers.update(nearby_couriers)
@@ -750,7 +782,7 @@ class Map:
         
         M = 1e9
         min_cost = 0
-        for order in orders:
+        for order in all_orders:
             row = []
             for courier in couriers:
                 avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
@@ -820,7 +852,7 @@ class Map:
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            order = orders[order_index]
+            order = all_orders[order_index]
             assigned_courier = couriers[courier_index]
                         
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
@@ -1294,13 +1326,13 @@ class Map:
             # else:
             #     return wage
     
-    def get_actions(self):
-        num_agents = len(self.couriers)
-        capacity = self.couriers[0].capacity
-        available_actions = [[0] * capacity for _ in range(num_agents)]
-        for i, courier in enumerate(self.couriers):
-            length = len(courier.waybill) + len(courier.wait_to_pick) - 1
-            for j in range(min(length, capacity)):
-                available_actions[i][j] = 1
+    # def get_actions(self):
+    #     num_agents = len(self.couriers)
+    #     capacity = self.couriers[0].capacity
+    #     available_actions = [[0] * capacity for _ in range(num_agents)]
+    #     for i, courier in enumerate(self.couriers):
+    #         length = len(courier.waybill) + len(courier.wait_to_pick) - 1
+    #         for j in range(min(length, capacity)):
+    #             available_actions[i][j] = 1
                 
-        return available_actions
+    #     return available_actions

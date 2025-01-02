@@ -543,8 +543,6 @@ class EnvRunner(Runner):
                 self.writter.add_scalar('ETA Usage Rate/Hired', Var_ETA0, episode + 1)
                 self.writter.add_scalar('ETA Usage Rate/Crowdsourced', ETA_usage_rate1, episode + 1)
                 self.writter.add_scalar('ETA Usage Rate/Crowdsourced', Var_ETA1, episode + 1)
-
-            # social_welfare = platform_cost + (Hired_distance_per_episode + Crowdsourced_distance_per_episode).sum() / 1000 * 0.6214 * 404 / 1e6 * 105 + (order0_price + order1_price).sum() + np.floor((count_overspeed0 + count_overspeed1) / self.envs.num_envs) * 50 + 
             
             print("\n")
                         
@@ -3025,16 +3023,6 @@ class EnvRunner(Runner):
             f"Algo2: Hired - {algo2_overspeed0}, Crowdsourced - {algo2_overspeed1}, Total rate - {algo2_overspeed}\n"
             f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}\n"
             f"Algo4: Hired - {algo4_overspeed0}, Crowdsourced - {algo4_overspeed1}, Total rate - {algo4_overspeed}\n"
-            "Reject Rate for Evaluation Between Algos:\n"
-            # f"Algo1: {algo1_reject_rate_per_episode} and the order is rejected by {algo1_max_reject_num} times at most\n"
-            # f"Algo2: {algo2_reject_rate_per_episode} and the order is rejected by {algo2_max_reject_num} times at most\n"
-            # f"Algo3: {algo3_reject_rate_per_episode} and the order is rejected by {algo3_max_reject_num} times at most\n"
-            # f"Algo4: {algo4_reject_rate_per_episode} and the order is rejected by {algo4_max_reject_num} times at most\n"
-            # "Average Reject Numbers per Courier for Evaluation Between Algos:\n"
-            # f"Algo1: Hired rejects average {algo1_reject0} orders (Var: {algo1_var0_reject}), Crowdsourced rejects average {algo1_reject1} orders (Var: {algo1_var1_reject}) and Total reject number per courier is {algo1_reject} (Var: {algo1_var_reject})\n"
-            # f"Algo2: Hired rejects average {algo2_reject0} orders (Var: {algo2_var0_reject}), Crowdsourced rejects average {algo2_reject1} orders (Var: {algo2_var1_reject}) and Total reject number per courier is {algo2_reject} (Var: {algo2_var_reject})\n"
-            # f"Algo3: Hired rejects average {algo3_reject0} orders (Var: {algo3_var0_reject}), Crowdsourced rejects average {algo3_reject1} orders (Var: {algo3_var1_reject}) and Total reject number per courier is {algo3_reject} (Var: {algo3_var_reject})\n"
-            # f"Algo4: Hired rejects average {algo4_reject0} orders (Var: {algo4_var0_reject}), Crowdsourced rejects average {algo4_reject1} orders (Var: {algo4_var1_reject}) and Total reject number per courier is {algo4_reject} (Var: {algo4_var_reject})\n"
             "Average Price per order for Evaluation Between Algos:\n"
             f"Algo1: The average price of Hired's order is {algo1_price_per_order0} dollar (Var: {algo1_var0_price}) with {algo1_order0_num} orders, Crowdsourced's is {algo1_price_per_order1} dollar (Var: {algo1_var1_price}) with {algo1_order1_num} orders and for all is {algo1_price_per_order} dollar (Var: {algo1_var_price})\n"
             f"Algo2: The average price of Hired's order is {algo2_price_per_order0} dollar (Var: {algo2_var0_price}) with {algo2_order0_num} orders, Crowdsourced's is {algo2_price_per_order1} dollar (Var: {algo2_var1_price}) with {algo2_order1_num} orders and for all is {algo2_price_per_order} dollar (Var: {algo2_var_price})\n"
