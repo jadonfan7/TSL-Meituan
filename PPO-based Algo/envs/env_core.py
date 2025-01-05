@@ -32,12 +32,13 @@ class EnvCore(object):
 
             # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
             action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
+            # action_space = Discrete(speed_dim)
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
                  
-    def reset(self, env_index):
-        self.map.reset(env_index)
+    def reset(self, env_index, eval=False):
+        self.map.reset(env_index, eval)
                         
     def step(self, action_n):
         self.current_step += 1
@@ -98,19 +99,22 @@ class EnvCore(object):
             # #     agent.speed = np.random.uniform(2.5, 4)
             # # else:
             # #     agent.speed = np.random.uniform(4, 7)
+            
             policy = np.argmax(action[:2])
             agent.speed =  np.argmax(action[2:]) + 1
+            # agent.speed =  np.argmax(action) + 1
+            
 
             if agent.speed > 4:
                 if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 80
+                    reward -= (agent.speed - 4) ** 2 * 10
                 else:
-                    reward -= (agent.speed - 4) ** 2 * 40
+                    reward -= (agent.speed - 4) ** 2 * 5
             else:
                 if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 40
+                    reward -= (agent.speed - 4) ** 2 * 5
                 else:
-                    reward -= (agent.speed - 4) ** 2 * 20
+                    reward -= (agent.speed - 4) ** 2 * 2
 
             # if order_index < waybill_length:
             #     if agent.target_location == None:
@@ -132,8 +136,8 @@ class EnvCore(object):
             #     agent.move(self.map.interval) 
             
             all_orders = agent.waybill + agent.wait_to_pick
+            
             if policy == 0:
-                
                 def calculate_distance(courier_position, order):
                     if order.status == 'picked_up':
                         return geodesic(courier_position, order.drop_off_point).meters
@@ -149,56 +153,55 @@ class EnvCore(object):
             elif sorted_orders[0].status == 'picked_up':
                 agent.target_location = sorted_orders[0].drop_off_point
                 
-            agent.move(self.map.interval)                
-                
+            agent.move(self.map.interval)  
+            agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
+            
+            for order in agent.wait_to_pick:
+                if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
+                    agent.pick_order(order)
+                    
+                    if agent.courier_type == 0:
+                        reward += 40
+                    else:
+                        reward += 60
+                        
+                elif agent.position == order.pick_up_point and self.map.clock < order.meal_prepare_time:
+                    agent.stay_duration = np.ceil((order.meal_prepare_time - self.map.clock) / self.map.interval)
+                    
+            for order in agent.waybill:
+                if agent.position == order.drop_off_point:  # dropping off
+                    agent.drop_order(order)
+                    
+                    agent.finish_order_num += 1
+                        
+                    if self.map.clock > order.ETA:
+                        if agent.courier_type == 0:
+                            reward -= 30 + 80 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
+                        else:
+                            reward -= 50 + 100 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
+                            
+                        agent.income += order.price * 0.7
+                        order.is_late = 1
+                                                
+                    else:
+                        order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
+                        if agent.courier_type == 0:
+                            reward += 50 + 80 * (1 - order.ETA_usage)
+                        else:
+                            reward += 70 + 80 * (1 - order.ETA_usage)
+                            
+                        agent.income += order.price 
         else:
             agent.speed = 0
             if agent.stay_duration != 0:
                 agent.stay_duration -= 1
-                
-        for order in agent.wait_to_pick:
-            if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
-                agent.pick_order(order)
-                
-                if agent.courier_type == 0:
-                    reward += 100
-                else:
-                    reward += 200
-            elif agent.position == order.pick_up_point and self.map.clock < order.meal_prepare_time:
-                agent.stay_duration = np.ceil((order.meal_prepare_time - self.map.clock) / self.map.interval)
-                
-        for order in agent.waybill:
-            if agent.position == order.drop_off_point:  # dropping off
-                agent.drop_order(order)
-                agent.finish_order_num += 1
-                    
-                if self.map.clock > order.ETA:
-                    if agent.courier_type == 0:
-                        reward -= 800 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
-                    else:
-                        reward -= 1000 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
-                        
-                    agent.income += order.price * 0.7
-                    order.is_late = 1
-                    
-                    # self.map.platform_cost += order.price * 0.3
-                    
-                else:
-                    order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
-                    if agent.courier_type == 0:
-                        reward += 500 * (1 - order.ETA_usage)
-                    else:
-                        reward += 600 * (1 - order.ETA_usage)
-                        
-                    agent.income += order.price
-                    
+                                    
         if agent.waybill == [] and agent.wait_to_pick == []:
             agent.is_leisure = 1
         else:
             agent.is_leisure = 0
             agent.leisure_time = self.map.clock
 
-        agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
         
         agent.reward += reward
 
@@ -239,9 +242,10 @@ class EnvCore(object):
 
             order_dim = self.map.couriers[0].capacity
             speed_dim = self.num_speeds
-
+            
             # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
-            action_space = MultiDiscrete([[0, 1], [0, speed_dim - 1]])
+            action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
+            # action_space = Discrete(speed_dim)
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))

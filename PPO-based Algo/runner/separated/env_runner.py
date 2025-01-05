@@ -175,7 +175,8 @@ class EnvRunner(Runner):
                         Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             Hired_avg_speed.append(c.avg_speed)
-                        Hired_income.append(c.income)
+                        if c.income > 0:
+                            Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         Crowdsourced_num += 1
                         if c.travel_distance > 0:
@@ -185,7 +186,8 @@ class EnvRunner(Runner):
                         Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             Crowdsourced_avg_speed.append(c.avg_speed)
-                        Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             Crowdsourced_on += 1
                 
@@ -582,7 +584,7 @@ class EnvRunner(Runner):
     @torch.no_grad()
     def eval(self, total_num_steps):
         
-        eval_obs = self.eval_envs.reset(4)
+        eval_obs = self.eval_envs.reset(4, eval=True)
         # eval_obs = self.eval_envs.reset(5)
         
         algo1_Hired_num = 0
@@ -774,13 +776,9 @@ class EnvRunner(Runner):
         eval_masks = np.ones((self.n_eval_rollout_threads, self.eval_num_agents, 1), dtype=np.float32)
 
         for eval_step in range(self.eval_episodes_length):
-            if self.eval_num_agents > self.num_agents:
-                print(self.eval_num_agents)
-                print(self.num_agents)
-                break
             
             # print("-"*25)
-            # print(f"THIS IS EVAL STEP {eval_step}")
+            print(f"THIS IS EVAL STEP {eval_step}")
 
             for i in range(self.eval_envs.num_envs):
                 
@@ -908,8 +906,8 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo5_count_overspeed1 += 1
 
-                                
-            eval_obs = self.eval_envs.eval_env_step()
+            print(self.num_agents)
+            eval_obs = self.eval_envs.eval_env_step(self.num_agents)
             
             add_courier_num = self.eval_envs.envs_discrete[0].num_couriers - self.eval_num_agents
 
@@ -935,22 +933,26 @@ class EnvRunner(Runner):
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         algo1_Hired_num += 1
-                        algo1_Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo1_Hired_distance_per_episode.append(c.travel_distance)
                         algo1_Hired_finish_num.append(c.finish_order_num)
                         algo1_Hired_leisure_time.append(c.total_leisure_time)
                         algo1_Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo1_Hired_avg_speed.append(c.avg_speed)
-                        algo1_Hired_income.append(c.income)
+                        if c.income > 0:
+                            algo1_Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         algo1_Crowdsourced_num += 1
-                        algo1_Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo1_Crowdsourced_distance_per_episode.append(c.travel_distance)
                         algo1_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo1_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo1_Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo1_Crowdsourced_avg_speed.append(c.avg_speed)
-                        algo1_Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            algo1_Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             algo1_Crowdsourced_on += 1
 
@@ -985,22 +987,26 @@ class EnvRunner(Runner):
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         algo2_Hired_num += 1
-                        algo2_Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo2_Hired_distance_per_episode.append(c.travel_distance)
                         algo2_Hired_finish_num.append(c.finish_order_num)
                         algo2_Hired_leisure_time.append(c.total_leisure_time)
                         algo2_Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo2_Hired_avg_speed.append(c.avg_speed)
-                        algo2_Hired_income.append(c.income)
+                        if c.income > 0:
+                            algo2_Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         algo2_Crowdsourced_num += 1
-                        algo2_Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo2_Crowdsourced_distance_per_episode.append(c.travel_distance)
                         algo2_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo2_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo2_Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo2_Crowdsourced_avg_speed.append(c.avg_speed)
-                        algo2_Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            algo2_Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             algo2_Crowdsourced_on += 1
                 
@@ -1033,22 +1039,26 @@ class EnvRunner(Runner):
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         algo3_Hired_num += 1
-                        algo3_Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo3_Hired_distance_per_episode.append(c.travel_distance)
                         algo3_Hired_finish_num.append(c.finish_order_num)
                         algo3_Hired_leisure_time.append(c.total_leisure_time)
                         algo3_Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo3_Hired_avg_speed.append(c.avg_speed)
-                        algo3_Hired_income.append(c.income)
+                        if c.income > 0:
+                            algo3_Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         algo3_Crowdsourced_num += 1
-                        algo3_Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo3_Crowdsourced_distance_per_episode.append(c.travel_distance)
                         algo3_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo3_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo3_Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo3_Crowdsourced_avg_speed.append(c.avg_speed)
-                        algo3_Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            algo3_Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             algo3_Crowdsourced_on += 1
                 
@@ -1081,22 +1091,26 @@ class EnvRunner(Runner):
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         algo4_Hired_num += 1
-                        algo4_Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo4_Hired_distance_per_episode.append(c.travel_distance)
                         algo4_Hired_finish_num.append(c.finish_order_num)
                         algo4_Hired_leisure_time.append(c.total_leisure_time)
                         algo4_Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo4_Hired_avg_speed.append(c.avg_speed)
-                        algo4_Hired_income.append(c.income)
+                        if c.income > 0:
+                            algo4_Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         algo4_Crowdsourced_num += 1
-                        algo4_Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo4_Crowdsourced_distance_per_episode.append(c.travel_distance)
                         algo4_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo4_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo4_Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo4_Crowdsourced_avg_speed.append(c.avg_speed)
-                        algo4_Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            algo4_Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             algo4_Crowdsourced_on += 1
                 
@@ -1130,22 +1144,26 @@ class EnvRunner(Runner):
                 for c in self.eval_envs.envs_discrete[i].couriers:
                     if c.courier_type == 0:
                         algo5_Hired_num += 1
-                        algo5_Hired_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo5_Hired_distance_per_episode.append(c.travel_distance)
                         algo5_Hired_finish_num.append(c.finish_order_num)
                         algo5_Hired_leisure_time.append(c.total_leisure_time)
                         algo5_Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo5_Hired_avg_speed.append(c.avg_speed)
-                        algo5_Hired_income.append(c.income)
+                        if c.income > 0:
+                            algo5_Hired_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                     else:
                         algo5_Crowdsourced_num += 1
-                        algo5_Crowdsourced_distance_per_episode.append(c.travel_distance)
+                        if c.travel_distance > 0:
+                            algo5_Crowdsourced_distance_per_episode.append(c.travel_distance)
                         algo5_Crowdsourced_finish_num.append(c.finish_order_num)
                         algo5_Crowdsourced_leisure_time.append(c.total_leisure_time)
                         algo5_Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
                             algo5_Crowdsourced_avg_speed.append(c.avg_speed)
-                        algo5_Crowdsourced_income.append(c.income)
+                        if c.income > 0:
+                            algo5_Crowdsourced_income.append(c.income / (c.total_running_time + c.total_leisure_time) * 3600)
                         if c.state == 'active':
                             algo5_Crowdsourced_on += 1
                 
@@ -1945,7 +1963,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Hired Var', algo1_var0_ETA, self.eval_num)
             self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Crowdsourced Var', algo1_var1_ETA, self.eval_num)
             
-            message += f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate} out of ({algo1_count_dropped_orders0 +algo1_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})\n"
+            message += f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate} out of ({algo1_count_dropped_orders0+algo1_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})\n"
         
         if algo2_count_dropped_orders0 + algo2_count_dropped_orders1 == 0:
             print("No order is dropped in Algo2")

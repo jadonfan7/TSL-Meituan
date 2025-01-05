@@ -112,7 +112,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.send((ob, reward, done, info, env_map))
             
         elif cmd == 'reset':
-            env.reset(data)
+            index, eval = data
+            env.reset(index, eval)
             env_map = env.get_map()
             obs = env.get_env_obs()
             action_space, observation_space = env.adjust()
@@ -133,7 +134,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.send((env_map, action_space, observation_space))
             
         elif cmd == 'eval_env_step':
-            env.map.step()
+            env.map.eval_step(data)
             action_space, observation_space = env.adjust()
             env_map = env.get_map()
             obs = env.get_env_obs()
@@ -188,9 +189,9 @@ class SubprocVecEnv(ShareVecEnv):
         obs, rews, dones, infos, self.envs_discrete = zip(*results)
         return np.stack(obs), np.stack(rews), np.stack(dones), infos
 
-    def reset(self, index):
+    def reset(self, index, eval=False):
         for remote in self.remotes:
-            remote.send(('reset', index))
+            remote.send(('reset', (index, eval)))
         
         results = [remote.recv() for remote in self.remotes]
         self.envs_discrete = [result[0] for result in results]
@@ -221,9 +222,9 @@ class SubprocVecEnv(ShareVecEnv):
     
         self.action_space, self.observation_space = results[0][1], results[0][2]
         
-    def eval_env_step(self):
+    def eval_env_step(self, eval=False):
         for remote in self.remotes:
-            remote.send(('eval_env_step', None))
+            remote.send(('eval_env_step', eval))
             
         results = [remote.recv() for remote in self.remotes]
     

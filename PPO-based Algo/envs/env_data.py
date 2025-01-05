@@ -11,7 +11,7 @@ import joblib
 
 
 class Map:
-    def __init__(self, env_index=0, algo_index=0):
+    def __init__(self, env_index=0, algo_index=0, eval=False):
         self.orders_id = set()
         self.couriers_id = set()
         self.orders = []
@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -144,15 +144,17 @@ class Map:
         # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
         # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
-        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
-
-        self.step(first_time=1)
+        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        if eval == False:
+            self.step(first_time=1)
+        else:
+            self.eval_step(agent_num=math.inf, first_time=1)
     
-    def reset(self, env_index):
+    def reset(self, env_index, eval=False):
         self.orders = []
         self.couriers = []
-        self.__init__(env_index, self.algo_index)
+        self.__init__(env_index, self.algo_index, eval)
 
     def __repr__(self):
         message = 'cls:' + type(self).__name__ + ', size:' + str(self.size) + '\n'
@@ -163,6 +165,104 @@ class Map:
         return message                
 
     def step(self, first_time=0):
+        
+        self.add_new_couriers = 0
+        
+        if not first_time:
+            if self.clock < self.end_time:
+                self.clock += self.interval 
+
+        orders_failed = [order for order in self.orders if order.status == "wait_pair"]
+        orders_new = []
+
+        while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
+            dt = self.order_data.iloc[self.current_index]
+            order_id = dt['order_id']
+            
+            if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
+        
+                self.orders_id.add(order_id)
+                
+                is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
+                order_create_time = dt['platform_order_time']
+                pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
+                dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
+                meal_prepare_time = dt['estimate_meal_prepare_time']
+                estimate_arrived_time = dt['estimate_arrived_time']
+                
+                order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                orders_new.append(order)
+
+            courier_id = dt['courier_id']
+            if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
+                if courier_id not in self.couriers_id:
+                    self.couriers_id.add(courier_id)
+                    courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
+                    courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
+                    courier = Courier(courier_type, courier_id, courier_location, self.clock)
+                    courier.state = 'active'
+                    courier.start_time = self.clock
+                    
+                    self.couriers.append(courier)
+                    self.add_new_couriers += 1
+            
+            self.current_index += 1
+            
+        # if a courier does not get an order for a period of a time, he will quit the system.
+        for courier in self.couriers:
+            if courier.is_leisure == 1 and courier.state == 'active':
+                courier.total_leisure_time += self.interval
+            elif courier.is_leisure == 0 and courier.state == 'active':
+                courier.total_running_time += self.interval
+
+            if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                courier.state = 'inactive'
+            
+            if courier.start_time != self.clock and courier.courier_type == 0:
+                salary_per_interval = 15 / 3600 * self.interval
+                courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                self.platform_cost += salary_per_interval
+
+        orders_pair = orders_failed + orders_new
+        
+        if orders_pair != []:
+            
+            self.orders += orders_new
+
+            if self.algo_index == 0:
+                self._EEtradeoff_bipartite_allocation(orders_pair)
+            # else:
+            #     nearby_couriers = None
+            #     for i, p in enumerate(orders):
+            #         nearby_couriers = self._get_nearby_couriers(p, 1500)
+            #     gorubi_solver(nearby_couriers, orders, self.clock)
+            elif self.algo_index == 1:
+                self._Efficiency_allocation(orders_pair)     
+            elif self.algo_index == 2:
+                self._MaxMin_fairness_allocation(orders_pair)   
+            elif self.algo_index == 3:
+                self._EEtradeoff_greedy_allocation(orders_pair)
+            # self.algo_index == 4 is the origin allocation in the dataset  
+        
+        # if orders_pair != []:
+            
+        #     self.orders += orders_new
+
+        #     if self.algo_index == 0:
+        #         self._fairness_threshold_allocation(orders_pair)
+        #     elif self.algo_index == 1:
+        #         self._MaxMin_fairness_allocation(orders_pair)     
+        #     elif self.algo_index == 2:
+        #         self._Pairwise_fairness_allocation(orders_pair)   
+        #     elif self.algo_index == 3:
+        #         self._Efficiency_allocation(orders_pair)     
+        #     elif self.algo_index == 4:
+        #         self._fair_allocation(orders_pair)               
+        
+        self.num_orders = len(self.orders)
+        self.num_couriers = len(self.couriers)
+        
+    def eval_step(self, agent_num, first_time=0):
         
         if self.algo_index == 4:
             self.add_new_couriers = 0
@@ -191,7 +291,7 @@ class Map:
                     order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
 
                     courier_id = dt['courier_id']
-                    if courier_id not in self.couriers_id:
+                    if courier_id not in self.couriers_id and self.num_couriers < agent_num:
                         self.couriers_id.add(courier_id)
                         courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
                         courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
@@ -274,7 +374,7 @@ class Map:
                     orders_new.append(order)
 
                 courier_id = dt['courier_id']
-                if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
+                if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0 and self.num_couriers < agent_num:
                     if courier_id not in self.couriers_id:
                         self.couriers_id.add(courier_id)
                         courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
@@ -341,6 +441,7 @@ class Map:
             
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
+
         
     def _accept_or_reject(self, order, courier):
         
