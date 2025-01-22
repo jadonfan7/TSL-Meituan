@@ -437,7 +437,7 @@ class EnvRunner(Runner):
 
             # compute return and update nrk
             self.compute()
-            # train_infos = self.train()
+            train_infos = self.train()
 
             # post process
             total_num_steps = (episode + 1) * self.episode_length * self.n_rollout_threads

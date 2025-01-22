@@ -235,15 +235,3 @@ class SubprocVecEnv(ShareVecEnv):
         obs = [result[3] for result in results]
         
         return np.array(obs)
-        
-    # def get_available_actions(self):
-    #     for remote in self.remotes:
-    #         remote.send(('get_available_actions', None))
-        
-    #     available_actions = [remote.recv() for remote in self.remotes]
-        
-    #     available_actions = np.array(available_actions)
-    
-    #     available_actions = np.transpose(available_actions, (1, 0, 2))
-    
-    #     return available_actions.tolist()

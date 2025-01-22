@@ -34,6 +34,9 @@ class Courier:
         self.capacity = 10
         self.reward = 0
         
+        self.da_count = dict()
+        self.poi_count = dict()
+        
         self.income = 0
                 
     def __repr__(self):
@@ -59,6 +62,16 @@ class Courier:
     def pair_order(self, order):
         order.status = 'wait_pick'
         self.wait_to_pick.append(order)
+        
+        if order.da in self.da_count:
+            self.da_count[order.da] += 1
+        else:
+            self.da_count[order.da] = 1
+
+        if order.poi in self.poi_count:
+            self.poi_count[order.poi] += 1
+        else:
+            self.poi_count[order.poi] = 1
 
 
     def pick_order(self, order):

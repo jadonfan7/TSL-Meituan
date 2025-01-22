@@ -78,9 +78,6 @@ class EnvRunner(Runner):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
             
             obs = self.envs.reset(episode % 4)
-            # obs = self.envs.reset(1)
-            self.reset_courier_num(self.envs.envs_discrete[0].num_couriers)
-            self.num_agents = self.envs.envs_discrete[0].num_couriers
 
             for step in range(self.episode_length):
                 # print("-"*25)
@@ -99,15 +96,7 @@ class EnvRunner(Runner):
                     #     print(o)  
                     # print("\n")
                     self.log_env(episode, step, i)
-
-                    # if self.game_success(step, self.envs.envs_discrete[i].map):
-                    #     dead_count += 1
-                    #     continue
-
-                # if dead_count == 5:
-                #     break
                 
-                # available_actions = self.envs.get_available_actions()
                 # Sample actions
                 (
                     values,
@@ -156,10 +145,6 @@ class EnvRunner(Runner):
 
 
                 self.envs.env_step()
-                add_courier_num = self.envs.envs_discrete[0].num_couriers - self.num_agents
-                self.add_new_agent(add_courier_num)
-                                
-                self.num_agents = self.envs.envs_discrete[0].num_couriers
             
             # Train over periods
             for i in range(self.envs.num_envs):
@@ -437,7 +422,7 @@ class EnvRunner(Runner):
 
             # compute return and update nrk
             self.compute()
-            # train_infos = self.train()
+            self.train()
 
             # post process
             total_num_steps = (episode + 1) * self.episode_length * self.n_rollout_threads
@@ -485,37 +470,37 @@ class EnvRunner(Runner):
 
         for agent_id in range(self.num_agents):
             self.trainer[agent_id].prep_rollout()
-            
-            value, action, action_log_prob, rnn_state, rnn_state_critic = self.trainer[
-                agent_id
-            ].policy.get_actions(
-                # self.buffer[agent_id].share_obs[step],
-                self.buffer[agent_id].obs[step],
-                self.buffer[agent_id].rnn_states[step],
-                self.buffer[agent_id].rnn_states_critic[step],
-                self.buffer[agent_id].masks[step],
-                # torch.tensor(available_actions[agent_id]),
-            )
-            # [agents, envs, dim]
-            values.append(_t2n(value))
-            action = _t2n(action)
-            
-            # rearrange action
-            if self.envs.action_space[agent_id].__class__.__name__ == "MultiDiscrete":
-                for i in range(self.envs.action_space[agent_id].shape):
-                    uc_action_env = np.eye(self.envs.action_space[agent_id].high[i] + 1)[action[:, i]]
-                    if i == 0:
-                        action_env = uc_action_env
-                    else:
-                        action_env = np.concatenate((action_env, uc_action_env), axis=1)
-            elif self.envs.action_space[agent_id].__class__.__name__ == "Discrete":
-                action_env = np.squeeze(np.eye(self.envs.action_space[agent_id].n)[action], 1)
+            for courier_idx in range(len(self.envs.envs_discrete[0].couriers)):
+                value, action, action_log_prob, rnn_state, rnn_state_critic = self.trainer[
+                    agent_id
+                ].policy.get_actions(
+                    # self.buffer[agent_id].share_obs[step],
+                    self.buffer[agent_id].obs[step][:, courier_idx],
+                    self.buffer[agent_id].rnn_states[step][:, courier_idx],
+                    self.buffer[agent_id].rnn_states_critic[step][:, courier_idx],
+                    self.buffer[agent_id].masks[step][:, courier_idx],
+                    # torch.tensor(available_actions[agent_id]),
+                )
+                # [agents, envs, dim]
+                values.append(_t2n(value))
+                action = _t2n(action)
+                
+                # rearrange action
+                if self.envs.action_space[agent_id].__class__.__name__ == "MultiDiscrete":
+                    for i in range(self.envs.action_space[agent_id].shape):
+                        uc_action_env = np.eye(self.envs.action_space[agent_id].high[i] + 1)[action[:, i]]
+                        if i == 0:
+                            action_env = uc_action_env
+                        else:
+                            action_env = np.concatenate((action_env, uc_action_env), axis=1)
+                elif self.envs.action_space[agent_id].__class__.__name__ == "Discrete":
+                    action_env = np.squeeze(np.eye(self.envs.action_space[agent_id].n)[action], 1)
 
-            actions.append(action)
-            temp_actions_env.append(action_env)
-            action_log_probs.append(_t2n(action_log_prob))
-            rnn_states.append(_t2n(rnn_state))
-            rnn_states_critic.append(_t2n(rnn_state_critic))
+                actions.append(action)
+                temp_actions_env.append(action_env)
+                action_log_probs.append(_t2n(action_log_prob))
+                rnn_states.append(_t2n(rnn_state))
+                rnn_states_critic.append(_t2n(rnn_state_critic))
 
         # [envs, agents, dim]
         actions_env = []
@@ -565,7 +550,7 @@ class EnvRunner(Runner):
         masks = np.ones((self.n_rollout_threads, self.num_agents, 1), dtype=np.float32)
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
 
-        for agent_id in range(self.num_agents):
+        for agent_id in range(len(self.envs.envs_discrete[0].couriers)):
             # if not self.use_centralized_V:
             #     share_obs = np.array(list(obs[:, agent_id]))
 
@@ -762,7 +747,7 @@ class EnvRunner(Runner):
         algo5_Hired_income = []
         algo5_Crowdsourced_income = []
 
-        self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
+        self.eval_num_agents = self.num_agents
 
         eval_rnn_states = np.zeros(
             (
@@ -799,31 +784,32 @@ class EnvRunner(Runner):
             
             for agent_id in range(self.eval_num_agents):
                 self.trainer[agent_id].prep_rollout()
-                eval_action, eval_rnn_state = self.trainer[agent_id].policy.act(
-                    np.array(list(eval_obs[:, agent_id])),
-                    eval_rnn_states[:, agent_id],
-                    eval_masks[:, agent_id],
-                    deterministic=True,
-                )
-
-                eval_action = eval_action.detach().cpu().numpy()
-                # rearrange action
-                if self.eval_envs.action_space[agent_id].__class__.__name__ == "MultiDiscrete":
-                    for i in range(self.eval_envs.action_space[agent_id].shape):
-                        eval_uc_action_env = np.eye(self.eval_envs.action_space[agent_id].high[i] + 1)[eval_action[:, i]]
-                        if i == 0:
-                            eval_action_env = eval_uc_action_env
-                        else:
-                            eval_action_env = np.concatenate((eval_action_env, eval_uc_action_env), axis=1)
-                elif self.eval_envs.action_space[agent_id].__class__.__name__ == "Discrete":
-                    eval_action_env = np.squeeze(
-                        np.eye(self.eval_envs.action_space[agent_id].n)[eval_action], 1
+                for courier_idx in range(len(self.envs.envs_discrete[0].couriers)):
+                    eval_action, eval_rnn_state = self.trainer[agent_id].policy.act(
+                        np.array(list(eval_obs[:, agent_id][:, courier_idx])),
+                        eval_rnn_states[:, agent_id][:, courier_idx],
+                        eval_masks[:, agent_id][:, courier_idx],
+                        deterministic=True,
                     )
-                else:
-                    raise NotImplementedError
 
-                eval_temp_actions_env.append(eval_action_env)
-                eval_rnn_states[:, agent_id] = _t2n(eval_rnn_state)
+                    eval_action = eval_action.detach().cpu().numpy()
+                    # rearrange action
+                    if self.eval_envs.action_space[agent_id].__class__.__name__ == "MultiDiscrete":
+                        for i in range(self.eval_envs.action_space[agent_id].shape):
+                            eval_uc_action_env = np.eye(self.eval_envs.action_space[agent_id].high[i] + 1)[eval_action[:, i]]
+                            if i == 0:
+                                eval_action_env = eval_uc_action_env
+                            else:
+                                eval_action_env = np.concatenate((eval_action_env, eval_uc_action_env), axis=1)
+                    elif self.eval_envs.action_space[agent_id].__class__.__name__ == "Discrete":
+                        eval_action_env = np.squeeze(
+                            np.eye(self.eval_envs.action_space[agent_id].n)[eval_action], 1
+                        )
+                    else:
+                        raise NotImplementedError
+
+                    eval_temp_actions_env.append(eval_action_env)
+                    eval_rnn_states[:, agent_id] = _t2n(eval_rnn_state)
 
             # [envs, agents, dim]
             eval_actions_env = []

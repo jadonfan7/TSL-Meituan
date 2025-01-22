@@ -15,7 +15,8 @@ class EnvCore(object):
         self.current_step = 0
         self.map_algo_index = map_algo_index
         self.map = Map(algo_index=map_algo_index)
-        self.num_agent = self.map.num_couriers
+        self.couriers = self.map.couriers
+        self.num_couriers = self.map.num_couriers
         self.num_speeds = 4 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 2,4,5.5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
         
         self.action_space = []
@@ -24,18 +25,31 @@ class EnvCore(object):
         self.observation_space = []
         self.epsilon = 0.05
         
-        for _ in range(self.num_agent):
-
+        action_space0 = []
+        action_space1 = []      
+        
+        observation_space0 = []
+        observation_space1 = []
+        
+        for courier in self.couriers:
             order_dim = self.map.couriers[0].capacity
             speed_dim = self.num_speeds
 
             # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
             action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
             # action_space = Discrete(speed_dim)
-            self.action_space.append(action_space)
-
-            self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
-                 
+            if courier.courier_type == 0:
+                action_space0.append(action_space)
+                observation_space0.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
+            else:
+                action_space1.append(action_space)
+                observation_space1.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
+                
+        self.action_space.append(action_space0)
+        self.action_space.append(action_space1)
+        self.observation_space.append(observation_space0)
+        self.observation_space.append(observation_space1)
+                    
     def reset(self, env_index, eval=False):
         self.map.reset(env_index, eval)
                         
@@ -56,18 +70,11 @@ class EnvCore(object):
 
             reward_n.append(reward)
 
-        
-        # self.update_action_space()
-
         for i, agent in enumerate(self.map.couriers):
             obs_n.append(self._get_obs(agent))
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
         
-        # self.num_agent = self.map.num_couriers
-        # self.obs_dim = self.map.num_orders * 6 + 2
-        
-
         # return obs_n, reward_n, done_n, info_n, share_obs
         return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n
     
@@ -219,7 +226,7 @@ class EnvCore(object):
         return ObservationSpace(self.map, agent).get_obs()
     
     def _get_done(self, agent):
-        if agent.waybill == [] and agent.wait_to_pick == []:
+        if agent.state == 'inactive':
             return True
         else:
             return False
@@ -246,17 +253,17 @@ class EnvCore(object):
         return obs
 
     def adjust(self):
-        for _ in range(self.map.add_new_couriers):
+        # for _ in range(self.map.add_new_couriers):
 
-            order_dim = self.map.couriers[0].capacity
-            speed_dim = self.num_speeds
+        #     order_dim = self.map.couriers[0].capacity
+        #     speed_dim = self.num_speeds
             
-            # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
-            action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
-            # action_space = Discrete(speed_dim)
-            self.action_space.append(action_space)
+        #     # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
+        #     action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
+        #     # action_space = Discrete(speed_dim)
+        #     self.action_space.append(action_space)
 
-            self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
+        #     self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
         
         return self.action_space, self.observation_space
     

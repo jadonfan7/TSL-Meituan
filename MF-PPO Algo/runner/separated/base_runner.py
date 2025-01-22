@@ -46,10 +46,6 @@ class Runner(object):
         # dir
         self.model_dir = self.all_args.model_dir
 
-        
-        # if self.use_wandb:
-        #     self.save_dir = str(wandb.run.dir)
-        # else:
         self.run_dir = config["run_dir"]
         self.log_dir = str(self.run_dir / "logs")
         if not os.path.exists(self.log_dir):
@@ -71,13 +67,13 @@ class Runner(object):
             #     if self.use_centralized_V
             #     else self.envs.observation_space[agent_id]
             # )
+            
             # policy network
-
             po = Policy(
                 self.all_args,
-                self.envs.observation_space[agent_id],
+                self.envs.observation_space[agent_id][0],
                 # share_observation_space[0], # add [0]
-                self.envs.action_space[agent_id],
+                self.envs.action_space[agent_id][0],
                 device=self.device,
             )
             self.policy.append(po)
@@ -98,9 +94,9 @@ class Runner(object):
             # )
             bu = SeparatedReplayBuffer(
                 self.all_args,
-                self.envs.observation_space[agent_id],
+                self.envs.observation_space[agent_id][0],
                 # share_observation_space[0], # add [0]
-                self.envs.action_space[agent_id],
+                self.envs.action_space[agent_id][0],
             )
             self.buffer.append(bu)
             self.trainer.append(tr)
@@ -130,14 +126,14 @@ class Runner(object):
             self.buffer[agent_id].compute_returns(next_value, self.trainer[agent_id].value_normalizer)
 
     def train(self):
-        train_infos = []
+        # train_infos = []
         for agent_id in range(self.num_agents):
             self.trainer[agent_id].prep_training()
             train_info = self.trainer[agent_id].train(self.buffer[agent_id])
-            train_infos.append(train_info)
+            # train_infos.append(train_info)
             self.buffer[agent_id].after_update()
 
-        return train_infos
+        # return train_infos
 
     def save(self):
         for agent_id in range(self.num_agents):
@@ -160,16 +156,6 @@ class Runner(object):
                 str(self.model_dir) + "/critic_agent" + str(agent_id) + ".pt"
             )
             self.policy[agent_id].critic.load_state_dict(policy_critic_state_dict)
-
-    # def log_train(self, train_infos, total_num_steps):
-    #     for agent_id in range(self.num_agents):
-    #         for k, v in train_infos[agent_id].items():
-    #             agent_k = "agent%i/" % agent_id + k
-    #             # if self.use_wandb:
-    #             #     pass
-    #             # wandb.log({agent_k: v}, step=total_num_steps)
-    #             # else:
-    #             self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)
 
     def log_env(self, episode, step, env_index, eval=False):
         step_info = "-" * 25 + "\n"
@@ -214,47 +200,47 @@ class Runner(object):
 
         logger.info(step_info)
         
-    def add_new_agent(self, num):
-        for agent_id in range(num):
-            po = Policy(
-                self.all_args,
-                self.envs.observation_space[self.num_agents + agent_id],
-                # share_observation_space[0], # add [0]
-                self.envs.action_space[self.num_agents + agent_id],
-                device=self.device,
-            )
-            self.policy.append(po)
+    # def add_new_agent(self, num):
+    #     for agent_id in range(num):
+    #         po = Policy(
+    #             self.all_args,
+    #             self.envs.observation_space[self.num_agents + agent_id],
+    #             # share_observation_space[0], # add [0]
+    #             self.envs.action_space[self.num_agents + agent_id],
+    #             device=self.device,
+    #         )
+    #         self.policy.append(po)
             
-        for agent_id in range(num):
-            tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
-            bu = SeparatedReplayBuffer(
-                self.all_args,
-                self.envs.observation_space[self.num_agents + agent_id],
-                # share_observation_space[0], # add [0]
-                self.envs.action_space[self.num_agents + agent_id],
-            )
-            self.buffer.append(bu)
-            self.trainer.append(tr)
+    #     for agent_id in range(num):
+    #         tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
+    #         bu = SeparatedReplayBuffer(
+    #             self.all_args,
+    #             self.envs.observation_space[self.num_agents + agent_id],
+    #             # share_observation_space[0], # add [0]
+    #             self.envs.action_space[self.num_agents + agent_id],
+    #         )
+    #         self.buffer.append(bu)
+    #         self.trainer.append(tr)
     
-    def reset_courier_num(self, num):
-        if num > self.num_agents:
-            for agent_id in range(num):
-                po = Policy(
-                    self.all_args,
-                    self.envs.observation_space[self.num_agents + agent_id],
-                    # share_observation_space[0], # add [0]
-                    self.envs.action_space[self.num_agents + agent_id],
-                    device=self.device,
-                )
-                self.policy.append(po)
+    # def reset_courier_num(self, num):
+    #     if num > self.num_agents:
+    #         for agent_id in range(num):
+    #             po = Policy(
+    #                 self.all_args,
+    #                 self.envs.observation_space[self.num_agents + agent_id],
+    #                 # share_observation_space[0], # add [0]
+    #                 self.envs.action_space[self.num_agents + agent_id],
+    #                 device=self.device,
+    #             )
+    #             self.policy.append(po)
                 
-            for agent_id in range(num):
-                tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
-                bu = SeparatedReplayBuffer(
-                    self.all_args,
-                    self.envs.observation_space[self.num_agents + agent_id],
-                    # share_observation_space[0], # add [0]
-                    self.envs.action_space[self.num_agents + agent_id],
-                )
-                self.buffer.append(bu)
-                self.trainer.append(tr)
+    #         for agent_id in range(num):
+    #             tr = TrainAlgo(self.all_args, self.policy[agent_id], device=self.device)
+    #             bu = SeparatedReplayBuffer(
+    #                 self.all_args,
+    #                 self.envs.observation_space[self.num_agents + agent_id],
+    #                 # share_observation_space[0], # add [0]
+    #                 self.envs.action_space[self.num_agents + agent_id],
+    #             )
+    #             self.buffer.append(bu)
+    #             self.trainer.append(tr)

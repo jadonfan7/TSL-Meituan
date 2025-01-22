@@ -46,7 +46,7 @@ def make_eval_env(all_args, device):
 def parse_args(args, parser):
     parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_orders", type=int, default=1)
-    parser.add_argument("--num_couriers", type=int, default=1, help="number of couriers")
+    parser.add_argument("--num_agents", type=int, default=2, help="number of agents")
     all_args = parser.parse_known_args(args)[0]
 
     return all_args
@@ -111,7 +111,7 @@ def main(args):
 
     envs = make_train_env(all_args, device)
     eval_envs = make_eval_env(all_args, device) if all_args.use_eval else None
-    num_agents = all_args.num_couriers
+    num_agents = all_args.num_agents
 
     config = {
         "all_args": all_args,
