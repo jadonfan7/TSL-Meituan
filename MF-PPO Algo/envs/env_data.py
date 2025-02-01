@@ -127,7 +127,7 @@ class Map:
                 self.couriers_id.add(courier_id)
                 courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
                 courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
-                courier = Courier(courier_type, courier_id, courier_location)
+                courier = Courier(courier_type, courier_id, None, courier_location)
                 courier.state = 'inactive'
                 self.couriers.append(courier)
             

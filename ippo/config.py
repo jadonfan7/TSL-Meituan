@@ -188,7 +188,7 @@ def get_config():
     parser.add_argument(
         "--n_rollout_threads",
         type=int,
-        default=5,
+        default=1,
         help="Number of parallel envs for training rollouts",
     )
     parser.add_argument(

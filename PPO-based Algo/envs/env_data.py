@@ -22,11 +22,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
+        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
 
         
         # config_mapping = {
@@ -89,8 +89,7 @@ class Map:
         #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
         #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
         #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-        #     4: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-        #     5: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
         # } # 10 min
         
         config_mapping = {
@@ -117,7 +116,7 @@ class Map:
             self.end_time = config['end_time']
             
             # 筛选和排序数据
-            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)]
+            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0)]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
             self.order_data = df.reset_index(drop=True)
@@ -147,13 +146,13 @@ class Map:
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
 
         self.add_new_couriers = 0
-        self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
-        self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
-        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
-        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
+        # self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/agent/courier_behavior_model/scaler.pkl')
+        # self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/agent/courier_behavior_model/xgb_model.joblib')
+        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/imbalanced_data/scaler.pkl')
+        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/imbalanced_data/xgb_model.joblib')
         
-        # self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
+        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
         if eval == False:
             self.step(first_time=1)
         else:
@@ -446,57 +445,55 @@ class Map:
             
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
-
-        
+   
     def _accept_or_reject(self, order, courier):
         
-        # decision = True if random.random() < 0.9 else False
-        # return decision
+        decision = True if random.random() < 0.9 else False
+        return decision
         
-        avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-        formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)
-        cost = avg_speed_fair - formal_speed_fair
+        # avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+        # if len(courier.waybill) + len(courier.wait_to_pick) > 0:
+        #     formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)
+        # else:
+        #     formal_speed_fair = 0
+        # cost = avg_speed_fair - formal_speed_fair
         
-        courier_running_time = courier.total_running_time + courier.total_leisure_time
-        num_waybill = len(courier.waybill + courier.wait_to_pick)
-        potential_overspeed_risk = 1 if max_speed > 4 else 0
-        rejection_history_count = order.reject_count
-        if order.da in courier.da_count:
-            courier_da_count = courier.da_count[order.da]
-        else:
-            courier_da_count = 0
-        if order.poi in courier.poi_count:
-            courier_poi_count = courier.poi_count[order.poi]
-        else:
-            courier_poi_count = 0
-        dispatch_hour = datetime.datetime.fromtimestamp(self.clock).hour
-        pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
-        drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
-        estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
-        estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
-        order_push_time = self.clock - order.order_create_time
+        # courier_running_time = courier.total_running_time + courier.total_leisure_time
+        # num_waybill = len(courier.waybill + courier.wait_to_pick)
+        # potential_overspeed_risk = 1 if max_speed > 4 else 0
+        # rejection_history_count = order.reject_count
+        # if order.da in courier.da_count:
+        #     courier_da_count = courier.da_count[order.da]
+        # else:
+        #     courier_da_count = 0
+        # if order.poi in courier.poi_count:
+        #     courier_poi_count = courier.poi_count[order.poi]
+        # else:
+        #     courier_poi_count = 0
+        # dispatch_hour = datetime.fromtimestamp(self.clock).hour
+        # pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
+        # drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
+        # estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
+        # estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
+        # order_push_time = self.clock - order.order_create_time
         
-        feature_names = [
-            'is_courier_grabbed', 'cost', 'courier_running_time', 'num_waybill', 'potential_overspeed_risk', 'rejection history count', 'courier_da_count', 'courier_poi_count', 'dispatch_hour', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time', 'pick_up_distance', 'drop_off_distance'
-        ]
+        # feature_names = [
+        #     'cost', 'courier_running_time', 'num_waybill', 'potential_overspeed_risk', 'rejection history count', 'courier_da_count', 'courier_poi_count', 'dispatch_hour', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time', 'pick_up_distance', 'drop_off_distance'
+        # ]
 
-        X = (cost, courier_running_time, num_waybill, potential_overspeed_risk, rejection_history_count, courier_da_count, courier_poi_count, dispatch_hour, estimate_arrived_time, estimate_meal_prepare_time, order_push_time, pick_up_distance, drop_off_distance)
+        # X = (cost, courier_running_time, num_waybill, potential_overspeed_risk, rejection_history_count, courier_da_count, courier_poi_count, dispatch_hour, estimate_arrived_time, estimate_meal_prepare_time, order_push_time, pick_up_distance, drop_off_distance)
         
-        X_df = pd.DataFrame([X], columns=feature_names)
+        # X_df = pd.DataFrame([X], columns=feature_names)
         
-        # Load the scaler
-        # columns_to_standardize = ['reward', 'fairness', 'num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
-        columns_to_standardize = ['num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
-        # Standardize new data
-        X_df[columns_to_standardize] = self.scaler.transform(X_df[columns_to_standardize])
+        # # Load the scaler
+        # # columns_to_standardize = ['reward', 'fairness', 'num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
+        # columns_to_standardize = ['cost', 'courier_running_time', 'num_waybill', 'rejection history count', 'courier_da_count', 'courier_poi_count', 'dispatch_hour', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time', 'pick_up_distance', 'drop_off_distance']
+        # # Standardize new data
+        # X_df[columns_to_standardize] = self.scaler.transform(X_df[columns_to_standardize])
 
-        y_pred_new = self.best_logreg.predict(X_df)
+        # y_pred_new = self.best_logreg.predict(X_df)
         
-        # if y_pred_new[0] == False:
-        #     order.reject_count += 1
-        #     courier.reject_order_num += 1
-
-        return y_pred_new[0]
+        # return y_pred_new[0]
         
     def _Efficiency_allocation(self, orders):
         
@@ -742,7 +739,7 @@ class Map:
                 pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
                 dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
         
-                order = Order(order_id_index, 0, order_create_time, pickup_point, dropoff_point, 0, eta)
+                order = Order(order_id_index, 0, poi_id, order_create_time, pickup_point, dropoff_point, 0, eta)
                 predicted_orders.append(order)
                 
                 order_id_index += 1

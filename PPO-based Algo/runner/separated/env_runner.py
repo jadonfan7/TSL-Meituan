@@ -37,11 +37,18 @@ class EnvRunner(Runner):
             Crowdsourced_on = 0
 
             episode_reward_sum = 0
+            
+            reject_rate = []
+            courier_reject_num_total = []
 
             count_overspeed0 = 0
             num_active_Hired = 0
             count_overspeed1 = 0
             num_active_Crowdsourced = 0
+            
+            count_reject_orders = 0
+            max_reject_num = 0
+            pair_num = 0
 
             late_orders0 = 0
             late_orders1 = 0
@@ -57,6 +64,9 @@ class EnvRunner(Runner):
             order0_num = 0
             order1_num = 0
             order_wait = 0
+            
+            Hired_reject_num = []
+            Crowdsourced_reject_num = []
             
             Hired_finish_num = []
             Crowdsourced_finish_num = []
@@ -171,6 +181,7 @@ class EnvRunner(Runner):
                         if c.travel_distance > 0:
                             Hired_distance_per_episode.append(c.travel_distance)
                         Hired_finish_num.append(c.finish_order_num)
+                        Hired_reject_num.append(c.reject_order_num)
                         Hired_leisure_time.append(c.total_leisure_time)
                         Hired_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
@@ -182,6 +193,7 @@ class EnvRunner(Runner):
                         if c.travel_distance > 0:
                             Crowdsourced_distance_per_episode.append(c.travel_distance)
                         Crowdsourced_finish_num.append(c.finish_order_num)
+                        Crowdsourced_reject_num.append(c.reject_order_num)
                         Crowdsourced_leisure_time.append(c.total_leisure_time)
                         Crowdsourced_running_time.append(c.total_running_time)
                         if c.avg_speed > 0:
@@ -191,6 +203,7 @@ class EnvRunner(Runner):
                         if c.state == 'active':
                             Crowdsourced_on += 1
                 
+                pair_num += len(self.envs.envs_discrete[i].orders)
                 for o in self.envs.envs_discrete[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
@@ -205,7 +218,13 @@ class EnvRunner(Runner):
                                 late_orders1 += 1
                             else:
                                 ETA_usage1.append(o.ETA_usage)
-                                            
+                    
+                    if o.reject_count > 0:
+                        count_reject_orders += 1
+                        pair_num += o.reject_count
+                        if max_reject_num <= o.reject_count:
+                            max_reject_num = o.reject_count
+                        
                     if o.status == 'wait_pair':
                         order_wait += 1
                     else:
@@ -273,7 +292,35 @@ class EnvRunner(Runner):
             self.writter.add_scalar('Overspeed Rate/Hired', overspeed0, episode + 1)
             self.writter.add_scalar('Overspeed Rate/Crowdsourced', overspeed1, episode + 1)
             self.writter.add_scalar('Overspeed Rate/Overspeed Penalty', overspeed_penalty, episode + 1)
-                        
+            
+            # ---------------------
+            # order reject rate
+            reject_rate_per_episode = round(count_reject_orders / pair_num, 2) # reject once or twice or more
+            reject_rate.append(reject_rate_per_episode)
+            print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most")
+            self.writter.add_scalar('Reject rate', reject_rate_per_episode, episode + 1)
+            
+            # ---------------------
+            # courier reject number
+            avg_reject0 = round(np.mean(Hired_reject_num), 2)
+            var_reject0 = round(np.var(Hired_reject_num), 2)
+            avg_reject1 = round(np.mean(Crowdsourced_reject_num), 2)
+            var_reject1 = round(np.var(Crowdsourced_reject_num), 2)
+            avg_reject = round(np.mean(Hired_reject_num + Crowdsourced_reject_num), 2)
+            var_reject = round(np.var(Hired_reject_num + Crowdsourced_reject_num), 2)
+            courier_reject_num_total.append([avg_reject0, var_reject0, avg_reject1, var_reject1, avg_reject, var_reject])
+            print(
+                f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), "
+                f"Crowdsourced - {avg_reject1} (Var: {var_reject1}), "
+                f"Total - {avg_reject} (Var: {var_reject})"
+            )
+            self.writter.add_scalar('Reject Rate/Total', avg_reject, episode + 1)
+            self.writter.add_scalar('Reject Rate/Total_Var', var_reject, episode + 1)
+            self.writter.add_scalar('Reject Rate/Hired', avg_reject0, episode + 1)
+            self.writter.add_scalar('Reject Rate/Hired_Var', var_reject0, episode + 1)
+            self.writter.add_scalar('Reject Rate/Crowdsourced', avg_reject1, episode + 1)
+            self.writter.add_scalar('Reject Rate/Crowdsourced_Var', var_reject1, episode + 1)
+
             # ---------------------
             # average order price for courier
             price_per_order0 = round(np.mean(order0_price), 2)
@@ -368,6 +415,8 @@ class EnvRunner(Runner):
                 f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}\n"
                 f"The average speed for Episode {episode+1}: Hired ({len(Hired_avg_speed)}) - {avg0_speed} m/s (Var: {var0_speed}), Crowdsourced ({len(Crowdsourced_avg_speed)}) - {avg1_speed} m/s (Var: {var1_speed}), Total ({len(Hired_avg_speed+Crowdsourced_avg_speed)}) - {avg_speed} m/s (Var: {var_speed})\n"
                 f"Rate of Overspeed for Episode {episode+1}: Hired ({num_active_Hired}) - {overspeed0}, Crowdsourced ({num_active_Crowdsourced}) - {overspeed1}, Total ({num_active_Hired+num_active_Crowdsourced}) - {overspeed}\n"
+                f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
+                f"The average rejection number for Episode {episode+1}: Hired - {avg_reject0} (Var: {var_reject0}), Crowdsourced - {avg_reject1} (Var: {var_reject1}), Total - {avg_reject} ( Var: {var_reject})\n"
                 f"The average price for Episode {episode+1}: Hired ({len(order0_price)}) - {price_per_order0} dollar (Var: {var_price0}) with {order0_num} orders, Crowdsourced ({len(order1_price)}) - {price_per_order1} dollar (Var: {var_price1}) with {order1_num} orders, Total ({len(order0_price+order1_price)}) - {price_per_order} dollar (Var: {var_price})\n"
                 f"The average income for Episode {episode+1}: Hired ({len(Hired_income)}) - {income0} dollar (Var: {var_income0}), Crowdsourced ({len(Crowdsourced_income)}) - {income1} dollar (Var: {var_income1}), Total ({len(Hired_income+Crowdsourced_income)}) - {income} dollar (Var: {var_income})\n"
                 f"The platform total cost is {platform_cost} dollar\n"
