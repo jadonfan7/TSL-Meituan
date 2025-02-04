@@ -103,7 +103,7 @@ class Map:
         #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
         # } # half an hour
         
-        self.max_num_couriers = 2200
+        self.max_num_couriers = 1100
         self.existing_courier_algo = 0
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -164,7 +164,7 @@ class Map:
         if eval == False:
             self.step(first_time=1)
         else:
-            self.eval_step(agent_num=math.inf, first_time=1)
+            self.eval_step(first_time=1)
     
     def reset(self, env_index, eval=False):
         self.orders = []
@@ -210,7 +210,7 @@ class Map:
             courier_id = dt['courier_id']
             if courier_id in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                 for courier in self.couriers:
-                    if courier.courierid == courier_id and courier.state == 'inactive':
+                    if courier.courier_id == courier_id and courier.state == 'inactive':
                         courier.state = 'active'
                         courier.start_time = self.clock
                         courier.leisure_time = self.clock
@@ -289,14 +289,13 @@ class Map:
                     continue
             
                 if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1 and self.existing_courier_algo <= self.max_num_couriers:                        
-                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                     order_create_time = dt['platform_order_time']
                     pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                     dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                 
-                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
 
                     courier_id = dt['courier_id']
                     courier = None
@@ -346,10 +345,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                     courier.state = 'inactive'
                 
-                if courier.start_time != self.clock and courier.courier_type == 0:
+                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
                     courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                     self.platform_cost += salary_per_interval
@@ -376,14 +375,13 @@ class Map:
             
                     self.orders_id.add(order_id)
                     
-                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                     order_create_time = dt['platform_order_time']
                     pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                     dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                     
-                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                     orders_new.append(order)
 
                 courier_id = dt['courier_id']                        
@@ -404,10 +402,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                     courier.state = 'inactive'
                 
-                if courier.start_time != self.clock and courier.courier_type == 0:
+                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
                     courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                     self.platform_cost += salary_per_interval

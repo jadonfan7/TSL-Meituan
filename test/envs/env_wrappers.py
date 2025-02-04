@@ -135,7 +135,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.send((env_map, action_space, observation_space))
             
         elif cmd == 'eval_env_step':
-            env.map.eval_step(data)
+            env.map.eval_step()
             action_space, observation_space = env.get_env_space()
             env_map = env.get_map()
             obs = env.get_env_obs()

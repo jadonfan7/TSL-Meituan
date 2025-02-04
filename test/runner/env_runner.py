@@ -229,7 +229,7 @@ class EnvRunner(Runner):
                             order1_price.append(o.price)
                             order1_num += 1              
                             
-            print(f"\nThis is Episode {episode+1}\n")                
+            print(f"\nThis is Episode {episode+1}")                
             print(f"There are {Hired_num / self.envs.num_envs} Hired, {Crowdsourced_num / self.envs.num_envs} Crowdsourced with {Crowdsourced_on / self.envs.num_envs} ({Crowdsourced_on / Crowdsourced_num}) on, {order0_num / self.envs.num_envs} Order0, {order1_num / self.envs.num_envs} Order1, {order_wait / self.envs.num_envs} ({round(100 * order_wait / (order_wait + order0_num + order1_num), 2)}%) Orders waiting to be paired")                
             print(f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
@@ -335,8 +335,8 @@ class EnvRunner(Runner):
             # average courier income
             income0 = round(np.mean(Hired_income), 2)
             var_income0 = round(np.var(Hired_income), 2)
-            income1 = round(np.mean(Crowdsourced_income), 2)
-            var_income1 = round(np.var(Crowdsourced_income), 2)
+            income1 = round(np.mean(Crowdsourced_income), 2) if np.sum(Crowdsourced_income) != 0 else 0
+            var_income1 = round(np.var(Crowdsourced_income), 2) if np.sum(Crowdsourced_income) != 0 else 0
             income = round(np.mean(Hired_income + Crowdsourced_income), 2)
             var_income = round(np.var(Hired_income + Crowdsourced_income), 2)
             platform_cost = round(platform_cost_all / self.envs.num_envs, 2)
@@ -895,7 +895,7 @@ class EnvRunner(Runner):
         algo5_Crowdsourced_income = []
 
         self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
-        self.eval_agents = self.eval_envs.envs_discrete[0].map.couriers
+        self.eval_agents = self.eval_envs.envs_discrete[0].couriers
 
         eval_rnn_states = np.zeros(
             (
@@ -930,7 +930,7 @@ class EnvRunner(Runner):
                 
             eval_temp_actions_env = []
             
-            for agent_id, agent in range(self.eval_agents):
+            for agent_id, agent in enumerate(self.eval_agents):
                 self.trainer1.prep_rollout()
                 self.trainer2.prep_rollout()
                 
@@ -997,7 +997,7 @@ class EnvRunner(Runner):
                 eval_actions_env.append(eval_one_hot_action_env)
 
             # Obser reward and next obs
-            eval_obs, eval_rewards, eval_dones, eval_infos = self.eval_envs.step(eval_actions_env)
+            eval_obs, eval_rewards, eval_dones, eval_infos, eval_share_obs = self.eval_envs.step(eval_actions_env)
             
             algo1_eval_episode_rewards_sum += sum(eval_rewards[0])
             algo2_eval_episode_rewards_sum += sum(eval_rewards[1])
@@ -1069,25 +1069,24 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo5_count_overspeed1 += 1
 
-            print(self.num_agents)
-            eval_obs = self.eval_envs.eval_env_step(self.num_agents)
+            eval_obs = self.eval_envs.eval_env_step()
             
-            add_courier_num = self.eval_envs.envs_discrete[0].num_couriers - self.eval_num_agents
+            # add_courier_num = self.eval_envs.envs_discrete[0].num_couriers - self.eval_num_agents
 
-            new_eval_rnn_states = np.zeros(
-                (
-                    self.n_eval_rollout_threads,
-                    add_courier_num,
-                    self.recurrent_N,
-                    self.hidden_size,
-                ),
-                dtype=np.float32,
-            )
-            eval_rnn_states = np.concatenate((eval_rnn_states, new_eval_rnn_states), axis=1)
-            new_eval_masks = np.ones((self.n_eval_rollout_threads, add_courier_num, 1), dtype=np.float32)
-            eval_masks = np.concatenate((eval_masks, new_eval_masks), axis=1)
+            # new_eval_rnn_states = np.zeros(
+            #     (
+            #         self.n_eval_rollout_threads,
+            #         add_courier_num,
+            #         self.recurrent_N,
+            #         self.hidden_size,
+            #     ),
+            #     dtype=np.float32,
+            # )
+            # eval_rnn_states = np.concatenate((eval_rnn_states, new_eval_rnn_states), axis=1)
+            # new_eval_masks = np.ones((self.n_eval_rollout_threads, add_courier_num, 1), dtype=np.float32)
+            # eval_masks = np.concatenate((eval_masks, new_eval_masks), axis=1)
                             
-            self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
+            # self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
 
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):

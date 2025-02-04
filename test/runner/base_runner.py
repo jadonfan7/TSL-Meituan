@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from loguru import logger
 
@@ -17,9 +18,9 @@ class Runner(object):
         self.envs = config["envs"]
         self.eval_envs = config["eval_envs"]
         self.device = config["device"]
-        self.num_agents = config["num_agents"]
         
         self.agents = self.envs.envs_discrete[0].map.couriers
+        self.num_agents = len(self.agents)
         self.num_agents1 = self.envs.envs_discrete[0].map.num_couriers1
         self.num_agents2 = self.envs.envs_discrete[0].map.num_couriers2
 
@@ -75,7 +76,7 @@ class Runner(object):
         self.buffer1 = []
         self.buffer2 = []
         
-        for agent_id, agent in enumerate(self.agents):
+        for agent_id in range(self.num_agents):
             
             # buffer
             share_observation_space = (
@@ -118,36 +119,99 @@ class Runner(object):
     @torch.no_grad()
     def compute(self):
         self.trainer1.prep_rollout()
-        next_value = self.trainer1.policy.get_values(
-            self.buffer1.obs[-1],
+        next_value1 = self.trainer1.policy.get_values(
+            self.buffer1.share_obs[-1],
             self.buffer1.rnn_states_critic[-1],
             self.buffer1.masks[-1],
         )
-        next_value = _t2n(next_value)
-        self.buffer1.compute_returns(next_value, self.trainer1.value_normalizer)
+        next_value1 = _t2n(next_value1)
+        self.buffer1.compute_returns(next_value1, self.trainer1.value_normalizer)
         
         self.trainer2.prep_rollout()
-        next_value = self.trainer1.policy.get_values(
-            self.buffer2.obs[-1],
+        next_value2 = self.trainer2.policy.get_values(
+            self.buffer2.share_obs[-1],
             self.buffer2.rnn_states_critic[-1],
             self.buffer2.masks[-1],
         )
-        next_value = _t2n(next_value)
-        self.buffer2.compute_returns(next_value, self.trainer2.value_normalizer)
+        next_value2 = _t2n(next_value2)
+        self.buffer2.compute_returns(next_value2, self.trainer2.value_normalizer)
 
     def train(self):
         train_infos = []
-        self.trainer1.prep_training()
-        train_info = self.trainer1.train(self.buffer1)
-        train_infos.append(train_info)
-        self.buffer1.after_update()
         
+        # Prepare both trainers for training
+        self.trainer1.prep_training()
         self.trainer2.prep_training()
-        train_info = self.trainer2.train(self.buffer2)
-        train_infos.append(train_info)
+
+        # Train using trainer1
+        train_info_1 = self.trainer1.train(self.buffer1)
+        train_infos.append(train_info_1)
+        self.buffer1.after_update()
+
+        # Train using trainer2
+        train_info_2 = self.trainer2.train(self.buffer2)
+        train_infos.append(train_info_2)
         self.buffer2.after_update()
 
         return train_infos
+        
+        # factor = np.ones((self.episode_length, self.n_rollout_threads, 1), dtype=np.float32)
+        # for agent_id in torch.randperm(self.num_agents):
+        #     if self.agents[agent_id] == 0:
+        #         self.trainer1.prep_training()
+        #         self.buffer[agent_id].update_factor(factor)
+        #         available_actions = None if self.buffer[agent_id].available_actions is None \
+        #             else self.buffer[agent_id].available_actions[:-1].reshape(-1, *self.buffer[agent_id].available_actions.shape[2:])
+                    
+        #         old_actions_logprob, _ =self.trainer1.policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+        #                                                     self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
+        #                                                     self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
+        #                                                     self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),
+        #                                                     available_actions,
+        #                                                     self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
+                
+        #         train_info = self.trainer1.train(self.buffer1)
+                
+        #         new_actions_logprob, _ =self.trainer1.policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+        #                                                     self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
+        #                                                     self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
+        #                                                     self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),
+        #                                                     available_actions,
+        #                                                     self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
+                
+        #         factor = factor*_t2n(torch.prod(torch.exp(new_actions_logprob-old_actions_logprob),dim=-1).reshape(self.episode_length,self.n_rollout_threads,1))
+                
+        #         train_infos.append(train_info)
+        #         self.buffer[agent_id].after_update()
+        #         self.buffer1.after_update()
+        #     else:
+        #         self.trainer2.prep_training()
+        #         self.buffer[agent_id].update_factor(factor)
+        #         available_actions = None if self.buffer[agent_id].available_actions is None \
+        #             else self.buffer[agent_id].available_actions[:-1].reshape(-1, *self.buffer[agent_id].available_actions.shape[2:])
+                    
+        #         old_actions_logprob, _ =self.trainer2.policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+        #                                                     self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
+        #                                                     self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
+        #                                                     self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),
+        #                                                     available_actions,
+        #                                                     self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
+                
+        #         train_info = self.trainer2.train(self.buffer2)
+                
+        #         new_actions_logprob, _ =self.trainer2.policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+        #                                                     self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
+        #                                                     self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
+        #                                                     self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),
+        #                                                     available_actions,
+        #                                                     self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
+                
+        #         factor = factor*_t2n(torch.prod(torch.exp(new_actions_logprob-old_actions_logprob),dim=-1).reshape(self.episode_length,self.n_rollout_threads,1))
+        #         train_infos.append(train_info)
+        #         self.buffer[agent_id].after_update()
+        #         self.buffer2.after_update()
+
+        # return train_infos
 
     def save(self):
         policy_actor = self.trainer1.policy.actor
