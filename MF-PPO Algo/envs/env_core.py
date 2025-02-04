@@ -6,7 +6,6 @@ from envs.multi_discrete import MultiDiscrete
 from gym.spaces import Box, Discrete
 
 from geopy.distance import geodesic
-import random
 
 class EnvCore(object):
     
@@ -59,7 +58,7 @@ class EnvCore(object):
         reward_n = []
         done_n = []
         info_n = []
-        # share_obs = []
+        share_obs = []
 
         # set action for each agent
         for i, agent in enumerate(self.map.couriers):
@@ -75,8 +74,9 @@ class EnvCore(object):
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
         
-        # return obs_n, reward_n, done_n, info_n, share_obs
-        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n
+        share_obs = np.concatenate(obs_n, axis=-1)
+        # return obs_n, reward_n, done_n, info_n, 
+        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, share_obs
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
@@ -224,7 +224,7 @@ class EnvCore(object):
             
     def _get_obs(self, agent):
         return ObservationSpace(self.map, agent).get_obs()
-    
+        
     def _get_done(self, agent):
         if agent.state == 'inactive':
             return True

@@ -109,8 +109,7 @@ class EnvRunner(Runner):
                 # print(actions)
 
                 # Obser reward and next obs
-                # obs, rewards, dones, infos, share_obs = self.envs.step(actions_env)
-                obs, rewards, dones, infos = self.envs.step(actions_env)
+                obs, rewards, dones, infos, share_obs = self.envs.step(actions_env)
 
                 episode_reward_sum += rewards.sum() / self.envs.num_envs
 
@@ -128,7 +127,7 @@ class EnvRunner(Runner):
 
                 data = (
                     obs,
-                    # share_obs,
+                    share_obs,
                     rewards,
                     dones,
                     infos,
@@ -474,7 +473,7 @@ class EnvRunner(Runner):
                 value, action, action_log_prob, rnn_state, rnn_state_critic = self.trainer[
                     agent_id
                 ].policy.get_actions(
-                    # self.buffer[agent_id].share_obs[step],
+                    self.buffer[agent_id].share_obs[step],
                     self.buffer[agent_id].obs[step][:, courier_idx],
                     self.buffer[agent_id].rnn_states[step][:, courier_idx],
                     self.buffer[agent_id].rnn_states_critic[step][:, courier_idx],
@@ -528,7 +527,7 @@ class EnvRunner(Runner):
     def insert(self, data):
         (
             obs,
-            # share_obs,
+            share_obs,
             rewards,
             dones,
             infos,
@@ -551,11 +550,11 @@ class EnvRunner(Runner):
         masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
 
         for agent_id in range(len(self.envs.envs_discrete[0].couriers)):
-            # if not self.use_centralized_V:
-            #     share_obs = np.array(list(obs[:, agent_id]))
+            if not self.use_centralized_V:
+                share_obs = np.array(list(obs[:, agent_id]))
 
             self.buffer[agent_id].insert(
-                # share_obs,
+                share_obs,
                 np.array(list(obs[:, agent_id])),
                 rnn_states[:, agent_id],
                 rnn_states_critic[:, agent_id],

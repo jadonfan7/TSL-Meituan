@@ -3,7 +3,6 @@ from geopy.distance import geodesic
 from agent.courier import Courier
 from agent.order import Order
 import pandas as pd
-from utils.gorubi_solver import gorubi_solver
 import random
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -89,8 +88,7 @@ class Map:
             1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
             2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
             3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-            4: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-            5: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
         } # 10 min
         
         # config_mapping = {
@@ -152,12 +150,6 @@ class Map:
         self.interval = 20 # allocation for every 20 seconds
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
-
-        # self.add_new_couriers = 0
-        # self.scaler = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/scaler.pkl')
-        # self.best_logreg = joblib.load('/share/home/tj23028/TSL/PPO_based/envs/courier behavior model/logistic_regression_model.joblib')
-        # self.scaler = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/scaler.pkl')
-        # self.best_logreg = joblib.load('/Users/jadonfan/Documents/TSL/courier_accept_reject_behavior/logistic_regression_model.joblib')
         
         self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
         # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
@@ -198,14 +190,13 @@ class Map:
         
                 self.orders_id.add(order_id)
                 
-                is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                 order_create_time = dt['platform_order_time']
                 pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                 dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                 meal_prepare_time = dt['estimate_meal_prepare_time']
                 estimate_arrived_time = dt['estimate_arrived_time']
                 
-                order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                 orders_new.append(order)
 
             courier_id = dt['courier_id']
@@ -437,52 +428,7 @@ class Map:
         
         decision = True if random.random() < 0.9 else False
         return decision
-        
-        # _, _, max_speed = self._cal_speed(order, courier)
-        # # reward = courier.speed - avg_speed_fair
-        # # fairness = abs(avg_speed_fair - avg_speed)
-        
-        # num_waybill = len(courier.waybill + courier.wait_to_pick)
-        # potential_overspeed_risk = 1 if max_speed > 4 else 0
-        # rejection_history_count = order.reject_count
-        # is_in_the_same_da_and_poi = order.is_in_the_same_da_and_poi
-        # pick_up_distance = geodesic(courier.position, order.pick_up_point).meters
-        # drop_off_distance = geodesic(order.pick_up_point, order.drop_off_point).meters
-        # estimate_arrived_time = order.ETA - self.clock if order.ETA - self.clock > 0 else 0
-        # estimate_meal_prepare_time = order.meal_prepare_time - self.clock if order.meal_prepare_time - self.clock > 0 else 0
-        # order_push_time = self.clock - order.order_create_time
-
-        # # feature_names = [
-        # #     'reward', 'fairness', 'num_waybill', 'potential_overspeed_risk', 
-        # #     'rejection history count', 'is_in_the_same_da_and_poi', 
-        # #     'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
-        # #     'estimate_meal_prepare_time', 'order_push_time'
-        # # ]
-        # feature_names = [
-        #     'num_waybill', 'potential_overspeed_risk', 
-        #     'rejection history count', 'is_in_the_same_da_and_poi', 
-        #     'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 
-        #     'estimate_meal_prepare_time', 'order_push_time'
-        # ]
-        # # X = (reward, fairness, num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
-        # X = (num_waybill, potential_overspeed_risk, rejection_history_count, is_in_the_same_da_and_poi, pick_up_distance, drop_off_distance, estimate_arrived_time, estimate_meal_prepare_time, order_push_time)
-        
-        # X_df = pd.DataFrame([X], columns=feature_names)
-        
-        # # Load the scaler
-        # # columns_to_standardize = ['reward', 'fairness', 'num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
-        # columns_to_standardize = ['num_waybill', 'rejection history count', 'pick_up_distance', 'drop_off_distance', 'estimate_arrived_time', 'estimate_meal_prepare_time', 'order_push_time']
-        # # Standardize new data
-        # X_df[columns_to_standardize] = self.scaler.transform(X_df[columns_to_standardize])
-
-        # y_pred_new = self.best_logreg.predict(X_df)
-        
-        # # if y_pred_new[0] == False:
-        # #     order.reject_count += 1
-        # #     courier.reject_order_num += 1
-
-        # return y_pred_new[0]
-        
+                
     def _Efficiency_allocation(self, orders):
         
         for order in orders:
@@ -727,7 +673,7 @@ class Map:
                 pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
                 dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
         
-                order = Order(order_id_index, 0, order_create_time, pickup_point, dropoff_point, 0, eta)
+                order = Order(order_id_index, 0, poi_id, order_create_time, pickup_point, dropoff_point, 0, eta)
                 predicted_orders.append(order)
                 
                 order_id_index += 1

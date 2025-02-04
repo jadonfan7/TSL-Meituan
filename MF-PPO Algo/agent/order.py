@@ -1,5 +1,5 @@
 class Order:
-    def __init__(self, OrderID, da, poi, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
+    def __init__(self, OrderID, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
         self.orderid = OrderID
         
         self.status = 'wait_pair' # wait_pair, wait_pick, picked_up, dropped
@@ -9,10 +9,7 @@ class Order:
         self.pick_up_point = pick_up_point
         self.drop_off_point = drop_off_point
         self.ETA = estimate_arrived_time
-        
-        self.da = da
-        self.poi = poi
-        
+                
         self.pair_time = None
         
         self.is_late = 0

@@ -16,7 +16,7 @@ class EnvCore(object):
         self.map_algo_index = map_algo_index
         self.map = Map(algo_index=map_algo_index)
         self.num_agent = self.map.num_couriers
-        self.num_speeds = 4 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 2,4,5.5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
+        self.num_speeds = 7 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 1,3,5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
         
         self.action_space = []
         self.obs_dim = self.map.couriers[0].capacity * 5 + 2 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, (num_waybill+num_wait_to_pick) * 2(distance_between_each_order + time_window)
@@ -100,17 +100,9 @@ class EnvCore(object):
             # #     agent.speed = np.random.uniform(4, 7)
             
             policy = np.argmax(action[:2])
-            speed_index = np.argmax(action[2:])
-            if speed_index == 0:
-                agent.speed = 2
-            elif speed_index == 1:
-                agent.speed = 4
-            elif speed_index == 2:
-                agent.speed = 5.5
-            else:
-                agent.speed = 7
+            agent.speed =  np.argmax(action[2:]) + 1
             # agent.speed =  np.argmax(action) + 1
-            
+
             if agent.speed > 4:
                 if agent.courier_type == 0:
                     reward -= (agent.speed - 4) ** 2 * 10
@@ -150,16 +142,14 @@ class EnvCore(object):
                     elif order.status == 'wait_pick':
                         return geodesic(courier_position, order.pick_up_point).meters
 
-                order_sequence = sorted(all_orders, key=lambda order: calculate_distance(agent.position, order))
+                sorted_orders = sorted(all_orders, key=lambda order: calculate_distance(agent.position, order))
             else:
-                order_sequence = sorted(all_orders, key=lambda order: order.ETA)
-            
-            # agent.order_sequence = self._cal_sequence(all_orders, agent)
-            
-            if order_sequence[0].status == 'wait_pick':
-                agent.target_location = agent.order_sequence[0].pick_up_point
-            elif order_sequence[0].status == 'picked_up':
-                agent.target_location = agent.order_sequence[0].drop_off_point
+                sorted_orders = sorted(all_orders, key=lambda order: order.ETA)
+                
+            if sorted_orders[0].status == 'wait_pick':
+                agent.target_location = sorted_orders[0].pick_up_point
+            elif sorted_orders[0].status == 'picked_up':
+                agent.target_location = sorted_orders[0].drop_off_point
                 
             agent.move(self.map.interval)  
             agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
@@ -259,3 +249,4 @@ class EnvCore(object):
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
         
         return self.action_space, self.observation_space
+    
