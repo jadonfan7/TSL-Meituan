@@ -293,3 +293,9 @@ class Runner(object):
             step_info += f"The rate of overspeed {round(count_overspeed / num_active_couriers, 2)}\n"
 
         logger.info(step_info)
+        
+    def log_train(self, train_infos, total_num_steps): 
+        for agent_id in range(2):
+            for k, v in train_infos[agent_id].items():
+                agent_k = "agent%i/" % agent_id + k
+                self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)

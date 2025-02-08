@@ -6,7 +6,7 @@ class Courier:
     def __init__(self, courier_type, CourierID, position, time, state='inactive'):
         self.courier_type = courier_type # 0专送，1众包
     
-        self.courierid = CourierID
+        self.courier_id = CourierID
         self.start_time = time
         self.state = state # inactive, active
         
@@ -40,7 +40,7 @@ class Courier:
         self.income = 0
                 
     def __repr__(self):
-        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courierid) + ', type: ' + str(self.courier_type) + ', state: ' + self.state + ', position: ' + str(self.position) + ', travel_distance: ' + str(round(self.travel_distance, 2)) + ', income: ' + str(round(self.income, 2)) + ', total_leisure_time: ' + str(self.total_leisure_time) + ', total_running_time: ' + str(self.total_running_time)
+        message = 'cls: ' + type(self).__name__ + ', courier_id: ' + str(self.courier_id) + ', type: ' + str(self.courier_type) + ', state: ' + self.state + ', position: ' + str(self.position) + ', travel_distance: ' + str(round(self.travel_distance, 2)) + ', income: ' + str(round(self.income, 2)) + ', total_leisure_time: ' + str(self.total_leisure_time) + ', total_running_time: ' + str(self.total_running_time)
 
         if self.waybill != []:
             orderid = [o.orderid for o in self.waybill]
@@ -89,10 +89,13 @@ class Courier:
     def move(self, interval):
         
         if self.speed != 0:
-            congestion_rate = random.uniform(1, 1.5)
-            speed = self.speed / congestion_rate
+            # congestion_rate = random.uniform(1, 1.5)
+            # speed = self.speed / congestion_rate
             
-            self.riding_time += interval / congestion_rate
+            speed = self.speed - 1.5
+            
+            # self.riding_time += interval / congestion_rate
+            self.riding_time += interval
             
             travel_distance = interval * speed
             distance_to_target = geodesic(self.target_location, self.position).meters

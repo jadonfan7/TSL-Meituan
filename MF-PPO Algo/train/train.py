@@ -44,9 +44,9 @@ def make_eval_env(all_args, device):
     return SubprocVecEnv([get_env_fn(i) for i in range(all_args.n_eval_rollout_threads)], device)
 
 def parse_args(args, parser):
-    parser.add_argument("--scenario_name", type=str, default="Food delivery", help="Which scenario to run on")
+    parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_orders", type=int, default=1)
-    parser.add_argument("--num_agents", type=int, default=2, help="number of agents")
+    parser.add_argument("--num_couriers", type=int, default=1, help="number of couriers")
     all_args = parser.parse_known_args(args)[0]
 
     return all_args
@@ -55,13 +55,17 @@ def main(args):
     parser = get_config()
     all_args = parse_args(args, parser)
 
-    if all_args.algorithm_name == "mappo":
+    if all_args.algorithm_name == "rmappo":
+        assert all_args.use_recurrent_policy or all_args.use_naive_recurrent_policy, "check recurrent policy!"
+    elif all_args.algorithm_name == "mappo":
         assert (
             all_args.use_recurrent_policy == False and all_args.use_naive_recurrent_policy == False
         ), "check recurrent policy!"
+    else:
+        raise NotImplementedError
 
     assert (
-        all_args.share_policy == False and all_args.scenario_name == "simple_speaker_listener"
+        all_args.share_policy == True and all_args.scenario_name == "simple_speaker_listener"
     ) == False, "The simple_speaker_listener scenario can not use shared policy. Please check the config.py."
 
     # cuda
@@ -107,7 +111,7 @@ def main(args):
 
     envs = make_train_env(all_args, device)
     eval_envs = make_eval_env(all_args, device) if all_args.use_eval else None
-    num_agents = all_args.num_agents
+    num_agents = all_args.num_couriers
 
     config = {
         "all_args": all_args,
@@ -118,7 +122,7 @@ def main(args):
         "run_dir": run_dir
     }
 
-    from runner.separated.env_runner import EnvRunner as Runner
+    from runner.env_runner import EnvRunner as Runner
 
     runner = Runner(config)
     runner.run()
@@ -129,7 +133,6 @@ def main(args):
         eval_envs.close()
 
     runner.writter.close()
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])

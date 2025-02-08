@@ -189,7 +189,7 @@ def get_config():
     parser.add_argument(
         "--n_rollout_threads",
         type=int,
-        default=1, #5
+        default=3, #5
         help="Number of parallel envs for training rollouts",
     )
     # *************
@@ -203,7 +203,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=500, #16e4 2e6
+        default=25e4, #1e5 2e6
         help="Number of environment steps to train (default: 10e6)",
     )
     # env parameters
@@ -217,7 +217,7 @@ def get_config():
 
     # *************
     # replay buffer parameters
-    parser.add_argument("--episode_length", type=int, default=30, help="Max length for any episode") #200
+    parser.add_argument("--episode_length", type=int, default=3, help="Max length for any episode") #200
 
     # network parameters
     parser.add_argument(
@@ -337,7 +337,7 @@ def get_config():
     parser.add_argument(
         "--num_mini_batch",
         type=int,
-        default=1,
+        default=10,
         help="number of batches for ppo (default: 1)",
     )
     parser.add_argument(
@@ -349,7 +349,7 @@ def get_config():
     parser.add_argument(
         "--value_loss_coef",
         type=float,
-        default=1,
+        default=0.5,
         help="value loss coefficient (default: 0.5)",
     )
     parser.add_argument(
@@ -421,7 +421,7 @@ def get_config():
     parser.add_argument(
         "--save_interval",
         type=int,
-        default=40,
+        default=20,
         help="time duration between contiunous twice models saving.",
     )
 
@@ -447,14 +447,14 @@ def get_config():
     parser.add_argument(
         "--eval_interval",
         type=int,
-        default=4,
+        default=8,
         help="time duration between contiunous twice evaluation progress.",
     )
     # *************
     parser.add_argument(
         "--eval_episodes_length",
         type=int,
-        default=30,
+        default=3,
         help="number of episodes of a single evaluation.",
     )
 

@@ -15,6 +15,10 @@ class Map:
         self.couriers_id = set()
         self.orders = []
         self.couriers = []
+        
+        self.num_couriers1 = 0
+        self.num_couriers2 = 0
+        
         self.env_index = env_index
         self.algo_index = algo_index
         self.current_index = 0
@@ -99,7 +103,7 @@ class Map:
         #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
         # } # half an hour
         
-        self.max_num_couriers = 2200
+        self.max_num_couriers = 1100 # 2250
         self.existing_courier_algo = 0
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -109,7 +113,7 @@ class Map:
             self.end_time = config['end_time']
             
             # 筛选和排序数据
-            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)]
+            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)] # do not define in one area
             df = df.sort_values(by=['platform_order_time'], ascending=True)
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
             self.order_data = df.reset_index(drop=True)
@@ -117,15 +121,19 @@ class Map:
             self.predicted_count = order_estimate_30min[order_estimate_30min['dt'] == date_value]['predicted_count']
          
         for index, dt in self.order_data.iterrows():
-            if len(self.couriers) > self.max_num_couriers:
+            if len(self.couriers) >= self.max_num_couriers:
                 break
             
             courier_id = dt['courier_id']
             if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                 self.couriers_id.add(courier_id)
                 courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
+                if courier_type == 0:
+                    self.num_couriers1 += 1
+                else:
+                    self.num_couriers2 += 1
                 courier_location = (dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6)
-                courier = Courier(courier_type, courier_id, None, courier_location)
+                courier = Courier(courier_type, courier_id, courier_location, None)
                 courier.state = 'inactive'
                 self.couriers.append(courier)
             
@@ -156,7 +164,7 @@ class Map:
         if eval == False:
             self.step(first_time=1)
         else:
-            self.eval_step(agent_num=math.inf, first_time=1)
+            self.eval_step(first_time=1)
     
     def reset(self, env_index, eval=False):
         self.orders = []
@@ -202,7 +210,7 @@ class Map:
             courier_id = dt['courier_id']
             if courier_id in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                 for courier in self.couriers:
-                    if courier.courierid == courier_id and courier.state == 'inactive':
+                    if courier.courier_id == courier_id and courier.state == 'inactive':
                         courier.state = 'active'
                         courier.start_time = self.clock
                         courier.leisure_time = self.clock
@@ -217,10 +225,10 @@ class Map:
             elif courier.is_leisure == 0 and courier.state == 'active':
                 courier.total_running_time += self.interval
 
-            if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+            if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                 courier.state = 'inactive'
             
-            if courier.start_time != self.clock and courier.courier_type == 0:
+            if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                 salary_per_interval = 15 / 3600 * self.interval
                 courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                 self.platform_cost += salary_per_interval
@@ -280,15 +288,14 @@ class Map:
                     self.current_index += 1
                     continue
             
-                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1 and self.existing_courier_algo <= self.max_num_couriers:                        
-                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
+                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1 and self.existing_courier_algo < self.max_num_couriers:                        
                     order_create_time = dt['platform_order_time']
                     pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                     dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                 
-                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
 
                     courier_id = dt['courier_id']
                     courier = None
@@ -338,10 +345,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                     courier.state = 'inactive'
                 
-                if courier.start_time != self.clock and courier.courier_type == 0:
+                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
                     courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                     self.platform_cost += salary_per_interval
@@ -368,14 +375,13 @@ class Map:
             
                     self.orders_id.add(order_id)
                     
-                    is_in_the_same_da_and_poi = 1 if dt['da_id'] == dt['poi_id'] else 0
                     order_create_time = dt['platform_order_time']
                     pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                     dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                     
-                    order = Order(order_id, is_in_the_same_da_and_poi, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                     orders_new.append(order)
 
                 courier_id = dt['courier_id']                        
@@ -396,10 +402,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                     courier.state = 'inactive'
                 
-                if courier.start_time != self.clock and courier.courier_type == 0:
+                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
                     courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                     self.platform_cost += salary_per_interval
@@ -1345,31 +1351,3 @@ class Map:
                 return wage
             else:
                 return 1.5 * wage
-
-            # m = 1 / courier.total_leisure_time
-            # n = 1 / (courier_total_time - courier.total_leisure_time)
-            
-            # wm = courier.income / courier_total_time # income_per_sec
-            # v = 4 # 4 m/s
-                    
-            # r = geodesic(order.pick_up_point, courier.position).meters
-            # d = geodesic(order.pick_up_point, order.drop_off_point).meters
-            
-            # wp = (m * wm) / (n * (m + n)) * (n * courier_total_time + m / (m + n))
-            # wage = wp * (r + d) / v
-            
-            # if courier.courier_type == 1:
-            #     return wage + 3 # flexible+fixed
-            # else:
-            #     return wage
-    
-    # def get_actions(self):
-    #     num_agents = len(self.couriers)
-    #     capacity = self.couriers[0].capacity
-    #     available_actions = [[0] * capacity for _ in range(num_agents)]
-    #     for i, courier in enumerate(self.couriers):
-    #         length = len(courier.waybill) + len(courier.wait_to_pick) - 1
-    #         for j in range(min(length, capacity)):
-    #             available_actions[i][j] = 1
-                
-    #     return available_actions

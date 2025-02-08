@@ -345,19 +345,22 @@ class SharedReplayBuffer(object):
         :param mini_batch_size: (int) number of samples in each minibatch.
         """
         episode_length, n_rollout_threads, num_agents = self.rewards.shape[0:3]
-        batch_size = n_rollout_threads * episode_length * num_agents
+        batch_size = n_rollout_threads * episode_length
+        total_size = n_rollout_threads * episode_length * num_agents
+        
+        # if mini_batch_size is None:
+        #     assert batch_size >= num_mini_batch, (
+        #         "PPO requires the number of processes ({}) "
+        #         "* number of steps ({}) * number of agents ({}) = {} "
+        #         "to be greater than or equal to the number of PPO mini batches ({})."
+        #         "".format(n_rollout_threads, episode_length, num_agents,
+        #                   n_rollout_threads * episode_length * num_agents,
+        #                   num_mini_batch))
+        #     mini_batch_size = batch_size // num_mini_batch
+        
+        mini_batch_size = batch_size // num_mini_batch
 
-        if mini_batch_size is None:
-            assert batch_size >= num_mini_batch, (
-                "PPO requires the number of processes ({}) "
-                "* number of steps ({}) * number of agents ({}) = {} "
-                "to be greater than or equal to the number of PPO mini batches ({})."
-                "".format(n_rollout_threads, episode_length, num_agents,
-                          n_rollout_threads * episode_length * num_agents,
-                          num_mini_batch))
-            mini_batch_size = batch_size // num_mini_batch
-
-        rand = torch.randperm(batch_size).numpy()
+        rand = torch.randperm(total_size).numpy()
         sampler = [rand[i * mini_batch_size:(i + 1) * mini_batch_size] for i in range(num_mini_batch)]
 
         share_obs = self.share_obs[:-1].reshape(-1, *self.share_obs.shape[3:])
