@@ -2,12 +2,16 @@ import numpy as np
 
 class ObservationSpace:
     def __init__(self, map, courier=None):
+    # def __init__(self, map, courier=None, share=False):
 
         self.orders = map.orders
         self.num_orders = len(self.orders)
         # self.share = share
         if courier is not None:
             self.courier = courier
+        # if self.share:
+        #     self.couriers = map.couriers
+        #     self.num_couriers = len(self.couriers)
 
         self.lng_min = map.lng_min
         self.lng_max = map.lng_max
@@ -76,4 +80,4 @@ class ObservationSpace:
             
         # 返回订单和骑手信息的Box空间
         return combined_obs
-        
+    

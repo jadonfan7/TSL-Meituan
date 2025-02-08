@@ -182,7 +182,7 @@ def get_config():
     parser.add_argument(
         "--n_training_threads",
         type=int,
-        default=12,
+        default=7,
         help="Number of torch threads for training",
     )
     # *************
@@ -203,7 +203,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=25e4, #1e5 2e6
+        default=500, #16e4 2e6
         help="Number of environment steps to train (default: 10e6)",
     )
     # env parameters
@@ -229,7 +229,7 @@ def get_config():
     parser.add_argument(
         "--use_centralized_V",
         action="store_false",
-        default=True,
+        default=False,
         help="Whether to use centralized V function",
     )
     parser.add_argument(
@@ -337,7 +337,7 @@ def get_config():
     parser.add_argument(
         "--num_mini_batch",
         type=int,
-        default=10,
+        default=1,
         help="number of batches for ppo (default: 1)",
     )
     parser.add_argument(
@@ -349,7 +349,7 @@ def get_config():
     parser.add_argument(
         "--value_loss_coef",
         type=float,
-        default=0.5,
+        default=1,
         help="value loss coefficient (default: 0.5)",
     )
     parser.add_argument(
@@ -421,7 +421,7 @@ def get_config():
     parser.add_argument(
         "--save_interval",
         type=int,
-        default=20,
+        default=40,
         help="time duration between contiunous twice models saving.",
     )
 
@@ -447,14 +447,14 @@ def get_config():
     parser.add_argument(
         "--eval_interval",
         type=int,
-        default=8,
+        default=4,
         help="time duration between contiunous twice evaluation progress.",
     )
     # *************
     parser.add_argument(
         "--eval_episodes_length",
         type=int,
-        default=3,
+        default=5,
         help="number of episodes of a single evaluation.",
     )
 
