@@ -25,10 +25,10 @@ class EnvCore(object):
         self.observation_space = []
         self.epsilon = 0.05
 
-        shared_obs_dim = self.obs_dim * self.num_agent
+        # shared_obs_dim = self.obs_dim * self.num_agent
         
-        # shared_obs_dim = self.obs_dim * 10
-        # self.share_observation_space = []
+        shared_obs_dim = self.obs_dim * 10
+        self.share_observation_space = []
         
         for _ in range(self.num_agent):
 
@@ -41,8 +41,8 @@ class EnvCore(object):
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
-            # self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32))
-        self.share_observation_space = Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32)
+            self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32))
+        # self.share_observation_space = Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32)
                  
     def reset(self, env_index, eval=False):
         self.map.reset(env_index, eval)
@@ -80,7 +80,7 @@ class EnvCore(object):
         # share_obs = np.expand_dims(share_obs, axis=1).repeat(770, axis=0)
 
         # return obs_n, reward_n, done_n, info_n, share_obs
-        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, share_obs
+        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, np.stack(share_obs)
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
@@ -252,7 +252,7 @@ class EnvCore(object):
     def get_env_space(self):
         return self.action_space, self.observation_space
     
-    def _get_local_share_obs_kdtree(agent, all_agents, obs_n, k=10):
+    def _get_local_share_obs_kdtree(self, agent, all_agents, obs_n, k=10):
 
         agent_positions = np.array([a.position for a in all_agents])
         agent_obs = np.array(obs_n)
@@ -261,7 +261,7 @@ class EnvCore(object):
 
         _, neighbor_idx = tree.query(agent.position, k=k)
 
-        local_share_obs = agent_obs[neighbor_idx]
+        local_share_obs = agent_obs[neighbor_idx].reshape(-1)
 
         return local_share_obs
     

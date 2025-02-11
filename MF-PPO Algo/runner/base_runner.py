@@ -61,7 +61,7 @@ class Runner(object):
         logger.add("PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
         logger.add("PPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
         
-        share_observation_space = self.envs.share_observation_space if self.use_centralized_V else self.envs.observation_space[0]
+        share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
         
         self.policy1 = Policy(self.all_args, self.envs.observation_space[0], share_observation_space, self.envs.action_space[0], device=self.device)
         self.policy2 = Policy(self.all_args, self.envs.observation_space[0], share_observation_space, self.envs.action_space[0], device=self.device)
@@ -80,7 +80,7 @@ class Runner(object):
             
             # buffer
             share_observation_space = (
-                self.envs.share_observation_space
+                self.envs.share_observation_space[agent_id]
                 if self.use_centralized_V
                 else self.envs.observation_space[agent_id]
             )
