@@ -28,10 +28,8 @@ class Map:
         df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
         # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_estimate_30min = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/30min_result.csv')
-        # order_estimate_30min = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/30min_result.csv')
+        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
 
-        
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
         #     1: {'date': 20221017, 'start_time': 1665997200, 'end_time': 1666004400},
@@ -72,21 +70,7 @@ class Map:
         #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666348200},
         #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
         # } # half an hour
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975900},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666001100},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062300},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087500},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148700},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173900},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235100},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260300},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321500},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346700},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666407900},
-        # } # 5 min
-                
+                        
         config_mapping = {
             0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
             1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
@@ -103,6 +87,15 @@ class Map:
         #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
         # } # half an hour
         
+        # config_mapping = {
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
+        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
+        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
+        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
+        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
+        # } # 11:00-13:00
+
+        
         self.max_num_couriers = 1100 # 2250
         self.existing_courier_algo = 0
         # 根据 env_index 获取相应的日期和时间范围
@@ -118,7 +111,7 @@ class Map:
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
             self.order_data = df.reset_index(drop=True)
             
-            self.predicted_count = order_estimate_30min[order_estimate_30min['dt'] == date_value]['predicted_count']
+            self.predicted_count = order_num_estimate[order_num_estimate['dt'] == date_value]['predicted_count']
          
         for index, dt in self.order_data.iterrows():
             if len(self.couriers) >= self.max_num_couriers:
@@ -159,8 +152,9 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        self.poi_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/data exploration/predictions/poi_frequency.csv')
-        # self.poi_frequency = pd.read_csv('/share/home/tj23028/TSL/PPO_based/predictions/poi_frequency.csv')
+        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        
         if eval == False:
             self.step(first_time=1)
         else:
@@ -172,7 +166,7 @@ class Map:
         self.__init__(env_index, self.algo_index, eval)
 
     def __repr__(self):
-        message = 'cls:' + type(self).__name__ + ', size:' + str(self.size) + '\n'
+        message = 'cls:' + type(self).__name__ + '\n'
         for c in self.couriers:
             message += repr(c) + '\n'
         for p in self.orders:
@@ -428,12 +422,65 @@ class Map:
             
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
-
         
     def _accept_or_reject(self, order, courier):
         
         decision = True if random.random() < 0.9 else False
         return decision
+    
+    def _get_predicted_orders(self):
+            
+            index = (self.clock - self.start_time) // self.interval - 1
+            predicted_count = int(self.predicted_count.iloc[index])
+
+            predicted_orders = []
+            da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+            
+            poi_ids = da_frequency_row.index[1:]
+            frequencies = da_frequency_row.values[1:]
+
+            frequencies_normalized = frequencies / np.sum(frequencies)
+
+            from collections import Counter
+            assigned_da_ids = np.random.choice(
+                poi_ids,
+                size=predicted_count,
+                p=frequencies_normalized
+            )
+
+            da_order_count = dict(Counter(assigned_da_ids))
+
+            for da_id, num in da_order_count.items():
+                da_id = int(da_id)
+                model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
+                
+                mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time']))
+                
+                from sklearn.cluster import KMeans
+
+                coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
+
+                kmeans = KMeans(n_clusters=num, random_state=42)
+                kmeans.fit(coordinates)
+
+                predicted_coords = kmeans.cluster_centers_
+
+                labels = kmeans.labels_
+
+                for label in np.unique(labels):
+                    
+                    cluster_center = predicted_coords[label]
+                    
+                    pickup_point = (cluster_center[0], cluster_center[1])
+                    dropoff_point = (cluster_center[2], cluster_center[3])
+                    
+                    eta = mean_eta + self.clock
+
+                    order_create_time = self.clock            
+                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
+                    predicted_orders.append(order)
+                    
+            return predicted_orders
                 
     def _Efficiency_allocation(self, orders):
         
@@ -656,39 +703,10 @@ class Map:
         return True
     
     def _EEtradeoff_bipartite_allocation(self, orders):
-        
-        def get_predicted_orders():
-            
-            index = (self.clock - self.start_time) // self.interval - 1
-            predicted_count = int(self.predicted_count.iloc[index])
-
-            predicted_orders = []
-
-            assigned_poi_ids = np.random.choice(
-                self.poi_frequency['poi_id'],
-                size=predicted_count,
-                p=self.poi_frequency['frequency_ratio']
-            )
-            order_id_index = 0
-            for poi_id in assigned_poi_ids:
-                data = self.poi_frequency[self.poi_frequency['poi_id'] == poi_id]
-                
-                eta = data['avg_delivery_time'].values[0] + self.clock
-
-                order_create_time = self.clock
-                pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
-                dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
-        
-                order = Order(order_id_index, 0, poi_id, order_create_time, pickup_point, dropoff_point, 0, eta)
-                predicted_orders.append(order)
-                
-                order_id_index += 1
-
-            return predicted_orders
 
         speed_upper_bound = 4
         
-        predicted_orders = get_predicted_orders()
+        predicted_orders = self._get_predicted_orders()
         all_orders = orders + predicted_orders
         
         # Create a cost matrix
@@ -778,35 +796,6 @@ class Map:
                     courier.reject_order_num += 1
     
     def _fairness_threshold_allocation(self, orders):
-        
-        def get_predicted_orders():
-            
-            index = (self.clock - self.start_time) // self.interval - 1
-            predicted_count = int(self.predicted_count.iloc[index])
-
-            predicted_orders = []
-
-            assigned_poi_ids = np.random.choice(
-                self.poi_frequency['poi_id'],
-                size=predicted_count,
-                p=self.poi_frequency['frequency_ratio']
-            )
-            order_id_index = 0
-            for poi_id in assigned_poi_ids:
-                data = self.poi_frequency[self.poi_frequency['poi_id'] == poi_id]
-                
-                eta = data['avg_delivery_time'].values[0] + self.clock
-
-                order_create_time = self.clock
-                pickup_point = (data['sender_lat'].values[0] / 1e6, data['sender_lng'].values[0] / 1e6)
-                dropoff_point = (data['recipient_lat'].values[0] / 1e6, data['recipient_lng'].values[0] / 1e6)
-        
-                order = Order(order_id_index, 0, order_create_time, pickup_point, dropoff_point, 0, eta)
-                predicted_orders.append(order)
-                
-                order_id_index += 1
-
-            return predicted_orders
 
         speed_upper_bound = 4
         
@@ -814,7 +803,7 @@ class Map:
         cost_matrix = []
         couriers = set()
         
-        predicted_orders = get_predicted_orders()
+        predicted_orders = self._get_predicted_orders()
         all_orders = orders + predicted_orders
 
         for order in orders:
