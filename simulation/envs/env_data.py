@@ -10,7 +10,7 @@ import joblib
 
 
 class Map:
-    def __init__(self, env_index=0, algo_index=0, eval=False):
+    def __init__(self, env_index=0, algo_index=0):
         self.orders_id = set()
         self.couriers_id = set()
         self.orders = []
@@ -25,52 +25,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
-
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
-        #     1: {'date': 20221017, 'start_time': 1665997200, 'end_time': 1666004400},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
-        #     3: {'date': 20221018, 'start_time': 1666083600, 'end_time': 1666090800},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
-        #     5: {'date': 20221019, 'start_time': 1666170000, 'end_time': 1666177200},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
-        #     7: {'date': 20221020, 'start_time': 1666256400, 'end_time': 1666263600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
-        #     9: {'date': 20221021, 'start_time': 1666342800, 'end_time': 1666350000},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666414800},
-        # } # 11:00-13:00, 17:00-19:00
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975600 + 3600},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666000800 + 3600},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062000 + 3600},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087200 + 3600},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148400 + 3600},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173600 + 3600},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666234800 + 3600},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260000 + 3600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321200 + 3600},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346400 + 3600},
-        # } # 1h
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666002600},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666063800},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666089000},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666150200},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666175400},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666236600},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666261800},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666348200},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
-        # } # half an hour
+        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
                         
         config_mapping = {
             0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -135,10 +94,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
         
         self.max_num_couriers = 1100 # 2250
         for index, dt in self.order_data.iterrows():
@@ -158,15 +117,12 @@ class Map:
                 courier.state = 'inactive'
                 self.couriers.append(courier)
         
-        if eval == False:
-            self.step(first_time=1)
-        else:
-            self.eval_step(first_time=1)
+        self.eval_step(first_time=1)
     
-    def reset(self, env_index, eval=False):
+    def reset(self, env_index):
         self.orders = []
         self.couriers = []
-        self.__init__(env_index, self.algo_index, eval)
+        self.__init__(env_index, self.algo_index)
 
     def __repr__(self):
         message = 'cls:' + type(self).__name__ + '\n'
@@ -176,102 +132,6 @@ class Map:
             message += repr(p) + '\n'
         return message                
 
-    def step(self, first_time=0):
-        
-        # self.add_new_couriers = 0
-        
-        if not first_time:
-            if self.clock < self.end_time:
-                self.clock += self.interval 
-
-        orders_failed = [order for order in self.orders if order.status == "wait_pair"]
-        orders_new = []
-
-        while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
-            dt = self.order_data.iloc[self.current_index]
-            order_id = dt['order_id']
-            
-            if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
-        
-                self.orders_id.add(order_id)
-                
-                order_create_time = dt['platform_order_time']
-                pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
-                dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
-                meal_prepare_time = dt['estimate_meal_prepare_time']
-                estimate_arrived_time = dt['estimate_arrived_time']
-                
-                order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
-                orders_new.append(order)
-
-            courier_id = dt['courier_id']
-            if courier_id in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
-                for courier in self.couriers:
-                    if courier.courier_id == courier_id and courier.state == 'inactive':
-                        courier.state = 'active'
-                        courier.start_time = self.clock
-                        courier.leisure_time = self.clock
-                        self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
-                        break
-            
-            self.current_index += 1
-            
-        # if a courier does not get an order for a period of a time, he will quit the system.
-        for courier in self.couriers:
-            if courier.is_leisure == 1 and courier.state == 'active':
-                courier.total_leisure_time += self.interval
-            elif courier.is_leisure == 0 and courier.state == 'active':
-                courier.total_running_time += self.interval
-
-            if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
-                courier.state = 'inactive'
-                self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
-
-            
-            if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
-                salary_per_interval = 15 / 3600 * self.interval
-                courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
-                self.platform_cost += salary_per_interval
-
-        orders_pair = orders_failed + orders_new
-        
-        if orders_pair != []:
-            
-            self.orders += orders_new
-
-            if self.algo_index == 0:
-                self._EEtradeoff_bipartite_allocation(orders_pair)
-            # else:
-            #     nearby_couriers = None
-            #     for i, p in enumerate(orders):
-            #         nearby_couriers = self._get_nearby_couriers(p, 1500)
-            #     gorubi_solver(nearby_couriers, orders, self.clock)
-            elif self.algo_index == 1:
-                self._Efficiency_allocation(orders_pair)     
-            elif self.algo_index == 2:
-                self._MaxMin_fairness_allocation(orders_pair)   
-            elif self.algo_index == 3:
-                self._EEtradeoff_greedy_allocation(orders_pair)
-            # self.algo_index == 4 is the origin allocation in the dataset  
-        
-        # if orders_pair != []:
-            
-        #     self.orders += orders_new
-
-        #     if self.algo_index == 0:
-        #         self._fairness_threshold_allocation(orders_pair)
-        #     elif self.algo_index == 1:
-        #         self._MaxMin_fairness_allocation(orders_pair)     
-        #     elif self.algo_index == 2:
-        #         self._Pairwise_fairness_allocation(orders_pair)   
-        #     elif self.algo_index == 3:
-        #         self._Efficiency_allocation(orders_pair)     
-        #     elif self.algo_index == 4:
-        #         self._fair_allocation(orders_pair)               
-        
-        self.num_orders = len(self.orders)
-        self.num_couriers = len(self.couriers)
-        
     def eval_step(self, first_time=0):
         if self.algo_index == 4:
             # self.add_new_couriers = 0
@@ -477,23 +337,23 @@ class Map:
         adjacent_grids = [(0, 0)]
         
         if position_flag == (0, 0):
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(-1, 0), (0, -1), (-1, -1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni >= 0 and nj >= 0:
                     adjacent_grids.append((ni, nj))  
-        elif position_flag == (1, 0):
-            ni, nj = lat_index + di, lng_index + dj
+        elif position_flag == (1, 0): 
             for di, dj in [(1, 0), (0, -1), (1, -1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni < self.grid_size and nj >= 0:
                     adjacent_grids.append((ni, nj))  
         elif position_flag == (0, 1):
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(-1, 0), (0, 1), (-1, 1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni >= 0 and nj < self.grid_size:
                     adjacent_grids.append((ni, nj))  
         else:
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(1, 0), (0, 1), (1, 1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni < self.grid_size and nj < self.grid_size:
                     adjacent_grids.append((ni, nj))  
         return adjacent_grids
@@ -687,42 +547,7 @@ class Map:
                     else:
                         order.reject_count += 1
                         courier.reject_order_num += 1
-                                 
-                # if (assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num < 10):
-                #     decision = self._accept_or_reject(p, assigned_courier)
-                #     if decision == True:
-                #         p.price = self._wage_response_model(p, assigned_courier)
-                #         # courier.income += p.price
-                        
-                #         assigned_courier.wait_to_pick.append(p)
-                #         p.pair_courier = assigned_courier
-                #         p.status = 'wait_pick'
-                #         p.pair_time = self.clock
-                        
-                #         if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                #             assigned_courier.pick_order(p)
-
-                #             if assigned_courier.position == p.drop_off_point:  # dropping off
-                #                 assigned_courier.drop_order(p)
-                #     else:
-                #         p.reject_count += 1
-                #         assigned_courier.reject_order_num += 1
-                                
-                # else:
-                #     p.price = self._wage_response_model(p, assigned_courier)
-                #     # courier.income += p.price
-                                        
-                #     assigned_courier.wait_to_pick.append(p)
-                #     p.pair_courier = assigned_courier
-                #     p.status = 'wait_pick'
-                #     p.pair_time = self.clock
-                    
-                #     if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                #         assigned_courier.pick_order(p)
-
-                #         if assigned_courier.position == p.drop_off_point:  # dropping off
-                #             assigned_courier.drop_order(p)
-                
+                                                 
     def _EEtradeoff_greedy_allocation(self, orders):
         speed_upper_bound = 4
 

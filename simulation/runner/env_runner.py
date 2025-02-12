@@ -12,24 +12,12 @@ def _t2n(x):
     return x.detach().cpu().numpy()
 
 class EnvRunner(Runner):
-    def __init__(self, config):
-        super(EnvRunner, self).__init__(config)
+    def __init__(self):
+        super(EnvRunner, self).__init__()
 
-    def run(self):
+    def run(self, current_eval_time):
         
-        self.eval_num = 0
-        
-        self.eval_num += 1
-                        
-        self.eval()
-
-
-        self.writter.close()
-
-    @torch.no_grad()
-    def eval(self):
-        
-        self.eval_envs.reset(4, eval=True)
+        self.eval_envs.reset(current_eval_time % 5)
         
         algo1_Hired_num = 0
         algo1_Crowdsourced_num = 0
@@ -205,9 +193,6 @@ class EnvRunner(Runner):
         algo4_Crowdsourced_income = []
         algo5_Hired_income = []
         algo5_Crowdsourced_income = []
-
-        self.eval_num_agents = self.eval_envs.envs_discrete[0].num_couriers
-        self.eval_agents = self.eval_envs.envs_discrete[0].couriers
 
         for eval_step in range(self.eval_episodes_length):
             
@@ -1580,3 +1565,6 @@ class EnvRunner(Runner):
         logger.success(message)
             
         print("\n")
+        
+        self.eval_envs.close()
+        self.writter.close()

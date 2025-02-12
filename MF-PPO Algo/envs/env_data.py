@@ -477,23 +477,23 @@ class Map:
         adjacent_grids = [(0, 0)]
         
         if position_flag == (0, 0):
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(-1, 0), (0, -1), (-1, -1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni >= 0 and nj >= 0:
                     adjacent_grids.append((ni, nj))  
-        elif position_flag == (1, 0):
-            ni, nj = lat_index + di, lng_index + dj
+        elif position_flag == (1, 0): 
             for di, dj in [(1, 0), (0, -1), (1, -1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni < self.grid_size and nj >= 0:
                     adjacent_grids.append((ni, nj))  
         elif position_flag == (0, 1):
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(-1, 0), (0, 1), (-1, 1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni >= 0 and nj < self.grid_size:
                     adjacent_grids.append((ni, nj))  
         else:
-            ni, nj = lat_index + di, lng_index + dj
             for di, dj in [(1, 0), (0, 1), (1, 1)]:
+                ni, nj = lat_index + di, lng_index + dj
                 if ni < self.grid_size and nj < self.grid_size:
                     adjacent_grids.append((ni, nj))  
         return adjacent_grids

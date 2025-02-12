@@ -28,7 +28,7 @@ class Courier:
         self.target_location = None
         self.is_target_locked = False
         self.order_sequence = []
-        self.speed = 0
+        self.speed = 3
         self.avg_speed = 0
         
         self.capacity = 10

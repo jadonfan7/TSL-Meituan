@@ -4,13 +4,27 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from loguru import logger
 
-def _t2n(x):
-    return x.detach().cpu().numpy()
+from envs.env_wrappers import SubprocVecEnv
+
+def make_eval_env(n_eval_rollout_threads):
+    def get_env_fn(rank):
+        def init_env():
+            
+            from envs.env_core import EnvCore
+            env = EnvCore(rank)
+
+            return env
+
+        return init_env
+
+    return SubprocVecEnv([get_env_fn(i) for i in range(n_eval_rollout_threads)])
+
 
 class Runner(object):
     def __init__(self):
         self.eval_episodes_length = 500
-        self.eval_envs.num_envs = 5
+        self.num_envs = 5 
+        self.eval_envs = make_eval_env(self.num_envs)
         
         logger.remove()
         logger.add("PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
