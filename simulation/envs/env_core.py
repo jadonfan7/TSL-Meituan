@@ -22,7 +22,6 @@ class EnvCore(object):
         for agent in self.map.couriers:       
             if (agent.waybill != [] or agent.wait_to_pick != []) and agent.stay_duration == 0:
 
-                
                 agent.move(self.map)  
                 agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
                 
@@ -58,3 +57,6 @@ class EnvCore(object):
             else:
                 agent.is_leisure = 0
                 agent.leisure_time = self.map.clock
+                
+    def get_map(self):
+        return self.map

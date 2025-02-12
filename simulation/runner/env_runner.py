@@ -207,7 +207,7 @@ class EnvRunner(Runner):
                         
             for i in range(self.eval_envs.num_envs):
                 if i == 0:
-                    for c in self.eval_envs.envs_discrete[i].couriers:
+                    for c in self.eval_envs.envs_map[i].couriers:
                         if c.state == 'active':
                             if c.courier_type == 0:
                                 algo1_num_active_couriers0 += 1
@@ -218,7 +218,7 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo1_count_overspeed1 += 1
                 elif i == 1:
-                    for c in self.eval_envs.envs_discrete[i].couriers:
+                    for c in self.eval_envs.envs_map[i].couriers:
                         if c.state == 'active':
                             if c.courier_type == 0:
                                 algo2_num_active_couriers0 += 1
@@ -229,7 +229,7 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo2_count_overspeed1 += 1
                 elif i == 2:
-                    for c in self.eval_envs.envs_discrete[i].couriers:
+                    for c in self.eval_envs.envs_map[i].couriers:
                         if c.state == 'active':
                             if c.courier_type == 0:
                                 algo3_num_active_couriers0 += 1
@@ -240,7 +240,7 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo3_count_overspeed1 += 1
                 elif i == 3:
-                    for c in self.eval_envs.envs_discrete[i].couriers:
+                    for c in self.eval_envs.envs_map[i].couriers:
                         if c.state == 'active':
                             if c.courier_type == 0:
                                 algo4_num_active_couriers0 += 1
@@ -251,7 +251,7 @@ class EnvRunner(Runner):
                                 if c.speed > 4:
                                     algo4_count_overspeed1 += 1
                 else:
-                    for c in self.eval_envs.envs_discrete[i].couriers:
+                    for c in self.eval_envs.envs_map[i].couriers:
                         if c.state == 'active':
                             if c.courier_type == 0:
                                 algo5_num_active_couriers0 += 1
@@ -265,8 +265,8 @@ class EnvRunner(Runner):
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):
             if i == 0:
-                platform_cost1 += self.eval_envs.envs_discrete[i].platform_cost
-                for c in self.eval_envs.envs_discrete[i].couriers:
+                platform_cost1 += self.eval_envs.envs_map[i].platform_cost
+                for c in self.eval_envs.envs_map[i].couriers:
                     if c.courier_type == 0:
                         algo1_Hired_num += 1
                         if c.travel_distance > 0:
@@ -293,7 +293,7 @@ class EnvRunner(Runner):
                             algo1_Crowdsourced_on += 1
 
                 
-                for o in self.eval_envs.envs_discrete[i].orders:
+                for o in self.eval_envs.envs_map[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
                             algo1_count_dropped_orders0 += 1
@@ -319,8 +319,8 @@ class EnvRunner(Runner):
                             algo1_order1_num += 1             
                     
             elif i == 1:
-                platform_cost2 += self.eval_envs.envs_discrete[i].platform_cost
-                for c in self.eval_envs.envs_discrete[i].couriers:
+                platform_cost2 += self.eval_envs.envs_map[i].platform_cost
+                for c in self.eval_envs.envs_map[i].couriers:
                     if c.courier_type == 0:
                         algo2_Hired_num += 1
                         if c.travel_distance > 0:
@@ -346,7 +346,7 @@ class EnvRunner(Runner):
                         if c.state == 'active':
                             algo2_Crowdsourced_on += 1
                 
-                for o in self.eval_envs.envs_discrete[i].orders:
+                for o in self.eval_envs.envs_map[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
                             algo2_count_dropped_orders0 += 1
@@ -371,8 +371,8 @@ class EnvRunner(Runner):
                             algo2_order1_price.append(o.price)
                             algo2_order1_num += 1
             elif i == 2:
-                platform_cost3 += self.eval_envs.envs_discrete[i].platform_cost
-                for c in self.eval_envs.envs_discrete[i].couriers:
+                platform_cost3 += self.eval_envs.envs_map[i].platform_cost
+                for c in self.eval_envs.envs_map[i].couriers:
                     if c.courier_type == 0:
                         algo3_Hired_num += 1
                         if c.travel_distance > 0:
@@ -398,7 +398,7 @@ class EnvRunner(Runner):
                         if c.state == 'active':
                             algo3_Crowdsourced_on += 1
                 
-                for o in self.eval_envs.envs_discrete[i].orders:
+                for o in self.eval_envs.envs_map[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
                             algo3_count_dropped_orders0 += 1
@@ -423,8 +423,8 @@ class EnvRunner(Runner):
                             algo3_order1_price.append(o.price)
                             algo3_order1_num += 1  
             elif i == 3:
-                platform_cost4 += self.eval_envs.envs_discrete[i].platform_cost
-                for c in self.eval_envs.envs_discrete[i].couriers:
+                platform_cost4 += self.eval_envs.envs_map[i].platform_cost
+                for c in self.eval_envs.envs_map[i].couriers:
                     if c.courier_type == 0:
                         algo4_Hired_num += 1
                         if c.travel_distance > 0:
@@ -450,7 +450,7 @@ class EnvRunner(Runner):
                         if c.state == 'active':
                             algo4_Crowdsourced_on += 1
                 
-                for o in self.eval_envs.envs_discrete[i].orders:
+                for o in self.eval_envs.envs_map[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
                             algo4_count_dropped_orders0 += 1
@@ -476,8 +476,8 @@ class EnvRunner(Runner):
                             algo4_order1_num += 1   
                             
             else:
-                platform_cost5 += self.eval_envs.envs_discrete[i].platform_cost
-                for c in self.eval_envs.envs_discrete[i].couriers:
+                platform_cost5 += self.eval_envs.envs_map[i].platform_cost
+                for c in self.eval_envs.envs_map[i].couriers:
                     if c.courier_type == 0:
                         algo5_Hired_num += 1
                         if c.travel_distance > 0:
@@ -503,7 +503,7 @@ class EnvRunner(Runner):
                         if c.state == 'active':
                             algo5_Crowdsourced_on += 1
                 
-                for o in self.eval_envs.envs_discrete[i].orders:
+                for o in self.eval_envs.envs_map[i].orders:
                     if o.status == 'dropped':
                         if o.pair_courier.courier_type == 0:
                             algo5_count_dropped_orders0 += 1

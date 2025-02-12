@@ -156,11 +156,11 @@ class SubprocVecEnv(ShareVecEnv):
         """
         self.waiting = False
         self.closed = False
-        # self.envs_discrete = [fn() for fn in env_fns]
+        # self.envs_map = [fn() for fn in env_fns]
         nenvs = len(env_fns)
         
         self.num_envs = nenvs
-        self.envs_discrete = []
+        self.envs_map = []
         
         self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
         self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
@@ -173,7 +173,7 @@ class SubprocVecEnv(ShareVecEnv):
         
         for remote in self.remotes:
             env = remote.recv()
-            self.envs_discrete.append(env)
+            self.envs_map.append(env.map)
 
         self.remotes[0].send(('get_spaces', None))
         observation_space, action_space, share_observation_space = self.remotes[0].recv()
@@ -187,7 +187,7 @@ class SubprocVecEnv(ShareVecEnv):
     def step_wait(self):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
-        obs, rews, dones, infos, share_obs, self.envs_discrete = zip(*results)
+        obs, rews, dones, infos, share_obs, self.envs_map = zip(*results)
         return np.stack(obs), np.stack(rews), np.stack(dones), infos, np.stack(share_obs)
 
     def reset(self, index, eval=False):
@@ -195,7 +195,7 @@ class SubprocVecEnv(ShareVecEnv):
             remote.send(('reset', (index, eval)))
         
         results = [remote.recv() for remote in self.remotes]
-        self.envs_discrete = [result[0] for result in results]
+        self.envs_map = [result[0] for result in results]
         obs = [result[1] for result in results]
         
         self.action_space, self.observation_space = results[0][2], results[0][3]
@@ -219,7 +219,7 @@ class SubprocVecEnv(ShareVecEnv):
             
         results = [remote.recv() for remote in self.remotes]
     
-        self.envs_discrete = [result[0] for result in results]
+        self.envs_map = [result[0] for result in results]
     
         self.action_space, self.observation_space = results[0][1], results[0][2]
         
@@ -229,7 +229,7 @@ class SubprocVecEnv(ShareVecEnv):
             
         results = [remote.recv() for remote in self.remotes]
     
-        self.envs_discrete = [result[0] for result in results]
+        self.envs_map = [result[0] for result in results]
     
         self.action_space, self.observation_space = results[0][1], results[0][2]
         

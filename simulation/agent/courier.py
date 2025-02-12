@@ -93,6 +93,7 @@ class Courier:
             # speed = self.speed / congestion_rate
             
             travel_distance = map.interval * self.speed
+            distance_to_target = geodesic(self.target_location, self.position).meters
 
             if travel_distance >= distance_to_target:
                 new_latitude, new_longitude = self.target_location
@@ -111,7 +112,6 @@ class Courier:
             self.riding_time += map.interval
             
             travel_distance = map.interval * speed
-            distance_to_target = geodesic(self.target_location, self.position).meters
             
             if travel_distance >= distance_to_target:
                 map.update(self.position[0], self.position[1], self.target_location[0], self.target_location[1], self)

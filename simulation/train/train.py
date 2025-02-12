@@ -11,8 +11,8 @@ parent_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # Append the parent directory to sys.path, otherwise the following import will fail
 sys.path.append(parent_dir)
+
 def main():
-    
     from runner.env_runner import EnvRunner as Runner
 
     runner = Runner()

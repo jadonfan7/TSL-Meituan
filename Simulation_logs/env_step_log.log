@@ -1,0 +1,220 @@
+2025-02-12 15:11:03.704 | INFO     | runner.base_runner:log_env:92 - -------------------------
+THIS IS EPISODE 2, STEP 1
+ENVIRONMENT 1
+Couriers:
+cls: Courier, courier_id: 1935, type: 0, state: active, position: (46.051746, 174.941738), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [537871], head_to: None, speed: 3
+cls: Courier, courier_id: 4485, type: 0, state: active, position: (45.874125, 174.585389), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [177166], head_to: None, speed: 3
+cls: Courier, courier_id: 2172, type: 0, state: active, position: (45.877373, 174.586193), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [555805], head_to: None, speed: 3
+cls: Courier, courier_id: 1627, type: 1, state: active, position: (46.052488, 174.946042), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [276262], head_to: None, speed: 3
+cls: Courier, courier_id: 3315, type: 0, state: active, position: (45.905942, 174.530354), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [9708], head_to: None, speed: 3
+cls: Courier, courier_id: 1459, type: 0, state: active, position: (45.859529, 174.564551), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [561012], head_to: None, speed: 3
+cls: Courier, courier_id: 3294, type: 1, state: active, position: (45.880121, 174.57932), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [403605], head_to: None, speed: 3
+cls: Courier, courier_id: 579, type: 1, state: active, position: (45.895502, 174.556581), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [446238], head_to: None, speed: 3
+cls: Courier, courier_id: 958, type: 0, state: active, position: (45.904954, 174.525534), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [209728], head_to: None, speed: 3
+cls: Courier, courier_id: 4202, type: 0, state: active, position: (45.885761, 174.597683), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [63964], head_to: None, speed: 3
+cls: Courier, courier_id: 4239, type: 1, state: active, position: (45.870984, 174.5718), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [371023], head_to: None, speed: 3
+cls: Courier, courier_id: 182, type: 1, state: active, position: (45.890295, 174.545759), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [548074], head_to: None, speed: 3
+cls: Courier, courier_id: 2136, type: 0, state: active, position: (45.913702, 174.565116), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [174170], head_to: None, speed: 3
+cls: Courier, courier_id: 2635, type: 0, state: active, position: (45.885781, 174.55695), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [446246], head_to: None, speed: 3
+cls: Courier, courier_id: 237, type: 0, state: active, position: (45.896147, 174.555744), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [67166], head_to: None, speed: 3
+cls: Courier, courier_id: 1060, type: 0, state: active, position: (45.858072, 174.571215), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [191933], head_to: None, speed: 3
+cls: Courier, courier_id: 1225, type: 0, state: active, position: (45.911222, 174.537931), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 592, type: 0, state: active, position: (46.051193, 174.944475), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [529958], head_to: None, speed: 3
+cls: Courier, courier_id: 3975, type: 0, state: active, position: (45.887466, 174.562778), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [435589], head_to: None, speed: 3
+cls: Courier, courier_id: 2820, type: 0, state: active, position: (45.896026, 174.555428), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [189042], head_to: None, speed: 3
+cls: Courier, courier_id: 1608, type: 0, state: active, position: (45.878915, 174.650546), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [131812], head_to: None, speed: 3
+cls: Courier, courier_id: 3480, type: 1, state: active, position: (45.851255, 174.555574), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [194846], head_to: None, speed: 3
+cls: Courier, courier_id: 2592, type: 1, state: active, position: (45.868335, 174.551094), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 52, type: 1, state: active, position: (45.895135, 174.52566), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [57], head_to: None, speed: 3
+cls: Courier, courier_id: 2381, type: 0, state: active, position: (46.043384, 174.940883), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [125670], head_to: None, speed: 3
+cls: Courier, courier_id: 1318, type: 1, state: active, position: (45.852357, 174.532304), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 1762, type: 0, state: active, position: (45.880821, 174.634072), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 493, type: 0, state: active, position: (45.907651, 174.566575), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [116599], head_to: None, speed: 3
+cls: Courier, courier_id: 3537, type: 1, state: active, position: (45.886068, 174.594485), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [209733], head_to: None, speed: 3
+cls: Courier, courier_id: 829, type: 0, state: active, position: (45.863414, 174.583431), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [553199], head_to: None, speed: 3
+cls: Courier, courier_id: 401, type: 0, state: active, position: (45.863924, 174.570963), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 212, type: 0, state: active, position: (45.860285, 174.572658), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [368284], head_to: None, speed: 3
+cls: Courier, courier_id: 163, type: 0, state: active, position: (45.819586, 174.564509), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [244706], head_to: None, speed: 3
+cls: Courier, courier_id: 4582, type: 0, state: active, position: (45.876238, 174.618447), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 168, type: 0, state: active, position: (45.894718, 174.555854), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [60851], head_to: None, speed: 3
+cls: Courier, courier_id: 1963, type: 1, state: active, position: (45.926434, 174.532689), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [183198], head_to: None, speed: 3
+cls: Courier, courier_id: 3581, type: 0, state: active, position: (45.862975, 174.581408), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [57697], head_to: None, speed: 3
+cls: Courier, courier_id: 269, type: 0, state: active, position: (46.044988, 174.938752), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [392736], head_to: None, speed: 3
+cls: Courier, courier_id: 3711, type: 0, state: active, position: (45.865853, 174.567023), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 1143, type: 1, state: active, position: (45.880054, 174.509584), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 747, type: 0, state: active, position: (45.860608, 174.563532), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 2681, type: 1, state: active, position: (45.856354, 174.610747), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [357196], head_to: None, speed: 3
+cls: Courier, courier_id: 2976, type: 1, state: active, position: (45.865162, 174.556944), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [28910], head_to: None, speed: 3
+cls: Courier, courier_id: 3686, type: 1, state: active, position: (45.868988, 174.572689), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [310151], head_to: None, speed: 3
+cls: Courier, courier_id: 892, type: 0, state: active, position: (45.876238, 174.624686), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [9707], head_to: None, speed: 3
+cls: Courier, courier_id: 1649, type: 0, state: active, position: (45.857176, 174.54374), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 3106, type: 0, state: active, position: (45.909925, 174.543802), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [362741], head_to: None, speed: 3
+cls: Courier, courier_id: 2722, type: 0, state: active, position: (45.8864, 174.583983), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [238907], head_to: None, speed: 3
+cls: Courier, courier_id: 569, type: 0, state: active, position: (45.863172, 174.584101), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [493426], head_to: None, speed: 3
+cls: Courier, courier_id: 2176, type: 0, state: active, position: (45.873531, 174.531723), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [113635], head_to: None, speed: 3
+Orders:
+cls: Order, order_id: 276262, price: 10, status: wait_pick, pick_up_point: (46.051835, 174.951074), drop_off_point: (46.044505, 174.922788), reject_count: 0, pair_time: 1665975620, pair_courier: 1627
+cls: Order, order_id: 555805, price: 10, status: wait_pick, pick_up_point: (45.874592, 174.590556), drop_off_point: (45.877815, 174.604782), reject_count: 0, pair_time: 1665975620, pair_courier: 2172
+cls: Order, order_id: 177166, price: 10, status: wait_pick, pick_up_point: (45.873822, 174.576548), drop_off_point: (45.860444, 174.563584), reject_count: 0, pair_time: 1665975620, pair_courier: 4485
+cls: Order, order_id: 529958, price: 10, status: wait_pick, pick_up_point: (46.051597, 174.94722), drop_off_point: (46.052251, 174.933518), reject_count: 0, pair_time: 1665975620, pair_courier: 592
+cls: Order, order_id: 165179, price: 0, status: wait_pair, pick_up_point: (45.91111, 174.53049), drop_off_point: (45.916951, 174.534805), reject_count: 1
+cls: Order, order_id: 371023, price: 10, status: wait_pick, pick_up_point: (45.868793, 174.574245), drop_off_point: (45.879556, 174.581628), reject_count: 0, pair_time: 1665975620, pair_courier: 4239
+cls: Order, order_id: 403605, price: 10, status: wait_pick, pick_up_point: (45.873188, 174.570382), drop_off_point: (45.883447, 174.580589), reject_count: 0, pair_time: 1665975620, pair_courier: 3294
+cls: Order, order_id: 446238, price: 10, status: wait_pick, pick_up_point: (45.894757, 174.555382), drop_off_point: (45.905141, 174.539913), reject_count: 0, pair_time: 1665975620, pair_courier: 579
+cls: Order, order_id: 209728, price: 10, status: wait_pick, pick_up_point: (45.905905, 174.526537), drop_off_point: (45.916786, 174.534005), reject_count: 0, pair_time: 1665975620, pair_courier: 958
+cls: Order, order_id: 209733, price: 10, status: wait_pick, pick_up_point: (45.89295, 174.56732), drop_off_point: (45.889857, 174.535479), reject_count: 0, pair_time: 1665975620, pair_courier: 3537
+cls: Order, order_id: 134834, price: 0, status: wait_pair, pick_up_point: (45.866909, 174.555545), drop_off_point: (45.851892, 174.566072), reject_count: 1
+cls: Order, order_id: 548074, price: 10, status: wait_pick, pick_up_point: (45.889986, 174.545204), drop_off_point: (45.907277, 174.560055), reject_count: 0, pair_time: 1665975620, pair_courier: 182
+cls: Order, order_id: 116599, price: 10, status: wait_pick, pick_up_point: (45.90763, 174.567904), drop_off_point: (45.902525, 174.590984), reject_count: 0, pair_time: 1665975620, pair_courier: 493
+cls: Order, order_id: 435589, price: 10, status: wait_pick, pick_up_point: (45.885075, 174.565745), drop_off_point: (45.887716, 174.563695), reject_count: 0, pair_time: 1665975620, pair_courier: 3975
+cls: Order, order_id: 60851, price: 10, status: wait_pick, pick_up_point: (45.894966, 174.554512), drop_off_point: (45.894925, 174.541679), reject_count: 0, pair_time: 1665975620, pair_courier: 168
+cls: Order, order_id: 537874, price: 0, status: wait_pair, pick_up_point: (45.868267, 174.559566), drop_off_point: (45.87512, 174.524972), reject_count: 0
+cls: Order, order_id: 449019, price: 0, status: wait_pair, pick_up_point: (45.909302, 174.525369), drop_off_point: (45.928344, 174.532558), reject_count: 0
+cls: Order, order_id: 537871, price: 10, status: wait_pick, pick_up_point: (46.050966, 174.946024), drop_off_point: (46.035724, 174.967381), reject_count: 0, pair_time: 1665975620, pair_courier: 1935
+cls: Order, order_id: 446246, price: 10, status: wait_pick, pick_up_point: (45.887438, 174.553952), drop_off_point: (45.873364, 174.535423), reject_count: 0, pair_time: 1665975620, pair_courier: 2635
+cls: Order, order_id: 189042, price: 10, status: wait_pick, pick_up_point: (45.894856, 174.555279), drop_off_point: (45.876307, 174.54594), reject_count: 0, pair_time: 1665975620, pair_courier: 2820
+cls: Order, order_id: 131812, price: 10, status: wait_pick, pick_up_point: (45.880376, 174.650688), drop_off_point: (45.873405, 174.626292), reject_count: 0, pair_time: 1665975620, pair_courier: 1608
+cls: Order, order_id: 371021, price: 0, status: wait_pair, pick_up_point: (45.851746, 174.556414), drop_off_point: (45.824982, 174.544946), reject_count: 0
+cls: Order, order_id: 493427, price: 0, status: wait_pair, pick_up_point: (45.871272, 174.543061), drop_off_point: (45.894605, 174.541793), reject_count: 0
+cls: Order, order_id: 57, price: 10, status: wait_pick, pick_up_point: (45.89637, 174.52488), drop_off_point: (45.909399, 174.54205), reject_count: 0, pair_time: 1665975620, pair_courier: 52
+cls: Order, order_id: 125670, price: 10, status: wait_pick, pick_up_point: (46.043478, 174.939239), drop_off_point: (46.060076, 174.93934), reject_count: 0, pair_time: 1665975620, pair_courier: 2381
+cls: Order, order_id: 282014, price: 0, status: wait_pair, pick_up_point: (45.853252, 174.530042), drop_off_point: (45.851175, 174.515014), reject_count: 0
+cls: Order, order_id: 6451, price: 0, status: wait_pair, pick_up_point: (45.879942, 174.634576), drop_off_point: (45.885016, 174.63517), reject_count: 1
+cls: Order, order_id: 535210, price: 0, status: wait_pair, pick_up_point: (45.905305, 174.559496), drop_off_point: (45.901824, 174.567632), reject_count: 0
+cls: Order, order_id: 63964, price: 10, status: wait_pick, pick_up_point: (45.889913, 174.596658), drop_off_point: (45.897232, 174.59113), reject_count: 0, pair_time: 1665975620, pair_courier: 4202
+cls: Order, order_id: 368284, price: 10, status: wait_pick, pick_up_point: (45.861427, 174.575615), drop_off_point: (45.850064, 174.571115), reject_count: 0, pair_time: 1665975620, pair_courier: 212
+cls: Order, order_id: 553199, price: 10, status: wait_pick, pick_up_point: (45.86299, 174.57536), drop_off_point: (45.859685, 174.560266), reject_count: 0, pair_time: 1665975620, pair_courier: 829
+cls: Order, order_id: 191933, price: 10, status: wait_pick, pick_up_point: (45.860696, 174.572517), drop_off_point: (45.867515, 174.572203), reject_count: 0, pair_time: 1665975620, pair_courier: 1060
+cls: Order, order_id: 244706, price: 10, status: wait_pick, pick_up_point: (45.817411, 174.564698), drop_off_point: (45.815177, 174.586041), reject_count: 0, pair_time: 1665975620, pair_courier: 163
+cls: Order, order_id: 183197, price: 0, status: wait_pair, pick_up_point: (45.873007, 174.626168), drop_off_point: (45.889502, 174.622337), reject_count: 1
+cls: Order, order_id: 67166, price: 10, status: wait_pick, pick_up_point: (45.898319, 174.553496), drop_off_point: (45.903937, 174.543166), reject_count: 0, pair_time: 1665975620, pair_courier: 237
+cls: Order, order_id: 183198, price: 10, status: wait_pick, pick_up_point: (45.920148, 174.542099), drop_off_point: (45.905599, 174.548038), reject_count: 0, pair_time: 1665975620, pair_courier: 1963
+cls: Order, order_id: 493426, price: 10, status: wait_pick, pick_up_point: (45.864606, 174.580745), drop_off_point: (45.847189, 174.590596), reject_count: 0, pair_time: 1665975620, pair_courier: 569
+cls: Order, order_id: 392736, price: 10, status: wait_pick, pick_up_point: (46.047132, 174.93797), drop_off_point: (46.052683, 174.936587), reject_count: 0, pair_time: 1665975620, pair_courier: 269
+cls: Order, order_id: 174170, price: 10, status: wait_pick, pick_up_point: (45.907518, 174.567959), drop_off_point: (45.905262, 174.583709), reject_count: 0, pair_time: 1665975620, pair_courier: 2136
+cls: Order, order_id: 561012, price: 10, status: wait_pick, pick_up_point: (45.859558, 174.565479), drop_off_point: (45.846667, 174.572381), reject_count: 0, pair_time: 1665975620, pair_courier: 1459
+cls: Order, order_id: 9708, price: 10, status: wait_pick, pick_up_point: (45.912289, 174.52637), drop_off_point: (45.916769, 174.533991), reject_count: 0, pair_time: 1665975620, pair_courier: 3315
+cls: Order, order_id: 113635, price: 10, status: wait_pick, pick_up_point: (45.865954, 174.526117), drop_off_point: (45.876254, 174.524818), reject_count: 0, pair_time: 1665975620, pair_courier: 2176
+cls: Order, order_id: 379163, price: 0, status: wait_pair, pick_up_point: (45.865852, 174.556038), drop_off_point: (45.874007, 174.534736), reject_count: 0
+cls: Order, order_id: 357196, price: 10, status: wait_pick, pick_up_point: (45.850798, 174.613138), drop_off_point: (45.852883, 174.601945), reject_count: 0, pair_time: 1665975620, pair_courier: 2681
+cls: Order, order_id: 28910, price: 10, status: wait_pick, pick_up_point: (45.868335, 174.54571), drop_off_point: (45.873407, 174.546081), reject_count: 0, pair_time: 1665975620, pair_courier: 2976
+cls: Order, order_id: 310151, price: 10, status: wait_pick, pick_up_point: (45.869083, 174.572719), drop_off_point: (45.886194, 174.556213), reject_count: 0, pair_time: 1665975620, pair_courier: 3686
+cls: Order, order_id: 9707, price: 10, status: wait_pick, pick_up_point: (45.873007, 174.626168), drop_off_point: (45.871741, 174.604082), reject_count: 0, pair_time: 1665975620, pair_courier: 892
+cls: Order, order_id: 194846, price: 10, status: wait_pick, pick_up_point: (45.852904, 174.549538), drop_off_point: (45.846512, 174.572181), reject_count: 0, pair_time: 1665975620, pair_courier: 3480
+cls: Order, order_id: 362741, price: 10, status: wait_pick, pick_up_point: (45.905951, 174.543445), drop_off_point: (45.902693, 174.586196), reject_count: 0, pair_time: 1665975620, pair_courier: 3106
+cls: Order, order_id: 238907, price: 10, status: wait_pick, pick_up_point: (45.887526, 174.577045), drop_off_point: (45.873228, 174.588697), reject_count: 0, pair_time: 1665975620, pair_courier: 2722
+cls: Order, order_id: 57697, price: 10, status: wait_pick, pick_up_point: (45.85981, 174.57942), drop_off_point: (45.842359, 174.55372), reject_count: 0, pair_time: 1665975620, pair_courier: 3581
+cls: Order, order_id: 256212, price: 0, status: wait_pair, pick_up_point: (45.864228, 174.536685), drop_off_point: (45.859707, 174.521737), reject_count: 0
+The average travel distance per courier is 0.0 meters
+The rate of overspeed 0.0
+
+2025-02-12 15:12:39.095 | INFO     | runner.base_runner:log_env:92 - -------------------------
+THIS IS EPISODE 2, STEP 1
+ENVIRONMENT 1
+Couriers:
+cls: Courier, courier_id: 1935, type: 1, state: active, position: (46.051746, 174.941738), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [276262], head_to: None, speed: 3
+cls: Courier, courier_id: 4485, type: 0, state: active, position: (45.874125, 174.585389), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [177166], head_to: None, speed: 3
+cls: Courier, courier_id: 2172, type: 0, state: active, position: (45.877373, 174.586193), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 1627, type: 0, state: active, position: (46.052488, 174.946042), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [537871], head_to: None, speed: 3
+cls: Courier, courier_id: 3315, type: 0, state: active, position: (45.905942, 174.530354), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [9708], head_to: None, speed: 3
+cls: Courier, courier_id: 1459, type: 1, state: active, position: (45.859529, 174.564551), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [561012], head_to: None, speed: 3
+cls: Courier, courier_id: 3294, type: 1, state: active, position: (45.880121, 174.57932), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [67166], head_to: None, speed: 3
+cls: Courier, courier_id: 579, type: 0, state: active, position: (45.895502, 174.556581), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [446238], head_to: None, speed: 3
+cls: Courier, courier_id: 958, type: 0, state: active, position: (45.904954, 174.525534), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [209728], head_to: None, speed: 3
+cls: Courier, courier_id: 4202, type: 0, state: active, position: (45.885761, 174.597683), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [63964], head_to: None, speed: 3
+cls: Courier, courier_id: 4239, type: 1, state: active, position: (45.870984, 174.5718), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [403605], head_to: None, speed: 3
+cls: Courier, courier_id: 182, type: 0, state: active, position: (45.890295, 174.545759), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [548074], head_to: None, speed: 3
+cls: Courier, courier_id: 2136, type: 0, state: active, position: (45.913702, 174.565116), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [116599], head_to: None, speed: 3
+cls: Courier, courier_id: 2635, type: 0, state: active, position: (45.885781, 174.55695), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [446246], head_to: None, speed: 3
+cls: Courier, courier_id: 237, type: 0, state: active, position: (45.896147, 174.555744), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 1060, type: 0, state: active, position: (45.858072, 174.571215), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [191933], head_to: None, speed: 3
+cls: Courier, courier_id: 1225, type: 0, state: active, position: (45.911222, 174.537931), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 592, type: 0, state: active, position: (46.051193, 174.944475), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [529958], head_to: None, speed: 3
+cls: Courier, courier_id: 3975, type: 0, state: active, position: (45.887466, 174.562778), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [435589], head_to: None, speed: 3
+cls: Courier, courier_id: 2820, type: 0, state: active, position: (45.896026, 174.555428), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 1608, type: 1, state: active, position: (45.878915, 174.650546), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [131812], head_to: None, speed: 3
+cls: Courier, courier_id: 3480, type: 0, state: active, position: (45.851255, 174.555574), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [194846], head_to: None, speed: 3
+cls: Courier, courier_id: 2592, type: 0, state: active, position: (45.868335, 174.551094), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [28910], head_to: None, speed: 3
+cls: Courier, courier_id: 52, type: 1, state: active, position: (45.895135, 174.52566), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [57], head_to: None, speed: 3
+cls: Courier, courier_id: 2381, type: 1, state: active, position: (46.043384, 174.940883), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [125670], head_to: None, speed: 3
+cls: Courier, courier_id: 1318, type: 1, state: active, position: (45.852357, 174.532304), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [282014], head_to: None, speed: 3
+cls: Courier, courier_id: 1762, type: 1, state: active, position: (45.880821, 174.634072), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [6451], head_to: None, speed: 3
+cls: Courier, courier_id: 493, type: 0, state: active, position: (45.907651, 174.566575), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [174170], head_to: None, speed: 3
+cls: Courier, courier_id: 3537, type: 0, state: active, position: (45.886068, 174.594485), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [209733], head_to: None, speed: 3
+cls: Courier, courier_id: 829, type: 1, state: active, position: (45.863414, 174.583431), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [493426], head_to: None, speed: 3
+cls: Courier, courier_id: 401, type: 0, state: active, position: (45.863924, 174.570963), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [553199], head_to: None, speed: 3
+cls: Courier, courier_id: 212, type: 0, state: active, position: (45.860285, 174.572658), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [368284], head_to: None, speed: 3
+cls: Courier, courier_id: 163, type: 0, state: active, position: (45.819586, 174.564509), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [244706], head_to: None, speed: 3
+cls: Courier, courier_id: 4582, type: 0, state: active, position: (45.876238, 174.618447), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [9707], head_to: None, speed: 3
+cls: Courier, courier_id: 168, type: 0, state: active, position: (45.894718, 174.555854), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [60851], head_to: None, speed: 3
+cls: Courier, courier_id: 1963, type: 1, state: active, position: (45.926434, 174.532689), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [183198], head_to: None, speed: 3
+cls: Courier, courier_id: 3581, type: 1, state: active, position: (45.862975, 174.581408), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [371023], head_to: None, speed: 3
+cls: Courier, courier_id: 269, type: 0, state: active, position: (46.044988, 174.938752), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [392736], head_to: None, speed: 3
+cls: Courier, courier_id: 3711, type: 0, state: active, position: (45.865853, 174.567023), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [537874], head_to: None, speed: 3
+cls: Courier, courier_id: 1143, type: 0, state: active, position: (45.880054, 174.509584), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 747, type: 0, state: active, position: (45.860608, 174.563532), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 2681, type: 1, state: active, position: (45.856354, 174.610747), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 2976, type: 0, state: active, position: (45.865162, 174.556944), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [134834], head_to: None, speed: 3
+cls: Courier, courier_id: 3686, type: 0, state: active, position: (45.868988, 174.572689), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 892, type: 0, state: active, position: (45.876238, 174.624686), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [183197], head_to: None, speed: 3
+cls: Courier, courier_id: 1649, type: 1, state: active, position: (45.857176, 174.54374), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [256212], head_to: None, speed: 3
+cls: Courier, courier_id: 3106, type: 0, state: active, position: (45.909925, 174.543802), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: None, head_to: None, speed: 3
+cls: Courier, courier_id: 2722, type: 1, state: active, position: (45.8864, 174.583983), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [238907], head_to: None, speed: 3
+cls: Courier, courier_id: 569, type: 0, state: active, position: (45.863172, 174.584101), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [57697], head_to: None, speed: 3
+cls: Courier, courier_id: 2176, type: 1, state: active, position: (45.873531, 174.531723), travel_distance: 0, income: 0, total_leisure_time: 0, total_running_time: 20, waybill: None, wait_to_pick: [113635], head_to: None, speed: 3
+Orders:
+cls: Order, order_id: 276262, price: 10, status: wait_pick, pick_up_point: (46.051835, 174.951074), drop_off_point: (46.044505, 174.922788), reject_count: 0, pair_time: 1665975620, pair_courier: 1935
+cls: Order, order_id: 555805, price: 0, status: wait_pair, pick_up_point: (45.874592, 174.590556), drop_off_point: (45.877815, 174.604782), reject_count: 1
+cls: Order, order_id: 177166, price: 10, status: wait_pick, pick_up_point: (45.873822, 174.576548), drop_off_point: (45.860444, 174.563584), reject_count: 0, pair_time: 1665975620, pair_courier: 4485
+cls: Order, order_id: 529958, price: 10, status: wait_pick, pick_up_point: (46.051597, 174.94722), drop_off_point: (46.052251, 174.933518), reject_count: 0, pair_time: 1665975620, pair_courier: 592
+cls: Order, order_id: 165179, price: 0, status: wait_pair, pick_up_point: (45.91111, 174.53049), drop_off_point: (45.916951, 174.534805), reject_count: 1
+cls: Order, order_id: 371023, price: 10, status: wait_pick, pick_up_point: (45.868793, 174.574245), drop_off_point: (45.879556, 174.581628), reject_count: 0, pair_time: 1665975620, pair_courier: 3581
+cls: Order, order_id: 403605, price: 10, status: wait_pick, pick_up_point: (45.873188, 174.570382), drop_off_point: (45.883447, 174.580589), reject_count: 0, pair_time: 1665975620, pair_courier: 4239
+cls: Order, order_id: 446238, price: 10, status: wait_pick, pick_up_point: (45.894757, 174.555382), drop_off_point: (45.905141, 174.539913), reject_count: 0, pair_time: 1665975620, pair_courier: 579
+cls: Order, order_id: 209728, price: 10, status: wait_pick, pick_up_point: (45.905905, 174.526537), drop_off_point: (45.916786, 174.534005), reject_count: 0, pair_time: 1665975620, pair_courier: 958
+cls: Order, order_id: 209733, price: 10, status: wait_pick, pick_up_point: (45.89295, 174.56732), drop_off_point: (45.889857, 174.535479), reject_count: 0, pair_time: 1665975620, pair_courier: 3537
+cls: Order, order_id: 134834, price: 10, status: wait_pick, pick_up_point: (45.866909, 174.555545), drop_off_point: (45.851892, 174.566072), reject_count: 0, pair_time: 1665975620, pair_courier: 2976
+cls: Order, order_id: 548074, price: 10, status: wait_pick, pick_up_point: (45.889986, 174.545204), drop_off_point: (45.907277, 174.560055), reject_count: 0, pair_time: 1665975620, pair_courier: 182
+cls: Order, order_id: 116599, price: 10, status: wait_pick, pick_up_point: (45.90763, 174.567904), drop_off_point: (45.902525, 174.590984), reject_count: 0, pair_time: 1665975620, pair_courier: 2136
+cls: Order, order_id: 435589, price: 10, status: wait_pick, pick_up_point: (45.885075, 174.565745), drop_off_point: (45.887716, 174.563695), reject_count: 0, pair_time: 1665975620, pair_courier: 3975
+cls: Order, order_id: 60851, price: 10, status: wait_pick, pick_up_point: (45.894966, 174.554512), drop_off_point: (45.894925, 174.541679), reject_count: 0, pair_time: 1665975620, pair_courier: 168
+cls: Order, order_id: 537874, price: 10, status: wait_pick, pick_up_point: (45.868267, 174.559566), drop_off_point: (45.87512, 174.524972), reject_count: 0, pair_time: 1665975620, pair_courier: 3711
+cls: Order, order_id: 449019, price: 0, status: wait_pair, pick_up_point: (45.909302, 174.525369), drop_off_point: (45.928344, 174.532558), reject_count: 0
+cls: Order, order_id: 537871, price: 10, status: wait_pick, pick_up_point: (46.050966, 174.946024), drop_off_point: (46.035724, 174.967381), reject_count: 0, pair_time: 1665975620, pair_courier: 1627
+cls: Order, order_id: 446246, price: 10, status: wait_pick, pick_up_point: (45.887438, 174.553952), drop_off_point: (45.873364, 174.535423), reject_count: 0, pair_time: 1665975620, pair_courier: 2635
+cls: Order, order_id: 189042, price: 0, status: wait_pair, pick_up_point: (45.894856, 174.555279), drop_off_point: (45.876307, 174.54594), reject_count: 0
+cls: Order, order_id: 131812, price: 10, status: wait_pick, pick_up_point: (45.880376, 174.650688), drop_off_point: (45.873405, 174.626292), reject_count: 0, pair_time: 1665975620, pair_courier: 1608
+cls: Order, order_id: 371021, price: 0, status: wait_pair, pick_up_point: (45.851746, 174.556414), drop_off_point: (45.824982, 174.544946), reject_count: 0
+cls: Order, order_id: 493427, price: 0, status: wait_pair, pick_up_point: (45.871272, 174.543061), drop_off_point: (45.894605, 174.541793), reject_count: 0
+cls: Order, order_id: 57, price: 10, status: wait_pick, pick_up_point: (45.89637, 174.52488), drop_off_point: (45.909399, 174.54205), reject_count: 0, pair_time: 1665975620, pair_courier: 52
+cls: Order, order_id: 125670, price: 10, status: wait_pick, pick_up_point: (46.043478, 174.939239), drop_off_point: (46.060076, 174.93934), reject_count: 0, pair_time: 1665975620, pair_courier: 2381
+cls: Order, order_id: 282014, price: 10, status: wait_pick, pick_up_point: (45.853252, 174.530042), drop_off_point: (45.851175, 174.515014), reject_count: 0, pair_time: 1665975620, pair_courier: 1318
+cls: Order, order_id: 6451, price: 10, status: wait_pick, pick_up_point: (45.879942, 174.634576), drop_off_point: (45.885016, 174.63517), reject_count: 0, pair_time: 1665975620, pair_courier: 1762
+cls: Order, order_id: 535210, price: 0, status: wait_pair, pick_up_point: (45.905305, 174.559496), drop_off_point: (45.901824, 174.567632), reject_count: 0
+cls: Order, order_id: 63964, price: 10, status: wait_pick, pick_up_point: (45.889913, 174.596658), drop_off_point: (45.897232, 174.59113), reject_count: 0, pair_time: 1665975620, pair_courier: 4202
+cls: Order, order_id: 368284, price: 10, status: wait_pick, pick_up_point: (45.861427, 174.575615), drop_off_point: (45.850064, 174.571115), reject_count: 0, pair_time: 1665975620, pair_courier: 212
+cls: Order, order_id: 553199, price: 10, status: wait_pick, pick_up_point: (45.86299, 174.57536), drop_off_point: (45.859685, 174.560266), reject_count: 0, pair_time: 1665975620, pair_courier: 401
+cls: Order, order_id: 191933, price: 10, status: wait_pick, pick_up_point: (45.860696, 174.572517), drop_off_point: (45.867515, 174.572203), reject_count: 0, pair_time: 1665975620, pair_courier: 1060
+cls: Order, order_id: 244706, price: 10, status: wait_pick, pick_up_point: (45.817411, 174.564698), drop_off_point: (45.815177, 174.586041), reject_count: 0, pair_time: 1665975620, pair_courier: 163
+cls: Order, order_id: 183197, price: 10, status: wait_pick, pick_up_point: (45.873007, 174.626168), drop_off_point: (45.889502, 174.622337), reject_count: 0, pair_time: 1665975620, pair_courier: 892
+cls: Order, order_id: 67166, price: 10, status: wait_pick, pick_up_point: (45.898319, 174.553496), drop_off_point: (45.903937, 174.543166), reject_count: 0, pair_time: 1665975620, pair_courier: 3294
+cls: Order, order_id: 183198, price: 10, status: wait_pick, pick_up_point: (45.920148, 174.542099), drop_off_point: (45.905599, 174.548038), reject_count: 0, pair_time: 1665975620, pair_courier: 1963
+cls: Order, order_id: 493426, price: 10, status: wait_pick, pick_up_point: (45.864606, 174.580745), drop_off_point: (45.847189, 174.590596), reject_count: 0, pair_time: 1665975620, pair_courier: 829
+cls: Order, order_id: 392736, price: 10, status: wait_pick, pick_up_point: (46.047132, 174.93797), drop_off_point: (46.052683, 174.936587), reject_count: 0, pair_time: 1665975620, pair_courier: 269
+cls: Order, order_id: 174170, price: 10, status: wait_pick, pick_up_point: (45.907518, 174.567959), drop_off_point: (45.905262, 174.583709), reject_count: 0, pair_time: 1665975620, pair_courier: 493
+cls: Order, order_id: 561012, price: 10, status: wait_pick, pick_up_point: (45.859558, 174.565479), drop_off_point: (45.846667, 174.572381), reject_count: 0, pair_time: 1665975620, pair_courier: 1459
+cls: Order, order_id: 9708, price: 10, status: wait_pick, pick_up_point: (45.912289, 174.52637), drop_off_point: (45.916769, 174.533991), reject_count: 0, pair_time: 1665975620, pair_courier: 3315
+cls: Order, order_id: 113635, price: 10, status: wait_pick, pick_up_point: (45.865954, 174.526117), drop_off_point: (45.876254, 174.524818), reject_count: 0, pair_time: 1665975620, pair_courier: 2176
+cls: Order, order_id: 379163, price: 0, status: wait_pair, pick_up_point: (45.865852, 174.556038), drop_off_point: (45.874007, 174.534736), reject_count: 1
+cls: Order, order_id: 357196, price: 0, status: wait_pair, pick_up_point: (45.850798, 174.613138), drop_off_point: (45.852883, 174.601945), reject_count: 1
+cls: Order, order_id: 28910, price: 10, status: wait_pick, pick_up_point: (45.868335, 174.54571), drop_off_point: (45.873407, 174.546081), reject_count: 0, pair_time: 1665975620, pair_courier: 2592
+cls: Order, order_id: 310151, price: 0, status: wait_pair, pick_up_point: (45.869083, 174.572719), drop_off_point: (45.886194, 174.556213), reject_count: 1
+cls: Order, order_id: 9707, price: 10, status: wait_pick, pick_up_point: (45.873007, 174.626168), drop_off_point: (45.871741, 174.604082), reject_count: 0, pair_time: 1665975620, pair_courier: 4582
+cls: Order, order_id: 194846, price: 10, status: wait_pick, pick_up_point: (45.852904, 174.549538), drop_off_point: (45.846512, 174.572181), reject_count: 0, pair_time: 1665975620, pair_courier: 3480
+cls: Order, order_id: 362741, price: 0, status: wait_pair, pick_up_point: (45.905951, 174.543445), drop_off_point: (45.902693, 174.586196), reject_count: 1
+cls: Order, order_id: 238907, price: 10, status: wait_pick, pick_up_point: (45.887526, 174.577045), drop_off_point: (45.873228, 174.588697), reject_count: 0, pair_time: 1665975620, pair_courier: 2722
+cls: Order, order_id: 57697, price: 10, status: wait_pick, pick_up_point: (45.85981, 174.57942), drop_off_point: (45.842359, 174.55372), reject_count: 0, pair_time: 1665975620, pair_courier: 569
+cls: Order, order_id: 256212, price: 10, status: wait_pick, pick_up_point: (45.864228, 174.536685), drop_off_point: (45.859707, 174.521737), reject_count: 0, pair_time: 1665975620, pair_courier: 1649
+The average travel distance per courier is 0.0 meters
+The rate of overspeed 0.0
+

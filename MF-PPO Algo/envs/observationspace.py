@@ -42,10 +42,10 @@ class ObservationSpace:
             drop_off_x = self.normalize(order.drop_off_point[0], self.lat_min, self.lat_max)
             drop_off_y = self.normalize(order.drop_off_point[1], self.lng_min, self.lng_max)
 
-            # prepare_time = self.normalize(order.prepare_time, self.time_min, self.time_max)
+            prepare_time = self.normalize(order.meal_prepare_time, self.time_min, self.time_max)
             ETA = self.normalize(order.ETA, self.time_min, self.time_max)
 
-            order_obs.append([pick_up_x, pick_up_y, drop_off_x, drop_off_y, ETA])
+            order_obs.append([pick_up_x, pick_up_y, drop_off_x, drop_off_y, prepare_time, ETA])
 
         orders_array = np.array(order_obs).flatten()
         

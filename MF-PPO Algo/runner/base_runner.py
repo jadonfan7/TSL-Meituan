@@ -19,10 +19,10 @@ class Runner(object):
         self.eval_envs = config["eval_envs"]
         self.device = config["device"]
         
-        self.agents = self.envs.envs_discrete[0].map.couriers
+        self.agents = self.envs.envs_map[0].map.couriers
         self.num_agents = len(self.agents)
-        self.num_agents1 = self.envs.envs_discrete[0].map.num_couriers1
-        self.num_agents2 = self.envs.envs_discrete[0].map.num_couriers2
+        self.num_agents1 = self.envs.envs_map[0].map.num_couriers1
+        self.num_agents2 = self.envs.envs_map[0].map.num_couriers2
 
         # parameters
         self.env_name = self.all_args.env_name
@@ -58,8 +58,8 @@ class Runner(object):
             os.makedirs(self.save_dir)
 
         logger.remove()
-        logger.add("PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
-        logger.add("PPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
+        logger.add("MF_PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
+        logger.add("MF_PPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
         
         share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
         
@@ -259,37 +259,43 @@ class Runner(object):
 
         count_overspeed = 0
         num_active_couriers = 0
+        courier_count = 0
         dist = 0
+        
         if eval:
-            for c in self.eval_envs.envs_discrete[env_index].couriers:
+            for c in self.eval_envs.envs_map[env_index].couriers:
                 dist += c.travel_distance
                 if c.state == 'active':
                     step_info += f"{c}\n"
                     num_active_couriers += 1
                     if c.speed > 4:
                         count_overspeed += 1
+                if c.state == 'active' or c.travel_distance > 0:
+                    courier_count += 1
             
             step_info += "Orders:\n"
-            for o in self.eval_envs.envs_discrete[env_index].orders:
+            for o in self.eval_envs.envs_map[env_index].orders:
                 step_info += f"{o}\n"
                 
-            step_info += f"The average travel distance per courier is {round(dist / len(self.eval_envs.envs_discrete[env_index].couriers), 2)} meters\n"
+            step_info += f"The average travel distance per courier is {round(dist / courier_count, 2)} meters\n"
             step_info += f"The rate of overspeed {round(count_overspeed / num_active_couriers, 2)}\n"
 
         else:
-            for c in self.envs.envs_discrete[env_index].couriers:
+            for c in self.envs.envs_map[env_index].couriers:
                 dist += c.travel_distance
                 if c.state == 'active':
                     step_info += f"{c}\n"
                     num_active_couriers += 1
                     if c.speed > 4:
                         count_overspeed += 1
+                if c.state == 'active' or c.travel_distance > 0:
+                    courier_count += 1
             
             step_info += "Orders:\n"
-            for o in self.envs.envs_discrete[env_index].orders:
+            for o in self.envs.envs_map[env_index].orders:
                 step_info += f"{o}\n"
 
-            step_info += f"The average travel distance per courier is {round(dist / len(self.envs.envs_discrete[env_index].couriers), 2)} meters\n"
+            step_info += f"The average travel distance per courier is {round(dist / courier_count, 2)} meters\n"
             step_info += f"The rate of overspeed {round(count_overspeed / num_active_couriers, 2)}\n"
 
         logger.info(step_info)

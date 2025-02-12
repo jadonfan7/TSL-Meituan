@@ -25,11 +25,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
 
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -123,6 +123,12 @@ class Map:
 
         self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
         self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+        
+        order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
+        order_time_non_zero = order_time[order_time > 0].dropna()
+
+        self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
 
         self.grid_size = 20
         
@@ -135,10 +141,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
         
         self.max_num_couriers = 1100 # 2250
         for index, dt in self.order_data.iterrows():
@@ -474,7 +480,7 @@ class Map:
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)    
         position_flag = self.get_subgrid_position(lat, lng)
-        adjacent_grids = [(0, 0)]
+        adjacent_grids = [(lat_index, lng_index)]
         
         if position_flag == (0, 0):
             for di, dj in [(-1, 0), (0, -1), (-1, -1)]:
@@ -1278,133 +1284,106 @@ class Map:
 
     def _cal_speed(self, order, courier):
         order_sequence = self._cal_sequence(order, courier)
-        order_speed = {}
-        visited_orders = set()  
-        orders = (courier.waybill + courier.wait_to_pick).copy()
-        if order is not None:
-            orders.append(order)
+        order_speed = []
+        last_loc = courier.position
+        total_dist = 0
+        max_eta = 0
         
-        total_dist = geodesic(courier.position, order_sequence[0][0]).meters
-        order_id = order_sequence[0][2]
-
-        if order_sequence[0][1] == 'dropped':
-            visited_orders.add(order_sequence[0][2])
-            matched_order = next((o for o in orders if o.orderid == order_id), None)
-            order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time)
-        
-        for i in range(1, len(order_sequence)):
-            prev_location = order_sequence[i-1][0]
-            current_location = order_sequence[i][0]
-            total_dist += geodesic(prev_location, current_location).meters
-
-            order_status = order_sequence[i][1]
-            order_id = order_sequence[i][2]
-            
-            if order_status == 'dropped' and order_id not in visited_orders:
-                visited_orders.add(order_id)
-
-                matched_order = next((o for o in orders if o.orderid == order_id), None)
-
-                if matched_order:
-                    # 单位为m/s
-                    order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300)) if matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300) > 0 else total_dist / (matched_order.ETA - matched_order.order_create_time)
+        for order in order_sequence:
+            total_dist += geodesic(last_loc, order[0]).meters
+            last_loc = order[0]
+            if order[1] == 'dropped':
+                speed = total_dist / (order[2] - self.clock)
+                order_speed.append(speed)
+                if max_eta < order[2]:
+                    max_eta = order[2]
+    
+                # order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300)) if matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300) > 0 else total_dist / (matched_order.ETA - matched_order.order_create_time)
                         
-        max_eta = max([o.ETA for o in orders])
-        time_window = max_eta - self.clock
-                    
-        avg_speed_fair = sum(order_speed.values()) / len(order_speed.values())
+        time_window = max_eta - self.clock          
+        avg_speed_fair = np.mean(order_speed)
         avg_speed = total_dist / time_window
-        max_speed = max(order_speed.values())
+        max_speed = max(order_speed)
 
         return avg_speed_fair, avg_speed, max_speed
     
     def _cal_sequence(self, order, courier):
+        #################
+        # first stage
         orders = (courier.waybill + courier.wait_to_pick).copy()
         if order is not None:
             orders.append(order)
+            
+        points = []
+        waybill_points = []
+
+        for o in orders:
+            if o in courier.waybill:
+                points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
+                waybill_points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
+            else:
+                points.append((o.pick_up_point, 'pick_up', o.ETA, o.orderid))
+                points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
+            
         # ETA reveals the sequence of the appearance of orders on the platform
         orders = sorted(orders, key=lambda o: o.ETA)
         order_sequence = []
-        drop_off_point = []
-        
-        if len(orders) == 1:
-            order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].orderid))
-            order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].orderid))
-
+        if orders[0] in courier.waybill:
+            order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
+            points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
         else:
-            i = 0
-            while(i < len(orders)):
-                if orders[i] in courier.waybill:
-                    order_sequence.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                    i += 1
-                else:
-                    order_sequence.append((orders[i].pick_up_point, 'pick_up', orders[i].orderid))
-                    drop_off_point.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                    i += 1
+            order_sequence.append((orders[0].pick_up_point, 'pick_up', o.ETA, orders[0].orderid))
+            points.remove((orders[0].pick_up_point, 'pick_up', orders[0].ETA, orders[0].orderid))
+            
+        while points:
+            last_point = order_sequence[-1][0]
+            closest_points = []
+
+            for point in points:
+                distance = geodesic(last_point, point[0]).meters
+                closest_points.append((distance, point))
+                
+            closest_points.sort(key=lambda x: (x[0], x[1]))
+            flag = True
+            for dist, closest_point in closest_points:
+                if flag == False:
                     break
-            
-            last_location = order_sequence[-1][0]
-            distance = []
-            for point in drop_off_point:
-                distance.append((geodesic(last_location, point[0]).meters, point))
-            distance.sort(key=lambda x: x[0])
-            
-            while(i < len(orders)):
-                if orders[i] in courier.waybill:
-                    dist = geodesic(last_location, orders[i].drop_off_point).meters
-                    if drop_off_point == []:
-                        order_sequence.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                        distance.clear()
-                        last_location = orders[i].drop_off_point
-                        for point in drop_off_point:
-                            distance.append((geodesic(last_location, point[0]).meters, point))
-                        distance.sort(key=lambda x: x[0])
-                        i += 1
-                    else:
-                        for d, point in distance:
-                            if d < dist:
-                                order_sequence.append(point)
-                                drop_off_point.remove(point)
-                            else:
-                                order_sequence.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                                distance.clear()
-                                last_location = orders[i].drop_off_point
-                                for point in drop_off_point:
-                                    distance.append((geodesic(last_location, point[0]).meters, point))
-                                distance.sort(key=lambda x: x[0])
-                                i += 1
-                                break
-
+                
+                if closest_point[1] == 'dropped' and closest_point not in waybill_points:
+                    for seq_point in order_sequence:
+                        if seq_point[3] == closest_point[3] and seq_point[1] == 'pick_up':
+                            order_sequence.append(closest_point)
+                            points.remove(closest_point)
+                            flag = False
+                            break
                 else:
-                    dist = geodesic(last_location, orders[i].pick_up_point).meters
-                    if drop_off_point == []:
-                        order_sequence.append((orders[i].pick_up_point, 'pick_up', orders[i].orderid))
-                        drop_off_point.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                        distance.clear()
-                        last_location = orders[i].pick_up_point
-                        for point in drop_off_point:
-                            distance.append((geodesic(last_location, point[0]).meters, point))
-                        distance.sort(key=lambda x: x[0])
-                        i += 1
+                    order_sequence.append(closest_point)
+                    points.remove(closest_point)
+                    break        
+                
+        #################
+        # second stage
+        while(True):
+            dist = 0
+            last_location = courier.position
+            i = 0
+            while i < len(order_sequence):
+                point = order_sequence[i]
+                if point[1] == 'dropped':
+                    temp_dist = dist + geodesic(last_location, point[0]).meters
+                    if 4 * (point[2] - self.clock) < temp_dist and i != 0 and order_sequence[i-1][3] != point[3]:
+                        order_sequence[i], order_sequence[i-1] = order_sequence[i-1], order_sequence[i]
+                        break
                     else:
-                        for d, point in distance:
-                            if d < dist:
-                                order_sequence.append(point)
-                                drop_off_point.remove(point)
-                            else:
-                                order_sequence.append((orders[i].pick_up_point, 'pick_up', orders[i].orderid))
-                                drop_off_point.append((orders[i].drop_off_point, 'dropped', orders[i].orderid))
-                                distance.clear()
-                                last_location = orders[i].pick_up_point
-                                for point in drop_off_point:
-                                    distance.append((geodesic(last_location, point[0]).meters, point))
-                                distance.sort(key=lambda x: x[0])
-                                i += 1
-                                break
-
-            for _, point in distance:
-                order_sequence.append(point)
-
+                        dist = temp_dist
+                        last_location = point[0]
+                        i += 1
+                else:
+                    dist += geodesic(last_location, point[0]).meters
+                    last_location = point[0]
+                    i += 1
+            break
+        
         return order_sequence
         
     def _wage_response_model(self, order, courier):
@@ -1413,7 +1392,7 @@ class Map:
             return 10 # as a incentive for a new courier, also 10 is the average price of an order
         elif courier.income == 0 and courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
             wm = 15 / 3600
-            v = 4 # 4 m/s
+            v = 3 # 3 m/s
             r = geodesic(order.pick_up_point, courier.position).meters
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v
@@ -1426,7 +1405,7 @@ class Map:
             return 1.5 * wage
         else:
             wm = courier.income / courier_total_time
-            v = 4 # 4 m/s
+            v = 3 # 3 m/s
             r = geodesic(order.pick_up_point, courier.position).meters
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v

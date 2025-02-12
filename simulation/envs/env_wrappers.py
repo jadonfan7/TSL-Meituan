@@ -30,11 +30,8 @@ class ShareVecEnv(ABC):
     closed = False
     viewer = None
 
-    def __init__(self, num_envs, observation_space, action_space, share_observation_space):
+    def __init__(self, num_envs):
         self.num_envs = num_envs
-        self.observation_space = observation_space
-        self.action_space = action_space
-        self.share_observation_space = share_observation_space
 
     @abstractmethod
     def reset(self):
@@ -89,13 +86,13 @@ class ShareVecEnv(ABC):
         self.close_extras()
         self.closed = True
 
-    def step(self, actions):
+    def step(self):
         """
         Step the environments synchronously.
 
         This is available for backwards compatibility.
         """
-        self.step_async(actions)
+        self.step_async()
         return self.step_wait()
 
 def worker(remote, parent_remote, env_fn_wrapper):
@@ -107,60 +104,39 @@ def worker(remote, parent_remote, env_fn_wrapper):
         cmd, data = remote.recv()
         
         if cmd == 'step':
-            ob, reward, done, info, share_obs = env.step(data)
+            env.step()
             env_map = env.get_map()
-            
-            remote.send((ob, reward, done, info, share_obs, env_map))
-            
+            remote.send((env_map))
+                        
         elif cmd == 'reset':
-            index, eval = data
-            env.reset(index, eval)
+            env.reset(data)
             env_map = env.get_map()
-            obs = env.get_env_obs()
-            action_space, observation_space = env.get_env_space()
-            remote.send((env_map, obs, action_space, observation_space))
-            # remote.send((env_map, obs))
+            remote.send((env_map))
 
         elif cmd == 'close':
             remote.close()
             break
-        elif cmd == 'get_spaces':
-            remote.send((env.observation_space, env.action_space, env.share_observation_space))
-            
-        elif cmd == 'env_step':
-            env.map.step()
-            action_space, observation_space = env.get_env_space()
-            env_map = env.get_map()
-            
-            remote.send((env_map, action_space, observation_space))
-            
+        
         elif cmd == 'eval_env_step':
             env.map.eval_step()
-            action_space, observation_space = env.get_env_space()
             env_map = env.get_map()
-            obs = env.get_env_obs()
             
-            remote.send((env_map, action_space, observation_space, obs))
-            
-        # elif cmd == 'get_available_actions':
-        #     available_actions = env.map.get_actions()
-        #     remote.send((available_actions))
+            remote.send((env_map))
             
         else:
             raise NotImplementedError
             
 class SubprocVecEnv(ShareVecEnv):
-    def __init__(self, env_fns, spaces=None):
+    def __init__(self, env_fns):
         """
         envs: list of gym environments to run in subprocesses
         """
         self.waiting = False
         self.closed = False
-        # self.envs_discrete = [fn() for fn in env_fns]
         nenvs = len(env_fns)
         
         self.num_envs = nenvs
-        self.envs_discrete = []
+        self.envs_map = []
         
         self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
         self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
@@ -173,34 +149,27 @@ class SubprocVecEnv(ShareVecEnv):
         
         for remote in self.remotes:
             env = remote.recv()
-            self.envs_discrete.append(env)
+            self.envs_map.append(env.map)
 
-        self.remotes[0].send(('get_spaces', None))
-        observation_space, action_space, share_observation_space = self.remotes[0].recv()
-        ShareVecEnv.__init__(self, len(env_fns), observation_space, action_space, share_observation_space)
+        ShareVecEnv.__init__(self, len(env_fns))
 
-    def step_async(self, actions):
-        for remote, action in zip(self.remotes, actions):
-            remote.send(('step', action))
+    def step_async(self):
+        for remote in self.remotes:
+            remote.send(('step', None))
         self.waiting = True
 
     def step_wait(self):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
-        obs, rews, dones, infos, share_obs, self.envs_discrete = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos, np.stack(share_obs)
+        self.envs_map = [result for result in results]
 
-    def reset(self, index, eval=False):
+    def reset(self, index):
         for remote in self.remotes:
-            remote.send(('reset', (index, eval)))
+            remote.send(('reset', index))
         
         results = [remote.recv() for remote in self.remotes]
-        self.envs_discrete = [result[0] for result in results]
-        obs = [result[1] for result in results]
+        self.envs_map = [result for result in results]
         
-        self.action_space, self.observation_space = results[0][2], results[0][3]
-        return np.array(obs)
-
     def close(self):
         if self.closed:
             return
@@ -213,38 +182,10 @@ class SubprocVecEnv(ShareVecEnv):
             p.join()
         self.closed = True
     
-    def env_step(self):
+    def eval_env_step(self):
         for remote in self.remotes:
-            remote.send(('env_step', None))
+            remote.send(('eval_env_step', None))
             
         results = [remote.recv() for remote in self.remotes]
     
-        self.envs_discrete = [result[0] for result in results]
-    
-        self.action_space, self.observation_space = results[0][1], results[0][2]
-        
-    def eval_env_step(self, eval=False):
-        for remote in self.remotes:
-            remote.send(('eval_env_step', eval))
-            
-        results = [remote.recv() for remote in self.remotes]
-    
-        self.envs_discrete = [result[0] for result in results]
-    
-        self.action_space, self.observation_space = results[0][1], results[0][2]
-        
-        obs = [result[3] for result in results]
-        
-        return np.array(obs)
-        
-    # def get_available_actions(self):
-    #     for remote in self.remotes:
-    #         remote.send(('get_available_actions', None))
-        
-    #     available_actions = [remote.recv() for remote in self.remotes]
-        
-    #     available_actions = np.array(available_actions)
-    
-    #     available_actions = np.transpose(available_actions, (1, 0, 2))
-    
-    #     return available_actions.tolist()
+        self.envs_map = [result for result in results]
