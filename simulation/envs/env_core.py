@@ -7,6 +7,7 @@ from gym.spaces import Box, Discrete
 
 from geopy.distance import geodesic
 import random
+from scipy.spatial import KDTree
 
 class EnvCore(object):
     
@@ -23,10 +24,15 @@ class EnvCore(object):
         
         self.observation_space = []
         self.epsilon = 0.05
+
+        # shared_obs_dim = self.obs_dim * self.num_agent
+        
+        shared_obs_dim = self.obs_dim * 10
+        self.share_observation_space = []
         
         for _ in range(self.num_agent):
 
-            order_dim = self.map.couriers[0].capacity
+            # order_dim = self.map.couriers[0].capacity
             speed_dim = self.num_speeds
 
             # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
@@ -35,41 +41,46 @@ class EnvCore(object):
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
+            self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32))
+        # self.share_observation_space = Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32)
                  
     def reset(self, env_index, eval=False):
         self.map.reset(env_index, eval)
-                        
+    
     def step(self, action_n):
         self.current_step += 1
         obs_n = []
         reward_n = []
         done_n = []
         info_n = []
-        # share_obs = []
+        
+        share_obs = []
 
         # set action for each agent
         for i, agent in enumerate(self.map.couriers):
-            # self.action_dim = len(agent.waybill) + len(agent.wait_to_pick) + self.num_speeds
 
             reward = 0
             reward = self._set_action(action_n[i], agent)
 
             reward_n.append(reward)
-
         
-        # self.update_action_space()
-
+        # active_couriers = []
+        
         for i, agent in enumerate(self.map.couriers):
             obs_n.append(self._get_obs(agent))
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
+            # if agent.state == 'active':
+            #     active_couriers.append(agent)
         
-        # self.num_agent = self.map.num_couriers
-        # self.obs_dim = self.map.num_orders * 6 + 2
-        
+        for i, agent in enumerate(self.map.couriers):
+            share_obs.append(self._get_local_share_obs_kdtree(agent, obs_n, k=10))
+                
+        # share_obs = np.concatenate(obs_n, axis=-1)
+        # share_obs = np.expand_dims(share_obs, axis=1).repeat(770, axis=0)
 
         # return obs_n, reward_n, done_n, info_n, share_obs
-        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n
+        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, np.stack(share_obs)
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
@@ -102,6 +113,7 @@ class EnvCore(object):
             policy = np.argmax(action[:2])
             agent.speed =  np.argmax(action[2:]) + 1
             # agent.speed =  np.argmax(action) + 1
+            
 
             if agent.speed > 4:
                 if agent.courier_type == 0:
@@ -151,11 +163,12 @@ class EnvCore(object):
             elif sorted_orders[0].status == 'picked_up':
                 agent.target_location = sorted_orders[0].drop_off_point
                 
-            agent.move(self.map.interval)  
+            agent.move(self.map)  
             agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
             
             for order in agent.wait_to_pick:
                 if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
+                    order.wait_time = self.map.clock - order.meal_prepare_time
                     agent.pick_order(order)
                     
                     if agent.courier_type == 0:
@@ -173,6 +186,7 @@ class EnvCore(object):
                     agent.finish_order_num += 1
                         
                     if self.map.clock > order.ETA:
+                        print(self.map.clock - order.ETA)
                         if agent.courier_type == 0:
                             reward -= 30 + 80 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
                         else:
@@ -204,7 +218,7 @@ class EnvCore(object):
         agent.reward += reward
 
         return reward
-            
+    
     def _get_obs(self, agent):
         return ObservationSpace(self.map, agent).get_obs()
     
@@ -235,18 +249,19 @@ class EnvCore(object):
             obs.append(self._get_obs(agent))
         return obs
 
-    def adjust(self):
-        for _ in range(self.map.add_new_couriers):
-
-            order_dim = self.map.couriers[0].capacity
-            speed_dim = self.num_speeds
-            
-            # action_space = MultiDiscrete([[0, order_dim - 1], [0, speed_dim - 1]])
-            action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
-            # action_space = Discrete(speed_dim)
-            self.action_space.append(action_space)
-
-            self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
-        
+    def get_env_space(self):
         return self.action_space, self.observation_space
+    
+    def _get_local_share_obs_kdtree(self, agent, obs_n, k=20):
+        agents_nearby = self.map.get_couriers_in_adjacent_grids(agent.position[0], agent.position[1])
+        agent_positions = np.array([a.position for a in agents_nearby])
+        agent_obs = np.array(obs_n)
+        
+        tree = KDTree(agent_positions)
+
+        _, neighbor_idx = tree.query(agent.position, k=k)
+
+        local_share_obs = agent_obs[neighbor_idx].reshape(-1)
+
+        return local_share_obs
     

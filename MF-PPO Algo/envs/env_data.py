@@ -25,10 +25,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
 
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -95,8 +96,6 @@ class Map:
         #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
         # } # 11:00-13:00
 
-        
-        self.max_num_couriers = 1100 # 2250
         self.existing_courier_algo = 0
         # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
@@ -112,7 +111,36 @@ class Map:
             self.order_data = df.reset_index(drop=True)
             
             self.predicted_count = order_num_estimate[order_num_estimate['dt'] == date_value]['predicted_count']
-         
+                     
+        lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
+        lat_values_non_zero = lat_values[lat_values > 0].dropna()
+
+        self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+
+        lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
+        lng_values_non_zero = lng_values[lng_values > 0].dropna()
+
+        self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
+        self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+
+        self.grid_size = 20
+        
+        self.lat_step = (self.lat_max - self.lat_min) / self.grid_size
+        self.lng_step = (self.lng_max - self.lng_min) / self.grid_size
+
+        self.grid = [[[] for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+
+        self.interval = 20 # allocation for every 20 seconds
+
+        self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
+        
+        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        
+        self.max_num_couriers = 1100 # 2250
         for index, dt in self.order_data.iterrows():
             if len(self.couriers) >= self.max_num_couriers:
                 break
@@ -129,31 +157,6 @@ class Map:
                 courier = Courier(courier_type, courier_id, courier_location, None)
                 courier.state = 'inactive'
                 self.couriers.append(courier)
-            
-        lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
-        lat_values_non_zero = lat_values[lat_values > 0].dropna()
-
-        self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
-
-        lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
-        lng_values_non_zero = lng_values[lng_values > 0].dropna()
-
-        self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
-
-        order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
-        order_time_non_zero = order_time[order_time > 0].dropna()
-
-        self.time_min = order_time_non_zero.min().min() / 1e6 # 取所有列的最小值
-        self.time_max = order_time_non_zero.max().max() / 1e6 # 取所有列的最大值
-
-        self.interval = 20 # allocation for every 20 seconds
-
-        self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
-        
-        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
         
         if eval == False:
             self.step(first_time=1)
@@ -208,6 +211,7 @@ class Map:
                         courier.state = 'active'
                         courier.start_time = self.clock
                         courier.leisure_time = self.clock
+                        self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
                         break
             
             self.current_index += 1
@@ -221,6 +225,8 @@ class Map:
 
             if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
                 courier.state = 'inactive'
+                self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+
             
             if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                 salary_per_interval = 15 / 3600 * self.interval
@@ -301,6 +307,7 @@ class Map:
                                 courier.start_time = self.clock
                                 courier.leisure_time = self.clock
                                 self.existing_courier_algo += 1
+                                self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
                                 break
                         
                         # self.add_new_couriers += 1
@@ -385,6 +392,7 @@ class Map:
                             courier.state = 'active'
                             courier.start_time = self.clock
                             courier.leisure_time = self.clock
+                            self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
                             break
 
                 self.current_index += 1
@@ -422,45 +430,128 @@ class Map:
             
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
+    
+    ##################
+    # grid
+    def get_grid_index(self, lat, lng):
+        lat_index = int((lat - self.lat_min) / self.lat_step)
+        lng_index = int((lng - self.lng_min) / self.lng_step)
         
+        lat_index = min(max(lat_index, 0), self.grid_size - 1)
+        lng_index = min(max(lng_index, 0), self.grid_size - 1)
+        
+        return lat_index, lng_index
+    
+    def add_courier(self, lat, lng, courier):
+        lat_index, lng_index = self.get_grid_index(lat, lng)
+        self.grid[lat_index][lng_index].append(courier)
+    
+    def get_courier_in_grid(self, lat, lng):
+        lat_index, lng_index = self.get_grid_index(lat, lng)
+        return self.grid[lat_index][lng_index]
+    
+    def remove_courier(self, lat, lng, courier):
+        lat_index, lng_index = self.get_grid_index(lat, lng)
+        if courier in self.grid[lat_index][lng_index]:
+            self.grid[lat_index][lng_index].remove(courier)
+    
+    def update_courier_position(self, old_lat, old_lng, new_lat, new_lng, courier):
+        self.remove_courier(old_lat, old_lng, courier)
+        self.add_courier(new_lat, new_lng, courier)
+        
+    def get_subgrid_position(self, lat, lng):    
+        lat_in_grid = (lat - self.lat_min) % self.lat_step
+        lng_in_grid = (lng - self.lng_min) % self.lng_step
+        
+        half_lat_step = self.lat_step / 2
+        half_lng_step = self.lng_step / 2
+        
+        # (0, 0)为左下，(1, 0)为右下，(0, 1)为左上，(1, 1)为右上
+        subgrid_pos = (lat_in_grid >= half_lat_step, lng_in_grid >= half_lng_step)
+        
+        return subgrid_pos  
+        
+    def get_adjacent_grids(self, lat, lng):
+        lat_index, lng_index = self.get_grid_index(lat, lng)    
+        position_flag = self.get_subgrid_position(lat, lng)
+        adjacent_grids = [(0, 0)]
+        
+        if position_flag == (0, 0):
+            ni, nj = lat_index + di, lng_index + dj
+            for di, dj in [(-1, 0), (0, -1), (-1, -1)]:
+                if ni >= 0 and nj >= 0:
+                    adjacent_grids.append((ni, nj))  
+        elif position_flag == (1, 0):
+            ni, nj = lat_index + di, lng_index + dj
+            for di, dj in [(1, 0), (0, -1), (1, -1)]:
+                if ni < self.grid_size and nj >= 0:
+                    adjacent_grids.append((ni, nj))  
+        elif position_flag == (0, 1):
+            ni, nj = lat_index + di, lng_index + dj
+            for di, dj in [(-1, 0), (0, 1), (-1, 1)]:
+                if ni >= 0 and nj < self.grid_size:
+                    adjacent_grids.append((ni, nj))  
+        else:
+            ni, nj = lat_index + di, lng_index + dj
+            for di, dj in [(1, 0), (0, 1), (1, 1)]:
+                if ni < self.grid_size and nj < self.grid_size:
+                    adjacent_grids.append((ni, nj))  
+        return adjacent_grids
+    
+    def get_couriers_in_adjacent_grids(self, lat, lng):
+        adjacent_grids = self.get_adjacent_grids(lat, lng)
+        couriers = []
+        
+        for grid in adjacent_grids:
+            lat_index, lng_index = grid
+            couriers.extend(self.grid[lat_index][lng_index])
+        
+        return couriers
+
+            
+    ##################
+    # courier
     def _accept_or_reject(self, order, courier):
         
         decision = True if random.random() < 0.9 else False
         return decision
     
+    ##################
+    # platform
     def _get_predicted_orders(self):
             
-            index = (self.clock - self.start_time) // self.interval - 1
-            predicted_count = int(self.predicted_count.iloc[index])
+        index = (self.clock - self.start_time) // self.interval - 1
+        predicted_count = int(self.predicted_count.iloc[index])
 
-            predicted_orders = []
-            da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+        predicted_orders = []
+        da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+        
+        poi_ids = da_frequency_row.index[1:]
+        frequencies = da_frequency_row.values[1:]
+
+        frequencies_normalized = frequencies / np.sum(frequencies)
+
+        from collections import Counter
+        assigned_da_ids = np.random.choice(
+            poi_ids,
+            size=predicted_count,
+            p=frequencies_normalized
+        )
+
+        
+        da_order_count = dict(Counter(assigned_da_ids))
+
+        for da_id, num in da_order_count.items():
+            da_id = int(da_id)
+            model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
             
-            poi_ids = da_frequency_row.index[1:]
-            frequencies = da_frequency_row.values[1:]
+            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time']))
+            
+            from sklearn.cluster import KMeans
 
-            frequencies_normalized = frequencies / np.sum(frequencies)
-
-            from collections import Counter
-            assigned_da_ids = np.random.choice(
-                poi_ids,
-                size=predicted_count,
-                p=frequencies_normalized
-            )
-
-            da_order_count = dict(Counter(assigned_da_ids))
-
-            for da_id, num in da_order_count.items():
-                da_id = int(da_id)
-                model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
-                
-                mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time']))
-                
-                from sklearn.cluster import KMeans
-
-                coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
-
-                kmeans = KMeans(n_clusters=num, random_state=42)
+            coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
+            if len(coordinates) > num:
+                kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
                 kmeans.fit(coordinates)
 
                 predicted_coords = kmeans.cluster_centers_
@@ -479,9 +570,18 @@ class Map:
                     order_create_time = self.clock            
                     order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
                     predicted_orders.append(order)
-                    
+            else:
+                for i in range(len(coordinates)):
+                    pickup_point = (coordinates[i][0], coordinates[i][1])
+                    dropoff_point = (coordinates[i][2], coordinates[i][3])
+
+                    eta = mean_eta + self.clock
+                    order_create_time = self.clock
+                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
+                    predicted_orders.append(order)
+                                
             return predicted_orders
-                
+                                
     def _Efficiency_allocation(self, orders):
         
         for order in orders:
@@ -1159,8 +1259,10 @@ class Map:
 
         min_dist = math.inf
         nearest_courier = None
-
-        for courier in self.couriers:
+        
+        couriers = self.get_couriers_in_adjacent_grids(order.pick_up_point[0], order.pick_up_point[1])
+        
+        for courier in couriers:
             if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
                 dist = geodesic(courier.position, order.pick_up_point).meters
                 if min_dist > dist:

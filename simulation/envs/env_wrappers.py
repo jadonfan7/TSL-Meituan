@@ -30,10 +30,11 @@ class ShareVecEnv(ABC):
     closed = False
     viewer = None
 
-    def __init__(self, num_envs, observation_space, action_space):
+    def __init__(self, num_envs, observation_space, action_space, share_observation_space):
         self.num_envs = num_envs
         self.observation_space = observation_space
         self.action_space = action_space
+        self.share_observation_space = share_observation_space
 
     @abstractmethod
     def reset(self):
@@ -106,17 +107,17 @@ def worker(remote, parent_remote, env_fn_wrapper):
         cmd, data = remote.recv()
         
         if cmd == 'step':
-            ob, reward, done, info = env.step(data)
+            ob, reward, done, info, share_obs = env.step(data)
             env_map = env.get_map()
             
-            remote.send((ob, reward, done, info, env_map))
+            remote.send((ob, reward, done, info, share_obs, env_map))
             
         elif cmd == 'reset':
             index, eval = data
             env.reset(index, eval)
             env_map = env.get_map()
             obs = env.get_env_obs()
-            action_space, observation_space = env.adjust()
+            action_space, observation_space = env.get_env_space()
             remote.send((env_map, obs, action_space, observation_space))
             # remote.send((env_map, obs))
 
@@ -124,18 +125,18 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.close()
             break
         elif cmd == 'get_spaces':
-            remote.send((env.observation_space, env.action_space))
+            remote.send((env.observation_space, env.action_space, env.share_observation_space))
             
         elif cmd == 'env_step':
             env.map.step()
-            action_space, observation_space = env.adjust()
+            action_space, observation_space = env.get_env_space()
             env_map = env.get_map()
             
             remote.send((env_map, action_space, observation_space))
             
         elif cmd == 'eval_env_step':
-            env.map.eval_step(data)
-            action_space, observation_space = env.adjust()
+            env.map.eval_step()
+            action_space, observation_space = env.get_env_space()
             env_map = env.get_map()
             obs = env.get_env_obs()
             
@@ -175,8 +176,8 @@ class SubprocVecEnv(ShareVecEnv):
             self.envs_discrete.append(env)
 
         self.remotes[0].send(('get_spaces', None))
-        observation_space, action_space = self.remotes[0].recv()
-        ShareVecEnv.__init__(self, len(env_fns), observation_space, action_space)
+        observation_space, action_space, share_observation_space = self.remotes[0].recv()
+        ShareVecEnv.__init__(self, len(env_fns), observation_space, action_space, share_observation_space)
 
     def step_async(self, actions):
         for remote, action in zip(self.remotes, actions):
@@ -186,8 +187,8 @@ class SubprocVecEnv(ShareVecEnv):
     def step_wait(self):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
-        obs, rews, dones, infos, self.envs_discrete = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        obs, rews, dones, infos, share_obs, self.envs_discrete = zip(*results)
+        return np.stack(obs), np.stack(rews), np.stack(dones), infos, np.stack(share_obs)
 
     def reset(self, index, eval=False):
         for remote in self.remotes:

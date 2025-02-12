@@ -10,6 +10,8 @@ class Order:
         self.drop_off_point = drop_off_point
         self.ETA = estimate_arrived_time
         
+        self.wait_time = None
+        
         self.da = da
         self.poi = poi
         
@@ -26,7 +28,7 @@ class Order:
         message = 'cls: ' + type(self).__name__  + ', order_id: ' + str(self.orderid) + ', price: ' + str(round(self.price, 2)) + ', status: ' + self.status + ', pick_up_point: ' + str(self.pick_up_point) + ', drop_off_point: ' + str(self.drop_off_point) + ", reject_count: " + str(self.reject_count) 
         
         if self.pair_time is not None:
-            message += ', pair_time: ' + str(self.pair_time) + ', pair_courier: ' + str(self.pair_courier.courierid)
+            message += ', pair_time: ' + str(self.pair_time) + ', pair_courier: ' + str(self.pair_courier.courier_id)
             
         if self.status == 'dropped':
             if self.is_late:

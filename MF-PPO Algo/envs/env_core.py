@@ -64,17 +64,17 @@ class EnvCore(object):
 
             reward_n.append(reward)
         
-        active_couriers = []
+        # active_couriers = []
         
         for i, agent in enumerate(self.map.couriers):
             obs_n.append(self._get_obs(agent))
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
-            if agent.state == 'active':
-                active_couriers.append(agent)
+            # if agent.state == 'active':
+            #     active_couriers.append(agent)
         
         for i, agent in enumerate(self.map.couriers):
-            share_obs.append(self._get_local_share_obs_kdtree(agent, active_couriers, obs_n, k=10))
+            share_obs.append(self._get_local_share_obs_kdtree(agent, obs_n, k=10))
                 
         # share_obs = np.concatenate(obs_n, axis=-1)
         # share_obs = np.expand_dims(share_obs, axis=1).repeat(770, axis=0)
@@ -163,7 +163,7 @@ class EnvCore(object):
             elif sorted_orders[0].status == 'picked_up':
                 agent.target_location = sorted_orders[0].drop_off_point
                 
-            agent.move(self.map.interval)  
+            agent.move(self.map)  
             agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
             
             for order in agent.wait_to_pick:
@@ -252,9 +252,9 @@ class EnvCore(object):
     def get_env_space(self):
         return self.action_space, self.observation_space
     
-    def _get_local_share_obs_kdtree(self, agent, all_agents, obs_n, k=10):
-
-        agent_positions = np.array([a.position for a in all_agents])
+    def _get_local_share_obs_kdtree(self, agent, obs_n, k=20):
+        agents_nearby = self.map.get_couriers_in_adjacent_grids(agent.position[0], agent.position[1])
+        agent_positions = np.array([a.position for a in agents_nearby])
         agent_obs = np.array(obs_n)
         
         tree = KDTree(agent_positions)
