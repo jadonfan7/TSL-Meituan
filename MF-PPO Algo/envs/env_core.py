@@ -83,132 +83,131 @@ class EnvCore(object):
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
-        
         reward = 0
-        
-        if (agent.waybill != [] or agent.wait_to_pick != []) and agent.stay_duration == 0:
+        if agent.state == 'active':
+            if (agent.waybill != [] or agent.wait_to_pick != []) and agent.stay_duration == 0:
 
-            waybill_length = len(agent.waybill)
-            wait_to_pick_length = len(agent.wait_to_pick)
-            total_length = waybill_length + wait_to_pick_length
-            index = self.map.couriers[0].capacity
+                waybill_length = len(agent.waybill)
+                wait_to_pick_length = len(agent.wait_to_pick)
+                total_length = waybill_length + wait_to_pick_length
+                index = self.map.couriers[0].capacity
 
-            if np.argmax(action[:index]) > total_length - 1:
-                reward -= 200
-                order_index = np.random.randint(0, total_length)
-            else:
-                order_index = np.argmax(action[:index])
-            
-            agent.speed =  np.argmax(action[index:]) + 1
-
-            # speed_index = np.argmax(action[index:])
-            # if speed_index == 0:
-            #     agent.speed = np.random.uniform(1, 2.5)
-            # elif speed_index == 1:
-            #     agent.speed = np.random.uniform(2.5, 4)
-            # else:
-            #     agent.speed = np.random.uniform(4, 7)            
-
-            if agent.speed > 4:
-                if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 10
+                if np.argmax(action[:index]) > total_length - 1:
+                    reward -= 200
+                    order_index = np.random.randint(0, total_length)
                 else:
-                    reward -= (agent.speed - 4) ** 2 * 5
-            else:
-                if agent.courier_type == 0:
-                    reward -= (agent.speed - 4) ** 2 * 5
-                else:
-                    reward -= (agent.speed - 4) ** 2 * 2
-
-            if order_index < waybill_length:
-                if agent.target_location == None:
-                    agent.target_location = agent.waybill[order_index].drop_off_point
-                    agent.is_target_locked = True
-                # elif not agent.is_target_locked and random.random() < self.epsilon:
-                elif not agent.is_target_locked:
-                    agent.target_location = agent.waybill[order_index].drop_off_point
-                    agent.is_target_locked = True
-                agent.move(self.map.interval)
-            elif order_index >= waybill_length and order_index < wait_to_pick_length + waybill_length:
-                if agent.target_location == None:
-                    agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
-                    agent.is_target_locked = True
-                # elif not agent.is_target_locked and random.random() < self.epsilon:
-                elif not agent.is_target_locked:
-                    agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
-                    agent.is_target_locked = True
-                agent.move(self.map.interval) 
-            
-            # all_orders = agent.waybill + agent.wait_to_pick
-            
-            # if policy == 0:
-            #     def calculate_distance(courier_position, order):
-            #         if order.status == 'picked_up':
-            #             return geodesic(courier_position, order.drop_off_point).meters
-            #         elif order.status == 'wait_pick':
-            #             return geodesic(courier_position, order.pick_up_point).meters
-
-            #     sorted_orders = sorted(all_orders, key=lambda order: calculate_distance(agent.position, order))
-            # else:
-            #     sorted_orders = sorted(all_orders, key=lambda order: order.ETA)
+                    order_index = np.argmax(action[:index])
                 
-            # if sorted_orders[0].status == 'wait_pick':
-            #     agent.target_location = sorted_orders[0].pick_up_point
-            # elif sorted_orders[0].status == 'picked_up':
-            #     agent.target_location = sorted_orders[0].drop_off_point
-                
-            agent.move(self.map)  
-            agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
-            
-            for order in agent.wait_to_pick:
-                if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
-                    order.wait_time = self.map.clock - order.meal_prepare_time
-                    agent.pick_order(order)
-                    
+                agent.speed =  np.argmax(action[index:]) + 1
+
+                # speed_index = np.argmax(action[index:])
+                # if speed_index == 0:
+                #     agent.speed = np.random.uniform(1, 2.5)
+                # elif speed_index == 1:
+                #     agent.speed = np.random.uniform(2.5, 4)
+                # else:
+                #     agent.speed = np.random.uniform(4, 7)            
+
+                if agent.speed > 4:
                     if agent.courier_type == 0:
-                        reward += 40
+                        reward -= (agent.speed - 4) ** 2 * 10
                     else:
-                        reward += 60
-                        
-                elif agent.position == order.pick_up_point and self.map.clock < order.meal_prepare_time:
-                    agent.stay_duration = np.ceil((order.meal_prepare_time - self.map.clock) / self.map.interval)
-                    
-            for order in agent.waybill:
-                if agent.position == order.drop_off_point:  # dropping off
-                    agent.drop_order(order)
-                    
-                    agent.finish_order_num += 1
-                        
-                    if self.map.clock > order.ETA:
-                        print(self.map.clock - order.ETA)
-                        if agent.courier_type == 0:
-                            reward -= 30 + 80 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
-                        else:
-                            reward -= 50 + 100 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
-                            
-                        agent.income += order.price * 0.7
-                        order.is_late = 1
-                                                
+                        reward -= (agent.speed - 4) ** 2 * 5
+                else:
+                    if agent.courier_type == 0:
+                        reward -= (agent.speed - 4) ** 2 * 5
                     else:
-                        order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
-                        if agent.courier_type == 0:
-                            reward += 50 + 80 * (1 - order.ETA_usage)
-                        else:
-                            reward += 70 + 80 * (1 - order.ETA_usage)
-                            
-                        agent.income += order.price 
-        else:
-            agent.speed = 0
-            if agent.stay_duration != 0:
-                agent.stay_duration -= 1
-                                    
-        if agent.waybill == [] and agent.wait_to_pick == []:
-            agent.is_leisure = 1
-        else:
-            agent.is_leisure = 0
-            agent.leisure_time = self.map.clock
+                        reward -= (agent.speed - 4) ** 2 * 2
 
-        agent.reward += reward
+                if order_index < waybill_length:
+                    if agent.target_location == None:
+                        agent.target_location = agent.waybill[order_index].drop_off_point
+                        agent.is_target_locked = True
+                    # elif not agent.is_target_locked and random.random() < self.epsilon:
+                    elif not agent.is_target_locked:
+                        agent.target_location = agent.waybill[order_index].drop_off_point
+                        agent.is_target_locked = True
+                    agent.move(self.map.interval)
+                elif order_index >= waybill_length and order_index < wait_to_pick_length + waybill_length:
+                    if agent.target_location == None:
+                        agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
+                        agent.is_target_locked = True
+                    # elif not agent.is_target_locked and random.random() < self.epsilon:
+                    elif not agent.is_target_locked:
+                        agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
+                        agent.is_target_locked = True
+                    agent.move(self.map.interval) 
+                
+                # all_orders = agent.waybill + agent.wait_to_pick
+                
+                # if policy == 0:
+                #     def calculate_distance(courier_position, order):
+                #         if order.status == 'picked_up':
+                #             return geodesic(courier_position, order.drop_off_point).meters
+                #         elif order.status == 'wait_pick':
+                #             return geodesic(courier_position, order.pick_up_point).meters
+
+                #     sorted_orders = sorted(all_orders, key=lambda order: calculate_distance(agent.position, order))
+                # else:
+                #     sorted_orders = sorted(all_orders, key=lambda order: order.ETA)
+                    
+                # if sorted_orders[0].status == 'wait_pick':
+                #     agent.target_location = sorted_orders[0].pick_up_point
+                # elif sorted_orders[0].status == 'picked_up':
+                #     agent.target_location = sorted_orders[0].drop_off_point
+                    
+                agent.move(self.map)  
+                agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
+                
+                for order in agent.wait_to_pick:
+                    if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
+                        order.wait_time = self.map.clock - order.meal_prepare_time
+                        agent.pick_order(order)
+                        
+                        if agent.courier_type == 0:
+                            reward += 40
+                        else:
+                            reward += 60
+                            
+                    elif agent.position == order.pick_up_point and self.map.clock < order.meal_prepare_time:
+                        agent.stay_duration = np.ceil((order.meal_prepare_time - self.map.clock) / self.map.interval)
+                        
+                for order in agent.waybill:
+                    if agent.position == order.drop_off_point:  # dropping off
+                        agent.drop_order(order)
+                        
+                        agent.finish_order_num += 1
+                            
+                        if self.map.clock > order.ETA:
+                            print(self.map.clock - order.ETA)
+                            if agent.courier_type == 0:
+                                reward -= 30 + 80 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
+                            else:
+                                reward -= 50 + 100 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)
+                                
+                            agent.income += order.price * 0.7
+                            order.is_late = 1
+                                                    
+                        else:
+                            order.ETA_usage = (self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
+                            if agent.courier_type == 0:
+                                reward += 50 + 80 * (1 - order.ETA_usage)
+                            else:
+                                reward += 70 + 80 * (1 - order.ETA_usage)
+                                
+                            agent.income += order.price 
+            else:
+                agent.speed = 0
+                if agent.stay_duration != 0:
+                    agent.stay_duration -= 1
+                                        
+            if agent.waybill == [] and agent.wait_to_pick == []:
+                agent.is_leisure = 1
+            else:
+                agent.is_leisure = 0
+                agent.leisure_time = self.map.clock
+
+            agent.reward += reward
 
         return reward
     

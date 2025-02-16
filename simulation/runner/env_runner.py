@@ -199,9 +199,9 @@ class EnvRunner(Runner):
             # print("-"*25)
             print(f"THIS IS EVAL STEP {eval_step}")
 
-            for i in range(self.eval_envs.num_envs):
+            for i in range(self.num_envs):
                 
-                self.log_env(1, eval_step, i, eval=True)
+                self.log_env(eval_step, i)
                             
             self.eval_envs.step()
                         
@@ -261,6 +261,8 @@ class EnvRunner(Runner):
                                 algo5_num_active_couriers1 += 1
                                 if c.speed > 4:
                                     algo5_count_overspeed1 += 1
+                                    
+            self.eval_envs.eval_env_step()
             
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):
@@ -538,12 +540,6 @@ class EnvRunner(Runner):
         # -----------------------
         # Reward
         print(f"Total Reward for Evaluation Between Algos:\nAlgo1: {round(algo1_eval_episode_rewards_sum, 2)}\nAlgo2: {round(algo2_eval_episode_rewards_sum, 2)}\nAlgo3: {round(algo3_eval_episode_rewards_sum, 2)}\nAlgo4: {round(algo4_eval_episode_rewards_sum, 2)}\nAlgo5: {round(algo5_eval_episode_rewards_sum, 2)}")
-        self.writter.add_scalar('Eval Reward/Algo1', algo1_eval_episode_rewards_sum, self.eval_num)
-        self.writter.add_scalar('Eval Reward/Algo2', algo2_eval_episode_rewards_sum, self.eval_num)
-        self.writter.add_scalar('Eval Reward/Algo3', algo3_eval_episode_rewards_sum, self.eval_num)
-        self.writter.add_scalar('Eval Reward/Algo4', algo4_eval_episode_rewards_sum, self.eval_num)
-        self.writter.add_scalar('Eval Reward/Algo5', algo5_eval_episode_rewards_sum, self.eval_num)
-
         # -----------------------
         # Distance
         algo1_distance0 = round(np.mean(algo1_Hired_distance_per_episode) / 1000, 2)
@@ -592,41 +588,6 @@ class EnvRunner(Runner):
         print(f"Algo3: Hired - {algo3_distance0} km (Var: {algo3_var0_distance}), Crowdsourced - {algo3_distance1} km (Var: {algo3_var1_distance}), Total - {algo3_distance} km (Var: {algo3_var_distance})")
         print(f"Algo4: Hired - {algo4_distance0} km (Var: {algo4_var0_distance}), Crowdsourced - {algo4_distance1} km (Var: {algo4_var1_distance}), Total - {algo4_distance} km (Var: {algo4_var_distance})")
         print(f"Algo5: Hired - {algo5_distance0} km (Var: {algo5_var0_distance}), Crowdsourced - {algo5_distance1} km (Var: {algo5_var1_distance}), Total - {algo5_distance} km (Var: {algo5_var_distance})")
-
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Hired', algo1_distance0, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Crowdsourced', algo1_distance1, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Total', algo1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Hired Var', algo1_var0_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Crowdsourced Var', algo1_var1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo1 Total Var', algo1_var_distance, self.eval_num)
-
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Hired', algo2_distance0, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Crowdsourced', algo2_distance1, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Total', algo2_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Hired Var', algo2_var0_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Crowdsourced Var', algo2_var1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo2 Total Var', algo2_var_distance, self.eval_num)
-
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Hired', algo3_distance0, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Crowdsourced', algo3_distance1, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Total', algo3_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Hired Var', algo3_var0_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Crowdsourced Var', algo3_var1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo3 Total Var', algo3_var_distance, self.eval_num)
-
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Hired', algo4_distance0, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Crowdsourced', algo4_distance1, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Total', algo4_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Hired Var', algo4_var0_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Crowdsourced Var', algo4_var1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo4 Total Var', algo4_var_distance, self.eval_num)
-        
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Hired', algo5_distance0, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Crowdsourced', algo5_distance1, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Total', algo5_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Hired Var', algo5_var0_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Crowdsourced Var', algo5_var1_distance, self.eval_num)
-        self.writter.add_scalar('Eval Travel Distance/Algo5 Total Var', algo5_var_distance, self.eval_num)
         
         # -----------------------
         # Average Speed
@@ -672,41 +633,6 @@ class EnvRunner(Runner):
         print(f"Algo4: Hired average speed is {algo4_avg0_speed} m/s (Var: {algo4_var0_speed}), Crowdsourced average speed is {algo4_avg1_speed} m/s (Var: {algo4_var1_speed}), Total average speed is {algo4_avg_speed} m/s (Var: {algo4_var_speed})")
         print(f"Algo5: Hired average speed is {algo5_avg0_speed} m/s (Var: {algo5_var0_speed}), Crowdsourced average speed is {algo5_avg1_speed} m/s (Var: {algo5_var1_speed}), Total average speed is {algo5_avg_speed} m/s (Var: {algo5_var_speed})")
 
-        self.writter.add_scalar('Eval Average Speed/Algo1 Total', algo1_avg_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo1 Hired', algo1_avg0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo1 Crowdsourced', algo1_avg1_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo1 Total Var', algo1_var_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo1 Hired Var', algo1_var0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo1 Crowdsourced Var', algo1_var1_speed, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Speed/Algo2 Total', algo2_avg_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo2 Hired', algo2_avg0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo2 Crowdsourced', algo2_avg1_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo2 Total Var', algo2_var_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo2 Hired Var', algo2_var0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo2 Crowdsourced Var', algo2_var1_speed, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Speed/Algo3 Total', algo3_avg_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo3 Hired', algo3_avg0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo3 Crowdsourced', algo3_avg1_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo3 Total Var', algo3_var_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo3 Hired Var', algo3_var0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo3 Crowdsourced Var', algo3_var1_speed, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Speed/Algo4 Total', algo4_avg_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo4 Hired', algo4_avg0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo4 Crowdsourced', algo4_avg1_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo4 Total Var', algo4_var_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo4 Hired Var', algo4_var0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo4 Crowdsourced Var', algo4_var1_speed, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Speed/Algo5 Total', algo5_avg_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo5 Hired', algo5_avg0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo5 Crowdsourced', algo5_avg1_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo5 Total Var', algo5_var_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo5 Hired Var', algo5_var0_speed, self.eval_num)
-        self.writter.add_scalar('Eval Average Speed/Algo5 Crowdsourced Var', algo5_var1_speed, self.eval_num)
-
         # -----------------------
         # Overspeed
         algo1_overspeed0 = round(algo1_count_overspeed0 / algo1_num_active_couriers0, 2)
@@ -740,31 +666,6 @@ class EnvRunner(Runner):
         print(f"Algo3: Hired - {algo3_overspeed0}, Crowdsourced - {algo3_overspeed1}, Total rate - {algo3_overspeed}, Overspeed penalty - {algo3_overspeed_penalty}")
         print(f"Algo4: Hired - {algo4_overspeed0}, Crowdsourced - {algo4_overspeed1}, Total rate - {algo4_overspeed}, Overspeed penalty - {algo4_overspeed_penalty}")
         print(f"Algo5: Hired - {algo5_overspeed0}, Crowdsourced - {algo5_overspeed1}, Total rate - {algo5_overspeed}, Overspeed penalty - {algo5_overspeed_penalty}")
-
-        self.writter.add_scalar('Eval Overspeed Rate/Algo1 Total', algo1_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo1 Hired', algo1_overspeed0, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo1 Crowdsourced', algo1_overspeed1, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo1 Overspeed Penalty', algo1_overspeed_penalty, self.eval_num)
-
-        self.writter.add_scalar('Eval Overspeed Rate/Algo2 Total', algo2_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo2 Hired', algo2_overspeed0, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo2 Crowdsourced', algo2_overspeed1, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo2 Overspeed Penalty', algo2_overspeed_penalty, self.eval_num)
-
-        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Total', algo3_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Hired', algo3_overspeed0, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Crowdsourced', algo3_overspeed1, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo3 Overspeed Penalty', algo3_overspeed_penalty, self.eval_num)
-
-        self.writter.add_scalar('Eval Overspeed Rate/Algo4 Total', algo4_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo4 Hired', algo4_overspeed0, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo4 Crowdsourced', algo4_overspeed1, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo4 Overspeed Penalty', algo4_overspeed_penalty, self.eval_num)
-
-        self.writter.add_scalar('Eval Overspeed Rate/Algo5 Total', algo5_overspeed, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo5 Hired', algo5_overspeed0, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo5 Crowdsourced', algo5_overspeed1, self.eval_num)
-        self.writter.add_scalar('Eval Overspeed Rate/Algo5 Overspeed Penalty', algo5_overspeed_penalty, self.eval_num)
 
         # -----------------------
         # Average Order Price
@@ -810,40 +711,6 @@ class EnvRunner(Runner):
         print(f"Algo4: Hired average price per order is {algo4_price_per_order0} dollars (Var: {algo4_var0_price}), Crowdsourced is {algo4_price_per_order1} dollars (Var: {algo4_var1_price}), Total average is {algo4_price_per_order} dollars (Var: {algo4_var_price})")
         print(f"Algo5: Hired average price per order is {algo5_price_per_order0} dollars (Var: {algo5_var0_price}), Crowdsourced is {algo5_price_per_order1} dollars (Var: {algo5_var1_price}), Total average is {algo5_price_per_order} dollars (Var: {algo5_var_price})")
 
-        self.writter.add_scalar('Eval Average Price/Algo1 Total', algo1_price_per_order, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo1 Hired', algo1_price_per_order0, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo1 Crowdsourced', algo1_price_per_order1, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo1 Total Var', algo1_var_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo1 Hired Var', algo1_var0_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo1 Crowdsourced Var', algo1_var1_price, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Price/Algo2 Total', algo2_price_per_order, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo2 Hired', algo2_price_per_order0, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo2 Crowdsourced', algo2_price_per_order1, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo2 Total Var', algo2_var_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo2 Hired Var', algo2_var0_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo2 Crowdsourced Var', algo2_var1_price, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Price/Algo3 Total', algo3_price_per_order, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo3 Hired', algo3_price_per_order0, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo3 Crowdsourced', algo3_price_per_order1, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo3 Total Var', algo3_var_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo3 Hired Var', algo3_var0_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo3 Crowdsourced Var', algo3_var1_price, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Price/Algo4 Total', algo4_price_per_order, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo4 Hired', algo4_price_per_order0, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo4 Crowdsourced', algo4_price_per_order1, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo4 Total Var', algo4_var_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo4 Hired Var', algo4_var0_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo4 Crowdsourced Var', algo4_var1_price, self.eval_num)
-         
-        self.writter.add_scalar('Eval Average Price/Algo5 Total', algo5_price_per_order, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo5 Hired', algo5_price_per_order0, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo5 Crowdsourced', algo5_price_per_order1, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo5 Total Var', algo5_var_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo5 Hired Var', algo5_var0_price, self.eval_num)
-        self.writter.add_scalar('Eval Average Price/Algo5 Crowdsourced Var', algo5_var1_price, self.eval_num)
 
         # -----------------------
         # Average Courier Income
@@ -894,46 +761,6 @@ class EnvRunner(Runner):
         print(f"Algo4: Hired's average income is {algo4_income0} dollars (Var: {algo4_var0_income}), Crowdsourced's average income is {algo4_income1} dollars (Var: {algo4_var1_income}), Total income per courier is {algo4_income} dollars (Var: {algo4_var_income})")
         print(f"Algo5: Hired's average income is {algo5_income0} dollars (Var: {algo5_var0_income}), Crowdsourced's average income is {algo5_income1} dollars (Var: {algo5_var1_income}), Total income per courier is {algo5_income} dollars (Var: {algo5_var_income})")
         
-        self.writter.add_scalar('Eval Average Income/Algo1 Total', algo1_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo1 Hired', algo1_income0, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced', algo1_income1, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo1 Total Var', algo1_var_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo1 Hired Var', algo1_var0_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo1 Crowdsourced Var', algo1_var1_income, self.eval_num)
-        self.writter.add_scalar('Eval Platform Cost/Algo1', platform_cost1, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Income/Algo2 Total', algo2_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo2 Hired', algo2_income0, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo2 Crowdsourced', algo2_income1, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo2 Total Var', algo2_var_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo2 Hired Var', algo2_var0_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo2 Crowdsourced Var', algo2_var1_income, self.eval_num)
-        self.writter.add_scalar('Eval Platform Cost/Algo2', platform_cost2, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Income/Algo3 Total', algo3_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo3 Hired', algo3_income0, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo3 Crowdsourced', algo3_income1, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo3 Total Var', algo3_var_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo3 Hired Var', algo3_var0_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo3 Crowdsourced Var', algo3_var1_income, self.eval_num)
-        self.writter.add_scalar('Eval Platform Cost/Algo3', platform_cost3, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Income/Algo4 Total', algo4_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo4 Hired', algo4_income0, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo4 Crowdsourced', algo4_income1, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo4 Total Var', algo4_var_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo4 Hired Var', algo4_var0_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo4 Crowdsourced Var', algo4_var1_income, self.eval_num)
-        self.writter.add_scalar('Eval Platform Cost/Algo4', platform_cost4, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Income/Algo5 Total', algo5_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo5 Hired', algo5_income0, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo5 Crowdsourced', algo5_income1, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo5 Total Var', algo5_var_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo5 Hired Var', algo5_var0_income, self.eval_num)
-        self.writter.add_scalar('Eval Average Income/Algo5 Crowdsourced Var', algo5_var1_income, self.eval_num)
-        self.writter.add_scalar('Eval Platform Cost/Algo5', platform_cost5, self.eval_num)
-
         # -----------------------
         # Average Courier Finishing Number
         algo1_finish0 = round(np.mean(algo1_Hired_finish_num), 2)
@@ -982,41 +809,6 @@ class EnvRunner(Runner):
         print(f"Algo3: Hired finishes average {algo3_finish0} orders (Var: {algo3_var0_finish}), Crowdsourced finishes average {algo3_finish1} orders (Var: {algo3_var1_finish}), Total finish number per courier is {algo3_finish} orders (Var: {algo3_var_finish})")
         print(f"Algo4: Hired finishes average {algo4_finish0} orders (Var: {algo4_var0_finish}), Crowdsourced finishes average {algo4_finish1} orders (Var: {algo4_var1_finish}), Total finish number per courier is {algo4_finish} orders (Var: {algo4_var_finish})")
         print(f"Algo5: Hired finishes average {algo5_finish0} orders (Var: {algo5_var0_finish}), Crowdsourced finishes average {algo5_finish1} orders (Var: {algo5_var1_finish}), Total finish number per courier is {algo5_finish} orders (Var: {algo5_var_finish})")
-
-        self.writter.add_scalar('Eval Average Finish/Algo1 Total', algo1_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo1 Hired', algo1_finish0, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo1 Crowdsourced', algo1_finish1, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo1 Total Var', algo1_var_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo1 Hired Var', algo1_var0_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo1 Crowdsourced Var', algo1_var1_finish, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Finish/Algo2 Total', algo2_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo2 Hired', algo2_finish0, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo2 Crowdsourced', algo2_finish1, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo2 Total Var', algo2_var_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo2 Hired Var', algo2_var0_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo2 Crowdsourced Var', algo2_var1_finish, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Finish/Algo3 Total', algo3_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo3 Hired', algo3_finish0, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo3 Crowdsourced', algo3_finish1, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo3 Total Var', algo3_var_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo3 Hired Var', algo3_var0_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo3 Crowdsourced Var', algo3_var1_finish, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Finish/Algo4 Total', algo4_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo4 Hired', algo4_finish0, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo4 Crowdsourced', algo4_finish1, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo4 Total Var', algo4_var_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo4 Hired Var', algo4_var0_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo4 Crowdsourced Var', algo4_var1_finish, self.eval_num)
-
-        self.writter.add_scalar('Eval Average Finish/Algo5 Total', algo5_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo5 Hired', algo5_finish0, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo5 Crowdsourced', algo5_finish1, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo5 Total Var', algo5_var_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo5 Hired Var', algo5_var0_finish, self.eval_num)
-        self.writter.add_scalar('Eval Average Finish/Algo5 Crowdsourced Var', algo5_var1_finish, self.eval_num)
 
         # -----------------------
         # Average Courier Leisure Time
@@ -1067,37 +859,6 @@ class EnvRunner(Runner):
         print(f"Algo4: Hired leisure time is {algo4_avg0_leisure} minutes (Var: {algo4_var0_leisure}), Crowdsourced leisure time is {algo4_avg1_leisure} minutes (Var: {algo4_var1_leisure}), Total leisure time per courier is {algo4_avg_leisure} minutes (Var: {algo4_var_leisure})")
         print(f"Algo5: Hired leisure time is {algo5_avg0_leisure} minutes (Var: {algo5_var0_leisure}), Crowdsourced leisure time is {algo5_avg1_leisure} minutes (Var: {algo5_var1_leisure}), Total leisure time per courier is {algo5_avg_leisure} minutes (Var: {algo5_var_leisure})")
 
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Total', algo1_avg_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Hired', algo1_avg0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Crowdsourced', algo1_avg1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Total Var', algo1_var_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Hired Var', algo1_var0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo1 Crowdsourced Var', algo1_var1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Total', algo2_avg_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Hired', algo2_avg0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Crowdsourced', algo2_avg1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Total Var', algo2_var_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Hired Var', algo2_var0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo2 Crowdsourced Var', algo2_var1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Total', algo3_avg_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Hired', algo3_avg0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Crowdsourced', algo3_avg1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Total Var', algo3_var_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Hired Var', algo3_var0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo3 Crowdsourced Var', algo3_var1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Total', algo4_avg_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Hired', algo4_avg0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Crowdsourced', algo4_avg1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Total Var', algo4_var_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Hired Var', algo4_var0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo4 Crowdsourced Var', algo4_var1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Total', algo5_avg_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Hired', algo5_avg0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Crowdsourced', algo5_avg1_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Total Var', algo5_var_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Hired Var', algo5_var0_leisure, self.eval_num)
-        self.writter.add_scalar('Eval Average Leisure Time/Algo5 Crowdsourced Var', algo5_var1_leisure, self.eval_num)
-
         # -----------------------
         # Average Courier running Time
         algo1_avg0_running = round(np.mean(algo1_Hired_running_time) / 60, 2)
@@ -1146,37 +907,6 @@ class EnvRunner(Runner):
         print(f"Algo3: Hired running time is {algo3_avg0_running} minutes (Var: {algo3_var0_running}), Crowdsourced running time is {algo3_avg1_running} minutes (Var: {algo3_var1_running}), Total running time per courier is {algo3_avg_running} minutes (Var: {algo3_var_running})")
         print(f"Algo4: Hired running time is {algo4_avg0_running} minutes (Var: {algo4_var0_running}), Crowdsourced running time is {algo4_avg1_running} minutes (Var: {algo4_var1_running}), Total running time per courier is {algo4_avg_running} minutes (Var: {algo4_var_running})")
         print(f"Algo5: Hired running time is {algo5_avg0_running} minutes (Var: {algo5_var0_running}), Crowdsourced running time is {algo5_avg1_running} minutes (Var: {algo5_var1_running}), Total running time per courier is {algo5_avg_running} minutes (Var: {algo5_var_running})")
-
-        self.writter.add_scalar('Eval Average running Time/Algo1 Total', algo1_avg_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo1 Hired', algo1_avg0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo1 Crowdsourced', algo1_avg1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo1 Total Var', algo1_var_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo1 Hired Var', algo1_var0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo1 Crowdsourced Var', algo1_var1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Total', algo2_avg_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Hired', algo2_avg0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Crowdsourced', algo2_avg1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Total Var', algo2_var_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Hired Var', algo2_var0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo2 Crowdsourced Var', algo2_var1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Total', algo3_avg_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Hired', algo3_avg0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Crowdsourced', algo3_avg1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Total Var', algo3_var_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Hired Var', algo3_var0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo3 Crowdsourced Var', algo3_var1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Total', algo4_avg_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Hired', algo4_avg0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Crowdsourced', algo4_avg1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Total Var', algo4_var_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Hired Var', algo4_var0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo4 Crowdsourced Var', algo4_var1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Total', algo5_avg_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Hired', algo5_avg0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Crowdsourced', algo5_avg1_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Total Var', algo5_var_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Hired Var', algo5_var0_running, self.eval_num)
-        self.writter.add_scalar('Eval Average running Time/Algo5 Crowdsourced Var', algo5_var1_running, self.eval_num)
 
         message = (
             f"\nIn Algo1 there are {algo1_Hired_num} Hired, {algo1_Crowdsourced_num} Crowdsourced with {algo1_Crowdsourced_on} ({algo1_Crowdsourced_on / algo1_Crowdsourced_num}) on, finishing {algo1_finished_num} orders in {algo1_order0_num} Order0 and {algo1_order1_num} Order1, {algo1_order_wait} ({round(100 * algo1_order_wait / (algo1_order_wait + algo1_order0_num + algo1_order1_num), 2)}%) Orders waiting to be paired\n"
@@ -1289,16 +1019,6 @@ class EnvRunner(Runner):
             algo1_var_ETA = round(np.var(algo1_ETA_usage0 + algo1_ETA_usage1), 2)
             print(f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo1 Total', algo1_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo1 Hired', algo1_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo1 Crowdsourced', algo1_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Total', algo1_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Hired', algo1_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Crowdsourced', algo1_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Total Var', algo1_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Hired Var', algo1_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo1 Crowdsourced Var', algo1_var1_ETA, self.eval_num)
-            
             message += f"Rate of Late Orders for Evaluation in Algo1: Hired - {algo1_late_rate0}, Crowdsourced - {algo1_late_rate1}, Total - {algo1_late_rate} out of ({algo1_count_dropped_orders0+algo1_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo1: Hired - {algo1_ETA_usage_rate0} (Var: {algo1_var0_ETA}), Crowdsourced - {algo1_ETA_usage_rate1} (Var: {algo1_var1_ETA}), Total - {algo1_ETA_usage_rate} (Var: {algo1_var_ETA})\n"
         
         if algo2_count_dropped_orders0 + algo2_count_dropped_orders1 == 0:
@@ -1313,16 +1033,6 @@ class EnvRunner(Runner):
             algo2_var0_ETA = 0
             algo2_var1_ETA = 0
 
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Total', algo2_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Hired', algo2_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Crowdsourced', algo2_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Total', algo2_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Total Var', algo2_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Hired', algo2_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Hired Var', algo2_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Crowdsourced', algo2_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Crowdsourced Var', algo2_var1_ETA, self.eval_num)
-            
             message += "No order is dropped in Algo2\n"
         else:
             if algo2_count_dropped_orders0:                
@@ -1349,17 +1059,7 @@ class EnvRunner(Runner):
             algo2_ETA_usage_rate = round(np.mean(algo2_ETA_usage0 + algo2_ETA_usage1), 2)
             algo2_var_ETA = round(np.var(algo2_ETA_usage0 + algo2_ETA_usage1), 2)
             print(f"Rate of ETA Usage for Evaluation in Algo2: Hired - {algo2_ETA_usage_rate0} (Var: {algo2_var0_ETA}), Crowdsourced - {algo2_ETA_usage_rate1} (Var: {algo2_var1_ETA}), Total - {algo2_ETA_usage_rate} (Var: {algo2_var_ETA})")
-            
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Total', algo2_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Hired', algo2_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo2 Crowdsourced', algo2_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Total', algo2_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Hired', algo2_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Crowdsourced', algo2_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Total Var', algo2_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Hired Var', algo2_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo2 Crowdsourced Var', algo2_var1_ETA, self.eval_num)
-            
+                        
             message += f"Rate of Late Orders for Evaluation in Algo2: Hired - {algo2_late_rate0}, Crowdsourced - {algo2_late_rate1}, Total - {algo2_late_rate} out of ({algo2_count_dropped_orders0 +algo2_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo2: Hired - {algo2_ETA_usage_rate0} (Var: {algo2_var0_ETA}), Crowdsourced - {algo2_ETA_usage_rate1} (Var: {algo2_var1_ETA}), Total - {algo2_ETA_usage_rate} (Var: {algo2_var_ETA})\n"
 
         if algo3_count_dropped_orders0 + algo3_count_dropped_orders1 == 0:
@@ -1374,16 +1074,6 @@ class EnvRunner(Runner):
             algo3_var0_ETA = 0
             algo3_var1_ETA = 0
 
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Total', algo3_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Hired', algo3_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Crowdsourced', algo3_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total', algo3_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total Var', algo3_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired', algo3_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired Var', algo3_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced', algo3_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced Var', algo3_var1_ETA, self.eval_num)
-            
             message += "No order is dropped in Algo3\n"
         else:
             if algo3_count_dropped_orders0:                
@@ -1411,16 +1101,6 @@ class EnvRunner(Runner):
             algo3_var_ETA = round(np.var(algo3_ETA_usage0 + algo3_ETA_usage1), 2)
             print(f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0} (Var: {algo3_var0_ETA}), Crowdsourced - {algo3_ETA_usage_rate1} (Var: {algo3_var1_ETA}), Total - {algo3_ETA_usage_rate} (Var: {algo3_var_ETA})")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Total', algo3_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Hired', algo3_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo3 Crowdsourced', algo3_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total', algo3_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired', algo3_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced', algo3_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Total Var', algo3_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Hired Var', algo3_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo3 Crowdsourced Var', algo3_var1_ETA, self.eval_num)
-            
             message += f"Rate of Late Orders for Evaluation in Algo3: Hired - {algo3_late_rate0}, Crowdsourced - {algo3_late_rate1}, Total - {algo3_late_rate} out of ({algo3_count_dropped_orders0 +algo3_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo3: Hired - {algo3_ETA_usage_rate0} (Var: {algo3_var0_ETA}), Crowdsourced - {algo3_ETA_usage_rate1} (Var: {algo3_var1_ETA}), Total - {algo3_ETA_usage_rate} (Var: {algo3_var_ETA})\n"
 
         if algo4_count_dropped_orders0 + algo4_count_dropped_orders1 == 0:
@@ -1434,16 +1114,6 @@ class EnvRunner(Runner):
             algo4_var_ETA = 0
             algo4_var0_ETA = 0
             algo4_var1_ETA = 0
-
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Total', algo4_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Hired', algo4_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Crowdsourced', algo4_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Total', algo4_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Total Var', algo4_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Hired', algo4_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Hired Var', algo4_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Crowdsourced', algo4_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Crowdsourced Var', algo4_var1_ETA, self.eval_num)
             
             message += "No order is dropped in Algo4\n"
         else:
@@ -1472,16 +1142,6 @@ class EnvRunner(Runner):
             algo4_var_ETA = round(np.var(algo4_ETA_usage0 + algo4_ETA_usage1), 2)
             print(f"Rate of ETA Usage for Evaluation in Algo4: Hired - {algo4_ETA_usage_rate0} (Var: {algo4_var0_ETA}), Crowdsourced - {algo4_ETA_usage_rate1} (Var: {algo4_var1_ETA}), Total - {algo4_ETA_usage_rate} (Var: {algo4_var_ETA})")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Total', algo4_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Hired', algo4_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo4 Crowdsourced', algo4_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Total', algo4_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Hired', algo4_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Crowdsourced', algo4_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Total Var', algo4_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Hired Var', algo4_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo4 Crowdsourced Var', algo4_var1_ETA, self.eval_num)
-            
             message += f"Rate of Late Orders for Evaluation in Algo4: Hired - {algo4_late_rate0}, Crowdsourced - {algo4_late_rate1}, Total - {algo4_late_rate} out of ({algo4_count_dropped_orders0 +algo4_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo4: Hired - {algo4_ETA_usage_rate0} (Var: {algo4_var0_ETA}), Crowdsourced - {algo4_ETA_usage_rate1} (Var: {algo4_var1_ETA}), Total - {algo4_ETA_usage_rate} (Var: {algo4_var_ETA})\n"
             
         if algo5_count_dropped_orders0 + algo5_count_dropped_orders1 == 0:
@@ -1496,16 +1156,6 @@ class EnvRunner(Runner):
             algo5_var0_ETA = 0
             algo5_var1_ETA = 0
 
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Total', algo5_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Hired', algo5_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Crowdsourced', algo5_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Total', algo5_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Total Var', algo5_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Hired', algo5_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Hired Var', algo5_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Crowdsourced', algo5_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Crowdsourced Var', algo5_var1_ETA, self.eval_num)
-            
             message += "No order is dropped in Algo5\n"
         else:
             if algo5_count_dropped_orders0:                
@@ -1533,16 +1183,6 @@ class EnvRunner(Runner):
             algo5_var_ETA = round(np.var(algo5_ETA_usage0 + algo5_ETA_usage1), 2)
             print(f"Rate of ETA Usage for Evaluation in Algo5: Hired - {algo5_ETA_usage_rate0} (Var: {algo5_var0_ETA}), Crowdsourced - {algo5_ETA_usage_rate1} (Var: {algo5_var1_ETA}), Total - {algo5_ETA_usage_rate} (Var: {algo5_var_ETA})")
             
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Total', algo5_late_rate, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Hired', algo5_late_rate0, self.eval_num)
-            self.writter.add_scalar('Eval Late Order Rate/Algo5 Crowdsourced', algo5_late_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Total', algo5_ETA_usage_rate, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Hired', algo5_ETA_usage_rate0, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Crowdsourced', algo5_ETA_usage_rate1, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Total Var', algo5_var_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Hired Var', algo5_var0_ETA, self.eval_num)
-            self.writter.add_scalar('Eval ETA Usage Rate/Algo5 Crowdsourced Var', algo5_var1_ETA, self.eval_num)
-            
             message += f"Rate of Late Orders for Evaluation in Algo5: Hired - {algo5_late_rate0}, Crowdsourced - {algo5_late_rate1}, Total - {algo5_late_rate} out of ({algo5_count_dropped_orders0 +algo5_count_dropped_orders1})\n" + f"Rate of ETA Usage for Evaluation in Algo5: Hired - {algo5_ETA_usage_rate0} (Var: {algo5_var0_ETA}), Crowdsourced - {algo5_ETA_usage_rate1} (Var: {algo5_var1_ETA}), Total - {algo5_ETA_usage_rate} (Var: {algo5_var_ETA})\n"
 
         # algo1_social_welfare = sum(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
@@ -1556,15 +1196,8 @@ class EnvRunner(Runner):
         # print(f"Algo4: The platform total cost is {round(platform_cost4, 2)} dollar, and social welfare is {algo4_social_welfare} dollar")
         # print(f"Algo5: The platform total cost is {round(platform_cost5, 2)} dollar, and social welfare is {algo5_social_welfare} dollar")
         # message += f"Algo1: Social welfare is {algo1_social_welfare} dollar\n" + f"Algo2: Social welfare is {algo2_social_welfare} dollar\n" + f"Algo3: Social welfare is {algo3_social_welfare} dollar\n" + f"Algo4: Social welfare is {algo4_social_welfare} dollar\n" + f"Algo5: Social welfare is {algo5_social_welfare} dollar\n"
-        # self.writter.add_scalar('Social Welfare/Algo1', algo1_social_welfare, self.eval_num)
-        # self.writter.add_scalar('Social Welfare/Algo2', algo2_social_welfare, self.eval_num)
-        # self.writter.add_scalar('Social Welfare/Algo3', algo3_social_welfare, self.eval_num)
-        # self.writter.add_scalar('Social Welfare/Algo4', algo4_social_welfare, self.eval_num)
-        # self.writter.add_scalar('Social Welfare/Algo5', algo5_social_welfare, self.eval_num)
-
         logger.success(message)
             
         print("\n")
         
         self.eval_envs.close()
-        self.writter.close()

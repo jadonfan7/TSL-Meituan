@@ -10,7 +10,7 @@ class Courier:
         self.start_time = time
         self.state = state # inactive, active
         
-        self.is_leisure = 0
+        self.is_leisure = None
         self.leisure_time = time
         self.total_leisure_time = 0
         self.riding_time = 0

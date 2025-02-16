@@ -246,34 +246,14 @@ class Map:
             self.orders += orders_new
 
             if self.algo_index == 0:
-                self._EEtradeoff_bipartite_allocation(orders_pair)
-            # else:
-            #     nearby_couriers = None
-            #     for i, p in enumerate(orders):
-            #         nearby_couriers = self._get_nearby_couriers(p, 1500)
-            #     gorubi_solver(nearby_couriers, orders, self.clock)
+                self._Delay_allocation(orders_pair)
             elif self.algo_index == 1:
                 self._Efficiency_allocation(orders_pair)     
             elif self.algo_index == 2:
                 self._MaxMin_fairness_allocation(orders_pair)   
             elif self.algo_index == 3:
-                self._EEtradeoff_greedy_allocation(orders_pair)
+                self._Greedy_allocation(orders_pair)
             # self.algo_index == 4 is the origin allocation in the dataset  
-        
-        # if orders_pair != []:
-            
-        #     self.orders += orders_new
-
-        #     if self.algo_index == 0:
-        #         self._fairness_threshold_allocation(orders_pair)
-        #     elif self.algo_index == 1:
-        #         self._MaxMin_fairness_allocation(orders_pair)     
-        #     elif self.algo_index == 2:
-        #         self._Pairwise_fairness_allocation(orders_pair)   
-        #     elif self.algo_index == 3:
-        #         self._Efficiency_allocation(orders_pair)     
-        #     elif self.algo_index == 4:
-        #         self._fair_allocation(orders_pair)               
         
         self.num_orders = len(self.orders)
         self.num_couriers = len(self.couriers)
@@ -333,6 +313,7 @@ class Map:
                         self.platform_cost += order.price
 
                     courier.wait_to_pick.append(order)
+                    courier.order_sequence, courier.current_wave_dist, courier.current_risk = self._cal_wave_info(None, courier)
                     order.pair_courier = courier
                     order.pair_time = self.clock
                     order.status = 'wait_pick'
@@ -425,13 +406,13 @@ class Map:
                 self.orders += orders_new
 
                 if self.algo_index == 0:
-                    self._EEtradeoff_bipartite_allocation(orders_pair)
+                    self._Delay_allocation(orders_pair)
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
                 elif self.algo_index == 2:
                     self._MaxMin_fairness_allocation(orders_pair)   
                 elif self.algo_index == 3:
-                    self._EEtradeoff_greedy_allocation(orders_pair)
+                    self._Greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset  
             
         self.num_orders = len(self.orders)
@@ -532,14 +513,14 @@ class Map:
         predicted_orders = []
         da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
         
-        poi_ids = da_frequency_row.index[1:]
+        da_ids = da_frequency_row.index[1:]
         frequencies = da_frequency_row.values[1:]
 
         frequencies_normalized = frequencies / np.sum(frequencies)
 
         from collections import Counter
         assigned_da_ids = np.random.choice(
-            poi_ids,
+            da_ids,
             size=predicted_count,
             p=frequencies_normalized
         )
@@ -586,8 +567,9 @@ class Map:
                     order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
                     predicted_orders.append(order)
                                 
-            return predicted_orders
-                                
+        return predicted_orders
+        
+    # give order to the nearest guy                        
     def _Efficiency_allocation(self, orders):
         
         for order in orders:
@@ -609,6 +591,7 @@ class Map:
                     self.platform_cost += order.price
                 
                 nearest_courier.wait_to_pick.append(order)
+                nearest_courier.order_sequence, nearest_courier.current_wave_dist, nearest_courier.current_risk = self._cal_wave_info(None, nearest_courier)
                 order.pair_courier = nearest_courier
                 order.status = 'wait_pick'
                 order.pair_time = self.clock
@@ -626,6 +609,7 @@ class Map:
                     self.platform_cost += order.price           
                             
                     nearest_courier.wait_to_pick.append(order)
+                    nearest_courier.order_sequence, nearest_courier.current_wave_dist, nearest_courier.current_risk = self._cal_wave_info(None, nearest_courier)
                     order.pair_courier = nearest_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -638,9 +622,9 @@ class Map:
                 else:
                     order.reject_count += 1
                     courier.reject_order_num += 1
-                                
+    
+    # give the order to the poorest guy                            
     def _fair_allocation(self, orders):
-        speed_upper_bound = 4
 
         for i, order in enumerate(orders):
             min_income = math.inf
@@ -648,9 +632,9 @@ class Map:
 
             nearby_couriers = self._get_nearby_couriers(order, 1500)
             for courier in nearby_couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
+                sequence, dist, risk = self._cal_wave_info(order, courier)
                 avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.start_time) != 0 else courier.income
-                if min_income > avg_income and max_speed < speed_upper_bound:
+                if min_income > avg_income and risk:
                     min_income = avg_income
                     assigned_courier = courier
             
@@ -664,6 +648,7 @@ class Map:
                         self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -681,6 +666,7 @@ class Map:
                         self.platform_cost += order.price
                                             
                         assigned_courier.wait_to_pick.append(order)
+                        assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                         order.pair_courier = assigned_courier
                         order.status = 'wait_pick'
                         order.pair_time = self.clock
@@ -693,62 +679,23 @@ class Map:
                     else:
                         order.reject_count += 1
                         courier.reject_order_num += 1
-                                 
-                # if (assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num < 10):
-                #     decision = self._accept_or_reject(p, assigned_courier)
-                #     if decision == True:
-                #         p.price = self._wage_response_model(p, assigned_courier)
-                #         # courier.income += p.price
-                        
-                #         assigned_courier.wait_to_pick.append(p)
-                #         p.pair_courier = assigned_courier
-                #         p.status = 'wait_pick'
-                #         p.pair_time = self.clock
-                        
-                #         if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                #             assigned_courier.pick_order(p)
-
-                #             if assigned_courier.position == p.drop_off_point:  # dropping off
-                #                 assigned_courier.drop_order(p)
-                #     else:
-                #         p.reject_count += 1
-                #         assigned_courier.reject_order_num += 1
-                                
-                # else:
-                #     p.price = self._wage_response_model(p, assigned_courier)
-                #     # courier.income += p.price
-                                        
-                #     assigned_courier.wait_to_pick.append(p)
-                #     p.pair_courier = assigned_courier
-                #     p.status = 'wait_pick'
-                #     p.pair_time = self.clock
-                    
-                #     if assigned_courier.position == p.pick_up_point and self.clock >= p.meal_prepare_time:  # picking up
-                #         assigned_courier.pick_order(p)
-
-                #         if assigned_courier.position == p.drop_off_point:  # dropping off
-                #             assigned_courier.drop_order(p)
-                
-    def _EEtradeoff_greedy_allocation(self, orders):
-        speed_upper_bound = 4
-
+    
+    # consider the matching degree but match one by one           
+    def _Greedy_allocation(self, orders):
         for i, order in enumerate(orders):
             min_cost = math.inf
             assigned_courier = None
 
             nearby_couriers = self._get_nearby_couriers(order, 1500)
             for courier in nearby_couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-                if len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                    formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
-                else:
-                    formal_speed_fair = 0
+                order_sequence, distance, risk = self._cal_wave_info(order, courier)
+                detour = distance - courier.current_wave_dist
 
                 price = self._wage_response_model(order, courier)
                 
-                cost = (avg_speed_fair - formal_speed_fair) / price
+                cost = detour / price
                 
-                if min_cost > cost and max_speed < speed_upper_bound:
+                if min_cost > cost and not risk:
                     min_cost = cost
                     assigned_courier = courier
             
@@ -762,6 +709,7 @@ class Map:
                         self.platform_cost += order.price
                     
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -779,6 +727,7 @@ class Map:
                         self.platform_cost += order.price
                                       
                         assigned_courier.wait_to_pick.append(order)
+                        assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                         order.pair_courier = assigned_courier
                         order.status = 'wait_pick'
                         order.pair_time = self.clock
@@ -808,9 +757,8 @@ class Map:
         
         return True
     
-    def _EEtradeoff_bipartite_allocation(self, orders):
-
-        speed_upper_bound = 4
+    # Bipartitie matching with estimation
+    def _Delay_allocation(self, orders):
         
         predicted_orders = self._get_predicted_orders()
         all_orders = orders + predicted_orders
@@ -830,15 +778,12 @@ class Map:
         for order in all_orders:
             row = []
             for courier in couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-                if max_speed < speed_upper_bound:
+                sequence, dist, risk = self._cal_wave_info(order, courier)
+                if not risk:
                     price = self._wage_response_model(order, courier)
-                    if len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                        formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
-                    else:
-                        formal_speed_fair = 0
-                    speed_variation = avg_speed_fair - formal_speed_fair
-                    cost =  speed_variation / price
+                    detour = dist - courier.current_wave_dist
+                    
+                    cost =  detour / price
                     if cost < min_cost:
                         min_cost = cost
                     row.append(cost)
@@ -853,16 +798,17 @@ class Map:
 
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            
+            order = all_orders[order_index]
+            if order in predicted_orders:
+                continue
+
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
             
-            order = all_orders[order_index]
             assigned_courier = couriers[courier_index]
-            
-            if order in predicted_orders:
-                continue
-            
+                        
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                 if assigned_courier.courier_type == 0:
                     order.price = self._wage_response_model(order, assigned_courier)
@@ -872,6 +818,7 @@ class Map:
                     self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
+                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 order.pair_courier = assigned_courier
                 order.status = 'wait_pick'
                 order.pair_time = self.clock
@@ -888,6 +835,7 @@ class Map:
                     order.price = self._wage_response_model(order, assigned_courier)     
                     self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -901,10 +849,8 @@ class Map:
                     order.reject_count += 1
                     courier.reject_order_num += 1
     
+    # matching with a fairness threshold: first match, then set a threshold and first match the "valuable" courier without cost exceeding the threshold
     def _fairness_threshold_allocation(self, orders):
-
-        speed_upper_bound = 4
-        
         # Create a cost matrix
         cost_matrix = []
         couriers = set()
@@ -923,15 +869,12 @@ class Map:
         for order in all_orders:
             row = []
             for courier in couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-                if max_speed < speed_upper_bound:
+                sequence, dist, risk = self._cal_wave_info(order, courier)
+                if not risk:
                     price = self._wage_response_model(order, courier)
-                    if len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                        formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
-                    else:
-                        formal_speed_fair = 0
-                    speed_variation = avg_speed_fair - formal_speed_fair
-                    cost =  speed_variation / price
+                    detour = dist - courier.current_wave_dist
+                    
+                    cost =  detour / price
                     if cost < min_cost:
                         min_cost = cost
                     row.append(cost)
@@ -1002,6 +945,7 @@ class Map:
                     self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
+                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 order.pair_courier = assigned_courier
                 order.status = 'wait_pick'
                 order.pair_time = self.clock
@@ -1018,6 +962,7 @@ class Map:
                     order.price = self._wage_response_model(order, assigned_courier)     
                     self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -1031,9 +976,8 @@ class Map:
                     order.reject_count += 1
                     courier.reject_order_num += 1
 
+    # Maxmin the cost
     def _MaxMin_fairness_allocation(self, orders):
-        speed_upper_bound = 4
-        
         # Create a cost matrix
         cost_matrix = []
         couriers = set()
@@ -1049,15 +993,12 @@ class Map:
         for order in orders:
             row = []
             for courier in couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-                if max_speed < speed_upper_bound:
+                sequence, dist, risk = self._cal_wave_info(order, courier)
+                if not risk:
                     price = self._wage_response_model(order, courier)
-                    if len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                        formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
-                    else:
-                        formal_speed_fair = 0
-                    speed_variation = avg_speed_fair - formal_speed_fair
-                    cost =  speed_variation / price
+                    detour = dist - courier.current_wave_dist
+                    
+                    cost =  detour / price
                     if cost < min_cost:
                         min_cost = cost
                     row.append(cost)
@@ -1101,6 +1042,7 @@ class Map:
                     self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
+                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 order.pair_courier = assigned_courier
                 order.status = 'wait_pick'
                 order.pair_time = self.clock
@@ -1117,6 +1059,7 @@ class Map:
                     order.price = self._wage_response_model(order, assigned_courier)     
                     self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -1130,9 +1073,8 @@ class Map:
                     order.reject_count += 1
                     courier.reject_order_num += 1
                     
+    # minimize the bound between the worst and the best
     def _Pairwise_fairness_allocation(self, orders):
-        speed_upper_bound = 4
-        
         # Create a cost matrix
         cost_matrix = []
         couriers = set()
@@ -1148,15 +1090,12 @@ class Map:
         for order in orders:
             row = []
             for courier in couriers:
-                avg_speed_fair, avg_speed, max_speed = self._cal_speed(order, courier)
-                if max_speed < speed_upper_bound:
+                sequence, dist, risk = self._cal_wave_info(order, courier)
+                if not risk:
                     price = self._wage_response_model(order, courier)
-                    if len(courier.waybill) + len(courier.wait_to_pick) > 0:
-                        formal_speed_fair, formal_speed, formal_max_speed = self._cal_speed(None, courier)  
-                    else:
-                        formal_speed_fair = 0
-                    speed_variation = avg_speed_fair - formal_speed_fair
-                    cost =  speed_variation / price
+                    detour = dist - courier.current_wave_dist
+                    
+                    cost =  detour / price
                     if cost < min_cost:
                         min_cost = cost
                     row.append(cost)
@@ -1231,6 +1170,7 @@ class Map:
                     self.platform_cost += order.price
                 
                 assigned_courier.wait_to_pick.append(order)
+                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 order.pair_courier = assigned_courier
                 order.status = 'wait_pick'
                 order.pair_time = self.clock
@@ -1247,6 +1187,7 @@ class Map:
                     order.price = self._wage_response_model(order, assigned_courier)     
                     self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
+                    assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                     order.pair_courier = assigned_courier
                     order.status = 'wait_pick'
                     order.pair_time = self.clock
@@ -1282,30 +1223,25 @@ class Map:
 
         return nearby_couriers
 
-    def _cal_speed(self, order, courier):
+    def _cal_wave_info(self, order, courier):
         order_sequence = self._cal_sequence(order, courier)
-        order_speed = []
         last_loc = courier.position
         total_dist = 0
-        max_eta = 0
+        
+        risk = 0
         
         for order in order_sequence:
             total_dist += geodesic(last_loc, order[0]).meters
             last_loc = order[0]
+            
             if order[1] == 'dropped':
                 speed = total_dist / (order[2] - self.clock)
-                order_speed.append(speed)
-                if max_eta < order[2]:
-                    max_eta = order[2]
-    
-                # order_speed[order_id] = total_dist / (matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300)) if matched_order.ETA - matched_order.order_create_time - 2*np.clip(np.random.normal(180, 40), 0, 300) > 0 else total_dist / (matched_order.ETA - matched_order.order_create_time)
-                        
-        time_window = max_eta - self.clock          
-        avg_speed_fair = np.mean(order_speed)
-        avg_speed = total_dist / time_window
-        max_speed = max(order_speed)
+                if speed > 4:
+                    risk = 1
+                else:
+                    risk = 0
 
-        return avg_speed_fair, avg_speed, max_speed
+        return order_sequence, total_dist, risk
     
     def _cal_sequence(self, order, courier):
         #################

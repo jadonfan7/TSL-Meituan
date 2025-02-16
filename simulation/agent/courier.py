@@ -10,7 +10,7 @@ class Courier:
         self.start_time = time
         self.state = state # inactive, active
         
-        self.is_leisure = 0
+        self.is_leisure = None
         self.leisure_time = time
         self.total_leisure_time = 0
         self.riding_time = 0
@@ -26,8 +26,11 @@ class Courier:
         self.travel_distance = 0
         self.wait_to_pick = []
         self.target_location = None
-        self.is_target_locked = False
+        
         self.order_sequence = []
+        self.current_wave_dist = 0
+        self.current_risk = 0
+        
         self.speed = 3
         self.avg_speed = 0
         
@@ -86,53 +89,52 @@ class Courier:
         self.finish_order_num += 1
         self.stay_duration = np.ceil(np.clip(np.random.normal(180, 40), 0, 300) / interval)
 
-    def move(self, map):
+    def move(self, map, current_map):
         
-        if self.speed != 0:
-            # congestion_rate = random.uniform(1, 1.5)
-            # speed = self.speed / congestion_rate
-            
-            travel_distance = map.interval * self.speed
-            distance_to_target = geodesic(self.target_location, self.position).meters
+        # congestion_rate = random.uniform(1, 1.5)
+        # speed = self.speed / congestion_rate
+    
+        self.target_location = self.order_sequence[0][0]
+        travel_distance = map.interval * self.speed
+        distance_to_target = geodesic(self.target_location, self.position).meters
 
-            if travel_distance >= distance_to_target:
-                new_latitude, new_longitude = self.target_location
-                
-            else:
-                ratio = travel_distance / distance_to_target
-                
-                new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
-                new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
-                            
-            congestion_rate = self.get_congestion_rate(map, new_latitude, new_longitude)
-            speed = congestion_rate * self.speed
-            # speed = self.speed - 1.5
+        if travel_distance >= distance_to_target:
+            new_latitude, new_longitude = self.target_location
             
-            # self.riding_time += interval / congestion_rate
-            self.riding_time += map.interval
+        else:
+            ratio = travel_distance / distance_to_target
             
-            travel_distance = map.interval * speed
+            new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
+            new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
+                        
+        congestion_rate = self.get_congestion_rate(current_map, new_latitude, new_longitude)
+        speed = congestion_rate * self.speed
+        # speed = self.speed - 1.5
+        
+        # self.riding_time += interval / congestion_rate
+        self.riding_time += map.interval
+        
+        travel_distance = map.interval * speed
+        
+        if travel_distance >= distance_to_target:
+            map.update_courier_position(self.position[0], self.position[1], self.target_location[0], self.target_location[1], self)
+            self.position = self.target_location
+            self.travel_distance += distance_to_target
             
-            if travel_distance >= distance_to_target:
-                map.update(self.position[0], self.position[1], self.target_location[0], self.target_location[1], self)
-                self.position = self.target_location
-                self.is_target_locked = False
-                self.travel_distance += distance_to_target
-                
-            else:
-                ratio = travel_distance / distance_to_target
-                
-                new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
-                new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
-                
-                map.update(self.position[0], self.position[1], new_latitude, new_longitude, self)
-                
-                self.position = (new_latitude, new_longitude)
+        else:
+            ratio = travel_distance / distance_to_target
+            
+            new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
+            new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
+            
+            map.update_courier_position(self.position[0], self.position[1], new_latitude, new_longitude, self)
+            
+            self.position = (new_latitude, new_longitude)
 
-                self.travel_distance += travel_distance
+            self.travel_distance += travel_distance
             
                 
-    def get_congestion_rate(self, map, latitude, longitude, radius=50):
+    def get_congestion_rate(self, map, latitude, longitude, radius=200):
         points_on_line = [(self.position[0], self.position[1])]
         distance_to_target = geodesic(self.position, self.target_location).meters
         num_steps = int(distance_to_target // 100)  # 以100m为步长
@@ -144,7 +146,7 @@ class Courier:
             points_on_line.append((new_latitude, new_longitude))
 
         nearby_couriers_count = 0
-        nearby_couriers = map.get_couriers_in_adjacent_grids(self, self.position[0], self.position[1])
+        nearby_couriers = map.get_couriers_in_adjacent_grids(self.position[0], self.position[1])
         for courier in nearby_couriers:
             if courier == self:
                 continue

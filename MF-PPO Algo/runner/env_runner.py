@@ -930,7 +930,7 @@ class EnvRunner(Runner):
                 #     print(o)  
                 # print("\n")
                 
-                self.log_env(1, eval_step, i, eval=True)
+                self.log_env(0, eval_step, i, eval=True)
                 
             eval_temp_actions_env = []
             
