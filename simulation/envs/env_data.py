@@ -30,7 +30,7 @@ class Map:
         # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
         order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
                         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -104,8 +104,8 @@ class Map:
         
         self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
         self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
         
         # # 2686, 2744, 2761, 2783, 2771
         # self.max_num_couriers = 2686
@@ -140,6 +140,23 @@ class Map:
             if not first_time:
                 if self.clock < self.end_time:
                     self.clock += self.interval 
+                    
+            # if a courier does not get an order for a period of a time, he will quit the system.
+            for courier in self.active_couriers:
+                if courier.is_leisure == 1 and courier.state == 'active':
+                    courier.total_leisure_time += self.interval
+                elif courier.is_leisure == 0 and courier.state == 'active':
+                    courier.total_running_time += self.interval
+
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
+                    courier.state = 'inactive'
+                    self.active_couriers.remove(courier)
+                    self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+
+                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
+                    salary_per_interval = 15 / 3600 * self.interval
+                    courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
+                    self.platform_cost += salary_per_interval
             
             while(self.current_index < self.order_data.shape[0] and self.order_data.iloc[self.current_index]['platform_order_time'] <= self.clock):
                 dt = self.order_data.iloc[self.current_index]
@@ -203,29 +220,29 @@ class Map:
                                    
                 self.current_index += 1
             
+        
+        else:            
+            if not first_time:
+                if self.clock < self.end_time:
+                    self.clock += self.interval 
+
             # if a courier does not get an order for a period of a time, he will quit the system.
-            for courier in self.couriers:
+            for courier in self.active_couriers:
                 if courier.is_leisure == 1 and courier.state == 'active':
                     courier.total_leisure_time += self.interval
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
+                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
                     courier.state = 'inactive'
                     self.active_couriers.remove(courier)
-                
+                    self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+
                 if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
                     courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
                     self.platform_cost += salary_per_interval
-        
-        else:
-            # self.add_new_couriers = 0
-            
-            if not first_time:
-                if self.clock < self.end_time:
-                    self.clock += self.interval 
-
+                    
             orders_failed = [order for order in self.orders if order.status == "wait_pair"]
             orders_new = []
 
@@ -262,23 +279,6 @@ class Map:
                             break
 
                 self.current_index += 1
-                
-            # if a courier does not get an order for a period of a time, he will quit the system.
-            for courier in self.couriers:
-                if courier.is_leisure == 1 and courier.state == 'active':
-                    courier.total_leisure_time += self.interval
-                elif courier.is_leisure == 0 and courier.state == 'active':
-                    courier.total_running_time += self.interval
-
-                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 300: # 5 minutes
-                    courier.state = 'inactive'
-                    self.active_couriers.remove(courier)
-                
-                if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
-                    salary_per_interval = 15 / 3600 * self.interval
-                    courier.income += salary_per_interval # 15 is from the paper "The Meal Delivery Routing Problem", 26.4 is the least salary per hour in Beijing
-                    self.platform_cost += salary_per_interval
-
             orders_pair = orders_failed + orders_new
             
             if orders_pair != []:
@@ -290,8 +290,8 @@ class Map:
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
                 elif self.algo_index == 2:
-                    self._MaxMin_fairness_allocation(orders_pair)   
-                elif self.algo_index == 3:
+                #     self._MaxMin_fairness_allocation(orders_pair)   
+                # elif self.algo_index == 3:
                     self._Greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset
             
@@ -317,20 +317,22 @@ class Map:
         lat_index, lng_index = self.get_grid_index(lat, lng)
         return self.grid[lat_index][lng_index]
     
-    def remove_courier(self, lat, lng, courier):
-        lat_index, lng_index = self.get_grid_index(lat, lng)
+    def remove_courier(self, lat_index, lng_index, courier):
         if courier in self.grid[lat_index][lng_index]:
             self.grid[lat_index][lng_index].remove(courier)
     
     def update_courier_position(self, old_lat, old_lng, new_lat, new_lng, courier):
-        self.remove_courier(old_lat, old_lng, courier)
-        self.add_courier(new_lat, new_lng, courier)
+        old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
+        new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
+        if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
+            self.remove_courier(old_lat_index, old_lng_index, courier)
+            self.grid[new_lat_index][new_lng_index].append(courier)
                 
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)  # 获取当前格子的索引
 
         # 定义相邻8个格子的相对位置（包括上下左右和对角线）
-        adjacent_offsets = [(-1, 0), (1, 0), (0, -1), (0, 1),  # 上, 下, 左, 右
+        adjacent_offsets = [(-1, 0), (1, 0), (0, 0), (0, -1), (0, 1),  # 上, 下, 左, 右
                             (-1, -1), (-1, 1), (1, -1), (1, 1)]  # 左上, 右上, 左下, 右下
 
         # 获取所有相邻格子的索引
@@ -352,9 +354,6 @@ class Map:
         for grid in adjacent_grids:
             lat_index, lng_index = grid
             couriers.extend(self.grid[lat_index][lng_index])
-
-        if couriers == []:
-            couriers = self.couriers
         
         return couriers
             
@@ -437,8 +436,7 @@ class Map:
         for order in orders:
             min_dist = math.inf
             nearest_courier = None
-            nearby_couriers = self._get_nearby_couriers(order)
-            for courier in nearby_couriers:
+            for courier in self.active_couriers:
                 if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
                     dist = geodesic(courier.position, order.pick_up_point).meters
                     if min_dist > dist:
@@ -966,9 +964,9 @@ class Map:
             dist = geodesic(courier.position, order.pick_up_point).meters
             if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and dist < dist_range:
                 nearby_couriers.append(courier)
-        
+                
         return nearby_couriers
-    
+        
         #         sequence, dist, risk = self._cal_wave_info(order, courier)
         #         price = self._wage_response_model(order, courier)
         #         detour = dist - courier.current_wave_dist
@@ -1028,9 +1026,6 @@ class Map:
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
             
         # ETA reveals the sequence of the appearance of orders on the platform
-        if orders == []:
-            print(order)
-            print(courier)
         orders = sorted(orders, key=lambda o: o.ETA)
         order_sequence = []
         if orders[0] in courier.waybill:

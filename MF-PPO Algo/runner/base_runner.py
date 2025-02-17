@@ -19,10 +19,10 @@ class Runner(object):
         self.eval_envs = config["eval_envs"]
         self.device = config["device"]
         
-        self.agents = self.envs.envs_map[0].map.couriers
+        self.agents = self.envs.envs_map[0].couriers
         self.num_agents = len(self.agents)
-        self.num_agents1 = self.envs.envs_map[0].map.num_couriers1
-        self.num_agents2 = self.envs.envs_map[0].map.num_couriers2
+        self.num_agents1 = self.envs.envs_map[0].num_couriers1
+        self.num_agents2 = self.envs.envs_map[0].num_couriers2
 
         # parameters
         self.env_name = self.all_args.env_name

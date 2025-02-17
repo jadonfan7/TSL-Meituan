@@ -23,8 +23,8 @@ def make_eval_env(n_eval_rollout_threads):
 class Runner(object):
     def __init__(self):
         self.eval_episodes_length = 450
-        self.num_envs = 5
-        self.eval_envs = make_eval_env(self.num_envs)
+        self.num_algo = 1
+        self.eval_envs = make_eval_env(self.num_algo)
         
         logger.remove()
         logger.add('Simulation_logs/env_step_log.log', rotation="50 MB", level="DEBUG")
