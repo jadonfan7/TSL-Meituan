@@ -209,7 +209,7 @@ class Map:
             if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
                 courier.state = 'inactive'
                 self.active_couriers.remove(courier)
-                self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+                self.remove_courier(courier.position[0], courier.position[1], courier)
 
             if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                 salary_per_interval = 15 / 3600 * self.interval
@@ -285,7 +285,7 @@ class Map:
                 if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
                     courier.state = 'inactive'
                     self.active_couriers.remove(courier)
-                    self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+                    self.remove_courier(courier.position[0], courier.position[1], courier)
 
                 if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
@@ -370,7 +370,7 @@ class Map:
                 if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
                     courier.state = 'inactive'
                     self.active_couriers.remove(courier)
-                    self.remove_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+                    self.remove_courier(courier.position[0], courier.position[1], courier)
 
                 if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
@@ -462,22 +462,18 @@ class Map:
             self.grid[new_lat_index][new_lng_index].append(courier)   
              
     def get_adjacent_grids(self, lat, lng):
-        lat_index, lng_index = self.get_grid_index(lat, lng)  # 获取当前格子的索引
+        lat_index, lng_index = self.get_grid_index(lat, lng)
 
-        # 定义相邻8个格子的相对位置（包括上下左右和对角线）
         adjacent_offsets = [(-1, 0), (1, 0), (0, 0), (0, -1), (0, 1),  # 上, 下, 左, 右
                             (-1, -1), (-1, 1), (1, -1), (1, 1)]  # 左上, 右上, 左下, 右下
 
-        # 获取所有相邻格子的索引
         adjacent_grids = [(lat_index + offset[0], lng_index + offset[1]) for offset in adjacent_offsets]
 
-        # 过滤掉越界的格子
         valid_adjacent_grids = [
             (lat, lng) for lat, lng in adjacent_grids
             if lat >= 0 and lat < self.grid_size and lng >= 0 and lng < self.grid_size
         ]
 
-        # 返回所有有效的相邻格子
         return valid_adjacent_grids
    
     def get_couriers_in_adjacent_grids(self, lat, lng):
@@ -527,7 +523,8 @@ class Map:
             da_id = int(da_id)
             model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
             
-            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time']))
+            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
+            mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
             
             from sklearn.cluster import KMeans
 
@@ -550,7 +547,7 @@ class Map:
                     eta = mean_eta + self.clock
 
                     order_create_time = self.clock            
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
+                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
                     predicted_orders.append(order)
             else:
                 for i in range(len(coordinates)):
@@ -559,7 +556,7 @@ class Map:
 
                     eta = mean_eta + self.clock
                     order_create_time = self.clock
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
+                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
                     predicted_orders.append(order)
                                 
         return predicted_orders
@@ -585,7 +582,7 @@ class Map:
             min_income = math.inf
             assigned_courier = None
 
-            nearby_couriers = self._get_nearby_couriers(order, 1000)
+            nearby_couriers = self._get_nearby_couriers(order)
             for courier in nearby_couriers:
                 sequence, dist, risk = self._cal_wave_info(order, courier)
                 avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.start_time) != 0 else courier.income
@@ -602,7 +599,7 @@ class Map:
             min_cost = math.inf
             assigned_courier = None
 
-            nearby_couriers = self._get_nearby_couriers(order, 1000)
+            nearby_couriers = self._get_nearby_couriers(order)
             for courier in nearby_couriers:
                 order_sequence, distance, risk = self._cal_wave_info(order, courier)
                 detour = distance - courier.current_wave_dist
@@ -656,7 +653,18 @@ class Map:
             row = []
             is_predicted = 0
             for courier in couriers:
-                # 计算每个订单与每个骑手的相关信息
+                unmatch = False
+                if isinstance(order, list):
+                    if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
+                        unmatch = True
+                                                
+                else:
+                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
+                        unmatch = True                
+                if unmatch:
+                    row.append(float(M))
+                    continue
+                
                 sequence, dist, risk = self._cal_wave_info(order, courier)
                 if not risk:
                     if isinstance(order, list):
@@ -683,12 +691,17 @@ class Map:
         
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
         for order_index, courier_index in zip(row_ind, col_ind):
-            if cost_matrix[order_index][courier_index] == float(M):
-                order.reject_count += 1
-                continue
-            
             order = clustered_new_orders[order_index]
             assigned_courier = couriers[courier_index]
+
+            if cost_matrix[order_index][courier_index] == float(M):
+                if isinstance(order, list):
+                    for o in order:
+                        o.reject_count += 1
+                else:
+                    order.reject_count += 1
+                continue
+            
             if isinstance(order, list):
                 if order[0] in predicted_orders:
                     continue 
@@ -862,11 +875,12 @@ class Map:
                     
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = all_orders[order_index]
+            assigned_courier = couriers[courier_index]
+            
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            order = all_orders[order_index]
-            assigned_courier = couriers[courier_index]
                         
             self._courier_order_matching(order, assigned_courier)
 
@@ -920,12 +934,12 @@ class Map:
             row_ind, col_ind = linear_sum_assignment(cost_matrix)
             
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = orders[order_index]
+            assigned_courier = couriers[courier_index]
+            
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
                         
             self._courier_order_matching(order, assigned_courier)
                     
@@ -1010,56 +1024,21 @@ class Map:
 
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = orders[order_index]
+            assigned_courier = couriers[courier_index]
+
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
-                        
+                                
             self._courier_order_matching(order, assigned_courier)
                         
-    def _get_nearby_couriers(self, order, dist_range=1500):
-        nearby_couriers = []
-        couriers = self.get_couriers_in_adjacent_grids(order.pick_up_point[0], order.pick_up_point[1])
-
-        for courier in couriers:
-            dist = geodesic(courier.position, order.pick_up_point).meters
-            if courier.state == 'active' and len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity and dist < dist_range:
-                nearby_couriers.append(courier)
-                
+    def _get_nearby_couriers(self, order):
+        nearby_couriers = self.get_couriers_in_adjacent_grids(order.pick_up_point[0], order.pick_up_point[1])
         return nearby_couriers
 
     def _cal_wave_info(self, order, courier):
-        if order is not None:
-            if isinstance(order, list):
-                if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
-                    return None, None, 1
-            else:
-                if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
-                    return None, None, 1
-
-        order_sequence = self._cal_sequence(order, courier)
-        last_loc = courier.position
-        total_dist = 0
-        
-        risk = 0
-        
-        for order in order_sequence:
-            total_dist += geodesic(last_loc, order[0]).meters
-            last_loc = order[0]
-            
-            if order[1] == 'dropped':
-                speed = total_dist / (order[2] - self.clock)
-                if speed > 4:
-                    risk = 1
-                else:
-                    risk = 0
-
-        return order_sequence, total_dist, risk
-    
-    def _cal_sequence(self, order, courier):
-        #################
+        ################# 
         # first stage
         orders = (courier.waybill + courier.wait_to_pick).copy()
         if order is not None:
@@ -1076,7 +1055,7 @@ class Map:
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
                 waybill_points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
             else:
-                points.append((o.pick_up_point, 'pick_up', o.ETA, o.orderid))
+                points.append((o.pick_up_point, 'pick_up', o.meal_prepare_time, o.orderid))
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
             
         # ETA reveals the sequence of the appearance of orders on the platform
@@ -1086,8 +1065,8 @@ class Map:
             order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
             points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
         else:
-            order_sequence.append((orders[0].pick_up_point, 'pick_up', o.ETA, orders[0].orderid))
-            points.remove((orders[0].pick_up_point, 'pick_up', orders[0].ETA, orders[0].orderid))
+            order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
+            points.remove((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
             
         while points:
             last_point = order_sequence[-1][0]
@@ -1097,7 +1076,7 @@ class Map:
                 distance = geodesic(last_point, point[0]).meters
                 closest_points.append((distance, point))
                 
-            closest_points.sort(key=lambda x: (x[0], x[1]))
+            closest_points.sort(key=lambda x: (x[0], x[1][2]))
             flag = True
             for dist, closest_point in closest_points:
                 if flag == False:
@@ -1117,28 +1096,50 @@ class Map:
                 
         #################
         # second stage
+        risk = 0
+        dist = 0
         while(True):
+            risk = 0
             dist = 0
+            
+            re = 0
+            
             last_location = courier.position
+            dist_between_grab_time = 0
+            time = self.clock
             i = 0
             while i < len(order_sequence):
                 point = order_sequence[i]
+                dist += geodesic(last_location, point[0]).meters
                 if point[1] == 'dropped':
-                    temp_dist = dist + geodesic(last_location, point[0]).meters
-                    if 4 * (point[2] - self.clock) < temp_dist and i != 0 and order_sequence[i-1][3] != point[3]:
+                    dist_between_grab_time += geodesic(last_location, point[0]).meters
+                    if 4 * (point[2] - time) < dist_between_grab_time and i != 0 and order_sequence[i-1][3] != point[3] and order_sequence[i-1][2] > point[2]:
                         order_sequence[i], order_sequence[i-1] = order_sequence[i-1], order_sequence[i]
+                        re = 1
                         break
                     else:
-                        dist = temp_dist
+                        if 4 * (point[2] - time) < dist_between_grab_time:
+                            risk = 1
                         last_location = point[0]
                         i += 1
                 else:
-                    dist += geodesic(last_location, point[0]).meters
+                    grab_dist = geodesic(last_location, point[0]).meters + dist_between_grab_time
+                    grab_time = grab_dist / 4 + time
+                    if grab_time < point[2]:
+                        time = point[2]
+                    else:
+                        time = grab_time
+                    
                     last_location = point[0]
+                    dist_between_grab_time = 0
                     i += 1
-            break
+                    
+            if re == 0:
+                break
+            else:
+                continue
         
-        return order_sequence
+        return order_sequence, dist, risk
         
     def _wage_response_model(self, order, courier):
         courier_total_time = self.clock - courier.start_time

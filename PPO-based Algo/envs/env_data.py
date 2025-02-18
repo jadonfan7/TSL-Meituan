@@ -789,12 +789,13 @@ class Map:
 
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
-            if cost_matrix[order_index][courier_index] == float(M):
-                order.reject_count += 1
-                continue  # Skip infeasible matches
             
             order = all_orders[order_index]
             assigned_courier = couriers[courier_index]
+
+            if cost_matrix[order_index][courier_index] == float(M):
+                order.reject_count += 1
+                continue  # Skip infeasible matches
             
             if order in predicted_orders:
                 continue
@@ -952,11 +953,12 @@ class Map:
                     
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = all_orders[order_index]
+            assigned_courier = couriers[courier_index]
+
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            order = all_orders[order_index]
-            assigned_courier = couriers[courier_index]
                         
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                 if assigned_courier.courier_type == 0:
@@ -1050,13 +1052,13 @@ class Map:
             row_ind, col_ind = linear_sum_assignment(cost_matrix)
             
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = orders[order_index]
+            assigned_courier = couriers[courier_index]
+
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
-            
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
-                        
+                                    
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                 if assigned_courier.courier_type == 0:
                     order.price = self._wage_response_model(order, assigned_courier)
@@ -1180,12 +1182,13 @@ class Map:
 
         # Assign orders to couriers based on the optimal matching
         for order_index, courier_index in zip(row_ind, col_ind):
+            order = orders[order_index]
+            assigned_courier = couriers[courier_index]
+
             if cost_matrix[order_index][courier_index] == float(M):
                 order.reject_count += 1
                 continue  # Skip infeasible matches
             
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
                         
             if (self.clock - order.order_create_time > 120) and (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5):
                 if assigned_courier.courier_type == 0:

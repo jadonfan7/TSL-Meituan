@@ -43,8 +43,6 @@ class EnvCore(object):
                     self._pick_or_drop(agent)
                 else:
                     agent.speed = 0
-                    if agent.stay_duration != 0:
-                        agent.stay_duration -= 1
                                             
                 if agent.waybill == [] and agent.wait_to_pick == []:
                     agent.is_leisure = 1
@@ -83,8 +81,6 @@ class EnvCore(object):
     #                         agent.income += order.price
     #         else:
     #             agent.speed = 0
-    #             if agent.stay_duration != 0:
-    #                 agent.stay_duration -= 1
                                             
     #         if agent.waybill == [] and agent.wait_to_pick == []:
     #             agent.is_leisure = 1

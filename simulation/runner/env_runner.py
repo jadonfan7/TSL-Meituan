@@ -70,7 +70,7 @@ class EnvRunner(Runner):
             # print("-"*25)
             print(f"THIS IS EVAL STEP {eval_step}")
 
-            for i in range(self.num_envs):
+            for i in range(self.eval_envs.num_envs):
                 
                 self.log_env(eval_step, i)
                             

@@ -100,7 +100,7 @@ class Courier:
             # speed = self.speed * congestion_rate
             
             if self.current_waiting_time > 0:
-                time = self.current_waiting_time - map.interval
+                time = map.interval - self.current_waiting_time
                 self.current_waiting_time = 0
             else:
                 time = map.interval

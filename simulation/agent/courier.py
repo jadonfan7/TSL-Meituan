@@ -98,11 +98,12 @@ class Courier:
             # speed = self.speed * congestion_rate
             
             if self.current_waiting_time > 0:
-                time = self.current_waiting_time - map.interval
+                time = map.interval - self.current_waiting_time
                 self.current_waiting_time = 0
             else:
                 time = map.interval
-            
+                
+            self.target_location = self.order_sequence[0][0]
             travel_distance = time * self.speed
             distance_to_target = geodesic(self.target_location, self.position).meters
 
@@ -114,7 +115,7 @@ class Courier:
                 
                 new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
                 new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
-                            
+            
             self.congestion_rate = self.get_congestion_rate(current_map, new_latitude, new_longitude, travel_distance)
             
             if self.congestion_rate != 1:
