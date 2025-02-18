@@ -166,8 +166,7 @@ class EnvCore(object):
                 #     agent.target_location = sorted_orders[0].drop_off_point
                     
                 agent.move(self.map, current_map)  
-                agent.avg_speed = agent.travel_distance / agent.riding_time if agent.riding_time != 0 else 0
-                agent.congestion_time = agent.total_running_time - agent.riding_time
+                agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
                 
                 reward += self._pick_or_drop(agent)
                 
@@ -234,8 +233,7 @@ class EnvCore(object):
         reward = 0
         for order in agent.wait_to_pick:
             if agent.position == order.pick_up_point and self.map.clock >= order.meal_prepare_time: # picking up
-                if order.wait_time is not None:
-                    order.wait_time = self.map.clock - order.meal_prepare_time
+                order.wait_time = self.map.clock - order.meal_prepare_time
                 agent.pick_order(order)
                 
                 if agent.courier_type == 0:
@@ -244,7 +242,6 @@ class EnvCore(object):
                     reward += 60
                     
             elif agent.position == order.pick_up_point and self.map.clock < order.meal_prepare_time and agent.is_waiting == 0:
-                order.wait_time = order.meal_prepare_time - self.map.clock
                 agent.current_waiting_time = order.meal_prepare_time - self.map.clock
                 agent.total_waiting_time += order.meal_prepare_time - self.map.clock
                 agent.is_waiting == 1
@@ -252,9 +249,7 @@ class EnvCore(object):
         for order in agent.waybill:
             if agent.position == order.drop_off_point:  # dropping off
                 agent.drop_order(order)
-                
-                agent.finish_order_num += 1
-                    
+                                    
                 if self.map.clock > order.ETA:
                     if agent.courier_type == 0:
                         reward -= 30 + 80 * ((self.map.clock - order.order_create_time) / (order.ETA - order.order_create_time) - 1)

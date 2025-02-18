@@ -270,7 +270,6 @@ class Map:
         
     def eval_step(self, first_time=0):
         if self.algo_index == 4:
-            # self.add_new_couriers = 0
             
             if not first_time:
                 if self.clock < self.end_time:
@@ -324,8 +323,6 @@ class Map:
                                 self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
                                 break
                         
-                        # self.add_new_couriers += 1
-                    
                     if len(courier.waybill) + len(courier.wait_to_pick) == courier.capacity or courier == None:
                         self.current_index += 1
                         continue

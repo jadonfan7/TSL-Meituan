@@ -13,8 +13,8 @@ class Courier:
         self.is_leisure = None
         self.leisure_time = time
         self.total_leisure_time = 0
-        self.riding_time = 0
-        self.congestion_time = 0
+        self.total_riding_time = 0
+        self.total_congestion_time = 0
         self.total_running_time = 0
         
         self.total_waiting_time = 0
@@ -36,7 +36,7 @@ class Courier:
         self.current_risk = 0
 
         self.speed = 0
-        self.avg_speed = 0
+        self.actual_speed = 0
         
         self.congestion_rate = 0
         
@@ -121,10 +121,11 @@ class Courier:
             
             if self.congestion_rate != 1:
                 speed = self.speed / (1 + self.congestion_rate ** 4)
-                self.riding_time += time * (1 + self.congestion_rate ** 4)
+                self.total_congestion_time += time * (self.congestion_rate ** 4)
             else:
                 speed = self.speed
-                self.riding_time += time
+            
+            self.total_riding_time += time # congestion has showed on speed
             
             travel_distance = time * speed
             

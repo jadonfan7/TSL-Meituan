@@ -135,7 +135,6 @@ class Map:
 
     def eval_step(self, first_time=0):
         if self.algo_index == 4:
-            # self.add_new_couriers = 0
             
             if not first_time:
                 if self.clock < self.end_time:
