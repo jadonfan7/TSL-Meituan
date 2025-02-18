@@ -127,7 +127,7 @@ class EnvRunner(Runner):
                 num1 = 0
                 count0 = 0
                 count1 = 0
-                for c in self.envs.envs_map[0].couriers:
+                for c in self.envs.envs_map[0].active_couriers:
                     if c.state == 'active':
                         if c.courier_type == 0:
                             num0 += 1
@@ -435,7 +435,7 @@ class EnvRunner(Runner):
             # average waiting time for orders
             waiting_time_per_order = np.mean(order_waiting_time)
             var_waiting_time = np.var(order_waiting_time)
-            print(f"The average waiting time for orders ({order_num - order_wait}) is {waiting_time_per_order} dollar (Var: {var_price})")
+            print(f"The average waiting time for orders ({order_num - order_wait}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})")
             self.writter.add_scalar('Train/Average Order Waiting Time/Total', waiting_time_per_order, episode + 1)
             self.writter.add_scalar('Train/Average Order Waiting Time/Total_Var', var_waiting_time, episode + 1)
 
@@ -475,14 +475,15 @@ class EnvRunner(Runner):
                 f"Rate of Overspeed for Episode {episode+1}: Hired - {overspeed0}, Crowdsourced - {overspeed1}, Total - {overspeed}\n"
                 
                 f"The average income for Episode {episode+1}: Hired ({len(Hired_income)}) - {income0} dollar (Var: {var_income0}), Crowdsourced ({len(Crowdsourced_income)}) - {income1} dollar (Var: {var_income1}), Total ({len(Hired_income+Crowdsourced_income)}) - {income} dollar (Var: {var_income})\n"
-                
-                f"The platform total cost is {platform_cost} dollar\n"
-                
+                                
                 f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
                 
                 f"The average waiting time for orders ({order_num - order_wait}) is {waiting_time_per_order} dollar (Var: {var_price})\n"
                 
                 f"The average price for Episode {episode+1}: Total ({len(order_price)}) - {price_per_order} dollar (Var: {var_price})\n"
+                
+                f"The platform total cost is {platform_cost} dollar\n"
+
             )
 
             if count_dropped_orders == 0:
@@ -774,20 +775,24 @@ class EnvRunner(Runner):
         
         # eval info
         stats = {i: {
+            # platform side
             "platform_cost": 0,
             "Hired_finish_num": [],
             "Hired_unfinish_num": [],
+            "Hired_reject_num": [],
             "Hired_leisure_time": [],
             "Hired_running_time": [],
             "Hired_congestion_time": [],
             "Hired_waiting_time": [],
             "Crowdsourced_finish_num": [],
             "Crowdsourced_unfinish_num": [],
+            "Crowdsourced_reject_num": [],
             "Crowdsourced_leisure_time": [],
             "Crowdsourced_running_time": [],
             "Crowdsourced_congestion_time": [],
             "Crowdsourced_waiting_time": [],
 
+            # courier side
             "courier_num": 0,
             "Hired_num": 0,
             "Crowdsourced_num": 0,
@@ -798,12 +803,15 @@ class EnvRunner(Runner):
             "Hired_income": [],
             "Crowdsourced_actual_speed": [],
             "Crowdsourced_income": [],
-            "overspeed_step": {"num0": [], "num1": []}, 
+            "overspeed_step": {"ratio0": [], "ratio1": []}, 
             
+            # order side
             "order_num": 0,
             "count_dropped_orders": 0,
             "count_unfinished_orders": 0,
             "unfinished_late_orders": 0,
+            "count_reject_orders": 0,
+            "max_reject_num": 0,
             "late_orders": 0,
             "ETA_usage": [],
             "order_price": [],
@@ -926,7 +934,7 @@ class EnvRunner(Runner):
             algo_stats = {i: {"num0": 0, "num1": 0, "count0": 0, "count1": 0} for i in range(self.eval_envs.num_envs)}
 
             for i in range(self.eval_envs.num_envs):
-                for c in self.eval_envs.envs_map[i].couriers:
+                for c in self.eval_envs.envs_map[i].active_couriers:
                     if c.state == 'active':
                         if c.courier_type == 0:
                             algo_stats[i]["num0"] += 1
@@ -941,8 +949,8 @@ class EnvRunner(Runner):
                 overspeed_ratio0 = algo_stats[i]["count0"] / algo_stats[i]["num0"] if algo_stats[i]["num0"] > 0 else 0
                 overspeed_ratio1 = algo_stats[i]["count1"] / algo_stats[i]["num1"] if algo_stats[i]["num1"] > 0 else 0
 
-                stats[i]["overspeed_step"]["num0"].append(overspeed_ratio0)
-                stats[i]["overspeed_step"]["num1"].append(overspeed_ratio1) 
+                stats[i]["overspeed_step"]["ratio0"].append(overspeed_ratio0)
+                stats[i]["overspeed_step"]["ratio1"].append(overspeed_ratio1) 
                           
             eval_obs = self.eval_envs.eval_env_step()
 
@@ -960,6 +968,7 @@ class EnvRunner(Runner):
 
                 stats[i][f"{category}_finish_num"].append(c.finish_order_num)
                 stats[i][f"{category}_unfinish_num"].append(len(c.waybill) + len(c.wait_to_pick))
+                stats[i][f"{category}_reject_num"].append(c.reject_order_num)
                 stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
                 stats[i][f"{category}_running_time"].append(c.total_running_time)
                 stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
@@ -989,6 +998,11 @@ class EnvRunner(Runner):
                     stats[i]["count_unfinished_orders"] += 1
                     if o.ETA <= self.envs.envs_map[0].clock:
                         stats[i]["unfinished_late_orders"] += 1
+                        
+                if o.reject_count > 0:
+                    stats[i]["count_reject_orders"] += 1
+                    if stats[i]["max_reject_num"] <= o.reject_count:
+                        stats[i]["max_reject_num"] = o.reject_count
 
                 if o.status == "wait_pair":
                     stats[i]["order_wait"] += 1
@@ -1046,7 +1060,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Finish/Crowdsourced Var', var1_finish, self.eval_num)
                     
             # -----------------------
-            # Average Courier unfinishing Number
+            # Average Courier unfinished Number
             hired_unfinish_num = data["Hired_unfinish_num"]
             crowdsourced_unfinish_num = data["Crowdsourced_unfinish_num"]
             
@@ -1067,6 +1081,27 @@ class EnvRunner(Runner):
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average unfinish/Hired Var', var0_unfinish, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average unfinish/Crowdsourced Var', var1_unfinish, self.eval_num)
 
+            # ---------------------
+            # courier reject number
+            Hired_reject_num = data['Hired_reject_num']
+            Crowdsourced_reject_num = data['Crowdsourced_reject_num']
+            avg_reject0 = np.mean(Hired_reject_num)
+            var_reject0 = np.var(Hired_reject_num)
+            avg_reject1 = np.mean(Crowdsourced_reject_num)
+            var_reject1 = np.var(Crowdsourced_reject_num)
+            avg_reject = np.mean(Hired_reject_num + Crowdsourced_reject_num)
+            var_reject = np.var(Hired_reject_num + Crowdsourced_reject_num)
+            print(
+                f"The average rejection number for Algo{algo_num+1}: Hired - {avg_reject0} (Var: {var_reject0}), "
+                f"Crowdsourced - {avg_reject1} (Var: {var_reject1}), "
+                f"Total - {avg_reject} (Var: {var_reject})"
+            )
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Total', avg_reject, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Total_Var', var_reject, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Hired', avg_reject0, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Hired_Var', var_reject0, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Crowdsourced', avg_reject1, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject Rate/Crowdsourced_Var', var_reject1, self.eval_num)
 
             # -----------------------
             # Average Courier Leisure Time
@@ -1165,7 +1200,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average waiting Time/Crowdsourced Var', Crowdsourced_waiting_var, self.eval_num)
             
             # -----------------------
-            # Average Speed
+            # Actual Speed
             Hired_actual_speed = data['Hired_actual_speed']
             Crowdsourced_actual_speed = data['Crowdsourced_actual_speed']
 
@@ -1227,6 +1262,20 @@ class EnvRunner(Runner):
             platform_cost = data['platform_cost']
             print(f"The platform cost for Algo{algo_num+1} is {platform_cost} dollars.")
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Platform Cost', platform_cost, self.eval_num)
+            
+            # ---------------------
+            # order reject rate
+            reject_rate_per_episode = data['count_reject_orders'] / data['order_num'] # reject once or twice or more
+            print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most")
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Reject rate', reject_rate_per_episode, self.eval_num)
+            
+            # ---------------------
+            # average waiting time for orders
+            waiting_time_per_order = np.mean(data['order_waiting_time'])
+            var_waiting_time = np.var(data['order_waiting_time'])
+            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})")
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total', waiting_time_per_order, self.eval_num)
+            self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total_Var', var_waiting_time, self.eval_num)
 
             # -----------------------
             # Average Order Price
@@ -1250,6 +1299,8 @@ class EnvRunner(Runner):
                 
                 f"Hired unfinishes average {unfinish0} orders (Var: {var0_unfinish}), Crowdsourced unfinishes average {unfinish1} orders (Var: {var1_unfinish}), Total unfinish number per courier is {total_unfinish} orders (Var: {var_unfinish})\n"
                 
+                f"Hired ones reject {avg_reject0} times (Var: {var_reject0}), Crowdsourced ones reject {avg_reject1} times (Var: {var_reject1}) and the total reject {avg_reject} times (Var: {var_reject}\n"
+                
                 f"Hired leisure time is {hired_leisure} minutes (Var: {hired_leisure_var}), Crowdsourced leisure time is {Crowdsourced_leisure} minutes (Var: {Crowdsourced_leisure_var}), Total leisure time per courier is {avg_leisure} minutes (Var: {avg_leisure_var})\n"
                 
                 f"Hired running time is {hired_running} minutes (Var: {hired_running_var}), Crowdsourced running time is {Crowdsourced_running} minutes (Var: {Crowdsourced_running_var}), Total running time per courier is {avg_running} minutes (Var: {avg_running_var})\n"
@@ -1262,7 +1313,11 @@ class EnvRunner(Runner):
 
                 f"Hired overspeed rate is {hired_overspeed}, Crowdsourced overspeed rate is {crowdsourced_overspeed}, Total overspeed rate is {total_overspeed}\n"     
                 
-                f"Total: Hired's average income is {hired_income} dollars (Var: {hired_income_var}), Crowdsourced's average income is {crowdsourced_income} dollars (Var: {crowdsourced_income_var}), Total income per courier is {total_income} dollars (Var: {total_income_var})\n"                
+                f"Total: Hired's average income is {hired_income} dollars (Var: {hired_income_var}), Crowdsourced's average income is {crowdsourced_income} dollars (Var: {crowdsourced_income_var}), Total income per courier is {total_income} dollars (Var: {total_income_var})\n"
+                
+                f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most\n"
+                
+                f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})\n"
                            
                 f"Total average is {order_price_per_order} dollars (Var: {order_price_var})\n"
                                 
@@ -1293,7 +1348,6 @@ class EnvRunner(Runner):
         if data['count_unfinished_orders'] == 0:
             print(f"No order is unfinished in Algo{algo_num+1}")
             message += f"No order is unfinished in Algo{algo_num+1}\n"
-            logger.success(message)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Orders Rate', 0, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Late Rate', 0, self.eval_num)
         else:
@@ -1302,7 +1356,6 @@ class EnvRunner(Runner):
             print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late")
             
             message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
-            logger.success(message)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Orders Rate', unfinished, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Late Rate', unfinished_late_rate, self.eval_num)
            
