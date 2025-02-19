@@ -96,7 +96,7 @@ class EnvCore(object):
 
                 if np.argmax(action[:index]) > total_length - 1:
                     reward -= 200
-                    order_index = np.random.randint(0, total_length)
+                    order_index = agent.order_sequence[0]
                 else:
                     order_index = np.argmax(action[:index])
                 

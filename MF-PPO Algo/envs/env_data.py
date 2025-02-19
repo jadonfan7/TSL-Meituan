@@ -26,11 +26,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
 
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -149,13 +149,14 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
         
         # 2686, 2744, 2761, 2783, 2771
         self.max_num_couriers = 2686
+        random.seed(42)
         for index, dt in self.order_data.iterrows():
             if len(self.couriers) >= self.max_num_couriers:
                 break
@@ -192,9 +193,7 @@ class Map:
         return message                
 
     def step(self, first_time=0):
-        
-        # self.add_new_couriers = 0
-        
+                
         if not first_time:
             if self.clock < self.end_time:
                 self.clock += self.interval 
@@ -259,9 +258,9 @@ class Map:
                 self._Delay_allocation(orders_pair)
             elif self.algo_index == 1:
                 self._Efficiency_allocation(orders_pair)     
+            # elif self.algo_index == 2:
+            #     self._MaxMin_fairness_allocation(orders_pair)   
             elif self.algo_index == 2:
-                self._MaxMin_fairness_allocation(orders_pair)   
-            elif self.algo_index == 3:
                 self._Greedy_allocation(orders_pair)
             # self.algo_index == 4 is the origin allocation in the dataset  
         
@@ -269,7 +268,7 @@ class Map:
         self.num_couriers = len(self.couriers)
         
     def eval_step(self, first_time=0):
-        if self.algo_index == 4:
+        if self.algo_index == 3:
             
             if not first_time:
                 if self.clock < self.end_time:
@@ -421,9 +420,9 @@ class Map:
                     self._Delay_allocation(orders_pair)
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
+                # elif self.algo_index == 2:
+                #     self._MaxMin_fairness_allocation(orders_pair)   
                 elif self.algo_index == 2:
-                    self._MaxMin_fairness_allocation(orders_pair)   
-                elif self.algo_index == 3:
                     self._Greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset  
             
@@ -757,7 +756,7 @@ class Map:
             else:
                 orders = [orders]               
             
-        if assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5:
+        if assigned_courier.courier_type == 0:
             for order in orders:
                 order.price = self._wage_response_model(order, assigned_courier)
                 self.platform_cost += order.price
@@ -773,7 +772,7 @@ class Map:
                         assigned_courier.drop_order(order)
             assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 
-        elif (assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5):
+        else:
             decision = self._accept_or_reject(orders, assigned_courier)
             if decision == True:
                 for order in orders:
@@ -1148,34 +1147,11 @@ class Map:
         courier_total_time = self.clock - courier.start_time
         if courier_total_time == 0 or (courier.income == 0 and len(courier.waybill) + len(courier.wait_to_pick) == 0):
             return 10 # as a incentive for a new courier, also 10 is the average price of an order
-        elif courier.income == 0 and courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
-            wm = 15 / 3600
-            v = 3 # 3 m/s
-            r = geodesic(order.pick_up_point, courier.position).meters
-            d = geodesic(order.pick_up_point, order.drop_off_point).meters
-            wage = wm * (r + d) / v
-            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-                wage = wage * 1.5
-            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
-                wage = wage * 1
-            else:
-                wage = wage * 0.6
-            return 1.5 * wage
         else:
-            wm = courier.income / courier_total_time
-            v = 3 # 3 m/s
+            wm = 15 / 3600
+            v = 4 # 4 m/s
             r = geodesic(order.pick_up_point, courier.position).meters
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v
-            
-            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-                wage = wage * 1.5
-            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
-                wage = wage * 1
-            else:
-                wage = wage * 0.6
-                
-            if courier.courier_type == 0:
-                return wage
-            else:
-                return 1.5 * wage
+
+            return wage

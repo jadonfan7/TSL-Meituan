@@ -26,6 +26,9 @@ class Runner(object):
         self.num_algo = 5
         self.eval_envs = make_eval_env(self.num_algo)
         
+        self.log_dir = 'logs'
+        self.writter = SummaryWriter(self.log_dir)
+
         logger.remove()
         logger.add('Simulation_logs/env_step_log.log', rotation="50 MB", level="DEBUG")
         logger.add("Simulation_logs/step_procedure.log", rotation="50 MB", level="INFO")

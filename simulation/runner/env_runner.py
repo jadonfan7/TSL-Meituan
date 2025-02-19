@@ -141,7 +141,7 @@ class EnvRunner(Runner):
                         stats[i]["ETA_usage"].append(o.ETA_usage)
                 else:
                     stats[i]["count_unfinished_orders"] += 1
-                    if o.ETA <= self.envs.envs_map[0].clock:
+                    if o.ETA <= self.eval_envs.envs_map[0].clock:
                         stats[i]["unfinished_late_orders"] += 1
                         
                 if o.reject_count > 0:

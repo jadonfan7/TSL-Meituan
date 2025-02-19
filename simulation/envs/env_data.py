@@ -61,6 +61,7 @@ class Map:
 
         self.existing_courier_algo = 0
         # 根据 env_index 获取相应的日期和时间范围
+        random.seed(42)
         if self.env_index in config_mapping:
             config = config_mapping[self.env_index]
             date_value = config['date']
@@ -453,7 +454,7 @@ class Map:
             min_income = math.inf
             assigned_courier = None
 
-            nearby_couriers = self._get_nearby_couriers(order, 1000)
+            nearby_couriers = self._get_nearby_couriers(order)
             for courier in nearby_couriers:
                 sequence, dist, risk = self._cal_wave_info(order, courier)
                 avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.start_time) != 0 else courier.income
@@ -471,7 +472,7 @@ class Map:
             min_cost = math.inf
             assigned_courier = None
 
-            nearby_couriers = self._get_nearby_couriers(order, 1000)
+            nearby_couriers = self._get_nearby_couriers(order)
             for courier in nearby_couriers:
                 order_sequence, distance, risk = self._cal_wave_info(order, courier)
                 detour = distance - courier.current_wave_dist
@@ -697,7 +698,7 @@ class Map:
             else:
                 orders = [orders]               
             
-        if assigned_courier.courier_type == 0 and assigned_courier.reject_order_num > 5:
+        if assigned_courier.courier_type == 0:
             for order in orders:
                 order.price = self._wage_response_model(order, assigned_courier)
                 self.platform_cost += order.price
@@ -713,7 +714,7 @@ class Map:
                         assigned_courier.drop_order(order)
             assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self._cal_wave_info(None, assigned_courier)
                 
-        elif (assigned_courier.courier_type == 1) or (assigned_courier.courier_type == 0 and assigned_courier.reject_order_num <= 5):
+        else:
             decision = self._accept_or_reject(orders, assigned_courier)
             if decision == True:
                 for order in orders:
@@ -1088,34 +1089,11 @@ class Map:
         courier_total_time = self.clock - courier.start_time
         if courier_total_time == 0 or (courier.income == 0 and len(courier.waybill) + len(courier.wait_to_pick) == 0):
             return 10 # as a incentive for a new courier, also 10 is the average price of an order
-        elif courier.income == 0 and courier.courier_type == 1 and len(courier.waybill) + len(courier.wait_to_pick) > 0:
+        else:
             wm = 15 / 3600
             v = 4 # 4 m/s
             r = geodesic(order.pick_up_point, courier.position).meters
             d = geodesic(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v
-            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-                wage = wage * 1.5
-            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
-                wage = wage * 1
-            else:
-                wage = wage * 0.6
-            return 1.5 * wage
-        else:
-            wm = courier.income / courier_total_time
-            v = 4 # 4 m/s
-            r = geodesic(order.pick_up_point, courier.position).meters
-            d = geodesic(order.pick_up_point, order.drop_off_point).meters
-            wage = wm * (r + d) / v
-            
-            if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-                wage = wage * 1.5
-            elif len(courier.waybill) + len(courier.wait_to_pick) > 0 and len(courier.waybill) + len(courier.wait_to_pick) <= 3:
-                wage = wage * 1
-            else:
-                wage = wage * 0.6
-                
-            if courier.courier_type == 0:
-                return wage
-            else:
-                return 1.5 * wage
+
+            return wage
