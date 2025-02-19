@@ -10,7 +10,7 @@ class Order:
         self.drop_off_point = drop_off_point
         self.ETA = estimate_arrived_time
         
-        self.wait_time = None
+        self.wait_time = 0
         
         self.da = da
         self.poi = poi

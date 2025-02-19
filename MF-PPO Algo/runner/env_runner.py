@@ -156,8 +156,8 @@ class EnvRunner(Runner):
                 # insert data into buffer
                 self.insert(data)
 
-
-                self.envs.env_step()
+                if episode != self.episode_length - 1:
+                    self.envs.env_step()
             
             # Train over periods
             platform_cost = self.envs.envs_map[0].platform_cost
@@ -188,6 +188,7 @@ class EnvRunner(Runner):
                     Crowdsourced_leisure_time.append(c.total_leisure_time)
                     Crowdsourced_running_time.append(c.total_running_time)
                     Crowdsourced_congestion_time.append(c.total_congestion_time)
+                    Crowdsourced_waiting_time.append(c.total_waiting_time)
                     if c.actual_speed > 0:
                         Crowdsourced_actual_speed.append(c.actual_speed)
                     if c.income > 0:
@@ -217,7 +218,8 @@ class EnvRunner(Runner):
                 if o.status == 'wait_pair':
                     order_wait += 1
                 else:
-                    order_waiting_time.append(o.wait_time)
+                    if o.status == 'wait_pick':
+                        order_waiting_time.append(o.wait_time)
                     order_price.append(o.price)
                     
             order_num = len(self.envs.envs_map[0].orders)
@@ -1007,7 +1009,8 @@ class EnvRunner(Runner):
                 if o.status == "wait_pair":
                     stats[i]["order_wait"] += 1
                 else:
-                    stats[i]["order_waiting_time"].append(o.wait_time)
+                    if o.status == 'wait_pick':
+                        stats[i]["order_waiting_time"].append(o.wait_time)
                     stats[i]["order_price"].append(o.price)
 
             stats[i]["order_num"] = len(env.orders)
@@ -1115,7 +1118,6 @@ class EnvRunner(Runner):
             
             avg_leisure = np.mean(Hired_leisure_time + Crowdsourced_leisure_time) / 60
             avg_leisure_var = np.var(Hired_leisure_time + Crowdsourced_leisure_time) / 60**2
-            leisure_courier_num = len(Hired_leisure_time + Crowdsourced_leisure_time)
 
             print(f"Average leisure time per courier for Algo {algo_num+1}:")
             print(f"Hired leisure time is {hired_leisure} minutes (Var: {hired_leisure_var}), Crowdsourced leisure time is {Crowdsourced_leisure} minutes (Var: {Crowdsourced_leisure_var}), Total leisure time per courier is {avg_leisure} minutes (Var: {avg_leisure_var})")
@@ -1139,7 +1141,6 @@ class EnvRunner(Runner):
             
             avg_running = np.mean(Hired_running_time + Crowdsourced_running_time) / 60
             avg_running_var = np.var(Hired_running_time + Crowdsourced_running_time) / 60**2
-            running_courier_num = len(Hired_running_time + Crowdsourced_running_time)
 
             print(f"Average running time per courier for Algo {algo_num+1}:")
             print(f"Hired running time is {hired_running} minutes (Var: {hired_running_var}), Crowdsourced running time is {Crowdsourced_running} minutes (Var: {Crowdsourced_running_var}), Total running time per courier is {avg_running} minutes (Var: {avg_running_var})")
@@ -1163,7 +1164,6 @@ class EnvRunner(Runner):
             
             avg_congestion = np.mean(Hired_congestion_time + Crowdsourced_congestion_time) / 60
             avg_congestion_var = np.var(Hired_congestion_time + Crowdsourced_congestion_time) / 60**2
-            congestion_courier_num = len(Hired_congestion_time + Crowdsourced_congestion_time)
 
             print(f"Average congestion time per courier for Algo {algo_num+1}:")
             print(f"Hired congestion time is {hired_congestion} minutes (Var: {hired_congestion_var}), Crowdsourced congestion time is {Crowdsourced_congestion} minutes (Var: {Crowdsourced_congestion_var}), Total congestion time per courier is {avg_congestion} minutes (Var: {avg_congestion_var})")
@@ -1187,7 +1187,6 @@ class EnvRunner(Runner):
             
             avg_waiting = np.mean(Hired_waiting_time + Crowdsourced_waiting_time) / 60
             avg_waiting_var = np.var(Hired_waiting_time + Crowdsourced_waiting_time) / 60**2
-            waiting_courier_num = len(Hired_waiting_time + Crowdsourced_waiting_time)
 
             print(f"Average waiting time per courier for Algo {algo_num+1}:")
             print(f"Hired waiting time is {hired_waiting} minutes (Var: {hired_waiting_var}), Crowdsourced waiting time is {Crowdsourced_waiting} minutes (Var: {Crowdsourced_waiting_var}), Total waiting time per courier is {avg_waiting} minutes (Var: {avg_waiting_var})")

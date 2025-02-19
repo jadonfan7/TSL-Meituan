@@ -458,8 +458,8 @@ class Map:
         old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
         new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
         if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
-            self.remove_courier(old_lat_index, old_lng_index, courier)
-            self.grid[new_lat_index][new_lng_index].append(courier)   
+            self.grid[old_lat_index][old_lng_index].remove(courier)
+            self.grid[new_lat_index][new_lng_index].append(courier)
              
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)
@@ -657,10 +657,13 @@ class Map:
                 if isinstance(order, list):
                     if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
                         unmatch = True
-                                                
+                    for o in order:
+                        if geodesic(o.pick_up_point, courier.position).meters > 4000:
+                            unmatch = True
                 else:
-                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
-                        unmatch = True                
+                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or geodesic(order.pick_up_point, courier.position).meters > 4000:
+                        unmatch = True   
+
                 if unmatch:
                     row.append(float(M))
                     continue

@@ -26,11 +26,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
-        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
                         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -102,10 +102,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
         
         # # 2686, 2744, 2761, 2783, 2771
         # self.max_num_couriers = 2686
@@ -316,7 +316,8 @@ class Map:
         lat_index, lng_index = self.get_grid_index(lat, lng)
         return self.grid[lat_index][lng_index]
     
-    def remove_courier(self, lat_index, lng_index, courier):
+    def remove_courier(self, lat, lng, courier):
+        lat_index, lng_index = self.get_grid_index(lat, lng)
         if courier in self.grid[lat_index][lng_index]:
             self.grid[lat_index][lng_index].remove(courier)
     
@@ -324,7 +325,7 @@ class Map:
         old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
         new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
         if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
-            self.remove_courier(old_lat_index, old_lng_index, courier)
+            self.grid[old_lat_index][old_lng_index].remove(courier)
             self.grid[new_lat_index][new_lng_index].append(courier)
                 
     def get_adjacent_grids(self, lat, lng):
@@ -550,16 +551,17 @@ class Map:
         def process_order(order, couriers):
             row = []
             is_predicted = 0
+            
             for courier in couriers:
                 unmatch = False
                 if isinstance(order, list):
                     if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
                         unmatch = True
                     for o in order:
-                        if geodesic(o.pick_up_point, courier.position).meters > 2000:
+                        if geodesic(o.pick_up_point, courier.position).meters > 4000:
                             unmatch = True
                 else:
-                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or geodesic(order.pick_up_point, courier.position).meters > 2000:
+                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or geodesic(order.pick_up_point, courier.position).meters > 4000:
                         unmatch = True   
 
                 if unmatch:

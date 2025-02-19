@@ -20,14 +20,14 @@ class EnvCore(object):
         self.num_speeds = 7 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 1,3,5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
         
         self.action_space = []
-        self.obs_dim = self.map.couriers[0].capacity * 6 + 2 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, (num_waybill+num_wait_to_pick) * 2(distance_between_each_order + time_window)
+        self.obs_dim = self.map.couriers[0].capacity * 6 + 5 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position
         
         self.observation_space = []
         self.epsilon = 0.05
 
         # shared_obs_dim = self.obs_dim * self.num_agent
         
-        shared_obs_dim = self.obs_dim * 10
+        self.shared_obs_dim = self.obs_dim * 10
         self.share_observation_space = []
         
         for _ in range(self.num_agent):
@@ -40,7 +40,7 @@ class EnvCore(object):
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
-            self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32))
+            self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(self.shared_obs_dim,), dtype=np.float32))
         # self.share_observation_space = Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32)
                  
     def reset(self, env_index, eval=False):
@@ -62,22 +62,15 @@ class EnvCore(object):
             reward = self._set_action(action_n[i], agent)
 
             reward_n.append(reward)
-        
-        # active_couriers = []
-        
+                
         for i, agent in enumerate(self.map.couriers):
             obs_n.append(self._get_obs(agent))
             done_n.append(self._get_done(agent))
             info_n.append(self._get_info(agent))
-            # if agent.state == 'active':
-            #     active_couriers.append(agent)
         
         for i, agent in enumerate(self.map.couriers):
-            share_obs.append(self._get_local_share_obs_kdtree(agent, obs_n, k=10))
+            share_obs.append(self._get_local_share_obs(agent, k=10))
                 
-        # share_obs = np.concatenate(obs_n, axis=-1)
-        # share_obs = np.expand_dims(share_obs, axis=1).repeat(770, axis=0)
-
         # return obs_n, reward_n, done_n, info_n, share_obs
         return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, np.stack(share_obs)
     
@@ -216,17 +209,27 @@ class EnvCore(object):
     def get_env_space(self):
         return self.action_space, self.observation_space
     
-    def _get_local_share_obs_kdtree(self, agent, obs_n, k=10):
+    def _get_local_share_obs(self, agent, k=10):
         agents_nearby = self.map.get_couriers_in_adjacent_grids(agent.position[0], agent.position[1])
-        agent_positions = np.array([a.position for a in agents_nearby])
-        agent_obs = np.array(obs_n)
+        local_share_obs = []
+        if agents_nearby == []:
+            local_share_obs = np.full((10, 65), -1)
+        elif len(agents_nearby) < k:
+            for agent in agents_nearby:
+                local_share_obs.append(self._get_obs(agent))
+            local_share_obs = np.array(local_share_obs)
+            local_share_obs = np.pad(local_share_obs, ((0, k - len(agents_nearby)), (0, 0)), 'constant', constant_values=-1)
+        else:
+            agent_positions = np.array([a.position for a in agents_nearby])
         
-        tree = KDTree(agent_positions)
+            tree = KDTree(agent_positions)
 
-        _, neighbor_idx = tree.query(agent.position, k=k)
-
-        local_share_obs = agent_obs[neighbor_idx].reshape(-1)
-
+            _, neighbor_idx = tree.query(agent.position, k=k)
+            for idx in neighbor_idx:
+                local_share_obs.append(self._get_obs(agents_nearby[idx]))
+            local_share_obs = np.array(local_share_obs)
+        
+        local_share_obs = local_share_obs.flatten().reshape(-1)
         return local_share_obs
     
     def _pick_or_drop(self, agent):
