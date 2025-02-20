@@ -954,7 +954,8 @@ class EnvRunner(Runner):
                 stats[i]["overspeed_step"]["ratio0"].append(overspeed_ratio0)
                 stats[i]["overspeed_step"]["ratio1"].append(overspeed_ratio1) 
                           
-            eval_obs = self.eval_envs.eval_env_step()
+            if eval_step != self.eval_episodes_length - 1:               
+                self.eval_envs.eval_env_step()
 
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):
@@ -1222,8 +1223,8 @@ class EnvRunner(Runner):
             
             # -----------------------
             # Overspeed
-            Hired_overspeed = data['Hired_overspeed']
-            Crowdsourced_overspeed = data['Crowdsourced_overspeed']
+            Hired_overspeed = data["overspeed_step"]["ratio0"]
+            Crowdsourced_overspeed = data["overspeed_step"]["ratio1"]
             hired_overspeed = np.mean(Hired_overspeed)
             crowdsourced_overspeed = np.mean(Crowdsourced_overspeed)
             total_overspeed = np.mean(Hired_overspeed + Crowdsourced_overspeed)

@@ -4,6 +4,7 @@ class ObservationSpace:
     def __init__(self, map, courier=None):
 
         self.orders = map.orders
+        self.clock = map.clock
         self.num_orders = len(self.orders)
         # self.share = share
         if courier is not None:
@@ -34,7 +35,7 @@ class ObservationSpace:
             prepare_time = self.normalize(order.meal_prepare_time, self.time_min, self.time_max)
             ETA = self.normalize(order.ETA, self.time_min, self.time_max)
 
-            order_obs.append([-1, -1, drop_off_x, drop_off_y, prepare_time, ETA])
+            order_obs.append([-1, -1, drop_off_x, drop_off_y, -1, ETA])
 
         for order in self.courier.wait_to_pick:
             pick_up_x = self.normalize(order.pick_up_point[0], self.lat_min, self.lat_max)
@@ -60,13 +61,16 @@ class ObservationSpace:
         else:
             target_x = -1
             target_y = -1
-        courier_obs.append([courier_pos_x, courier_pos_y, target_x, target_y, speed])
+        clock = self.normalize(self.clock, self.time_min, self.time_max)
+        courier_obs.append([courier_pos_x, courier_pos_y, target_x, target_y, speed, clock])
+        
+        
    
         couriers_array = np.array(courier_obs).flatten()
 
         combined_obs = np.concatenate((orders_array, couriers_array))
         
-        obs_dim = 6 * self.courier.capacity + 5
+        obs_dim = 6 * self.courier.capacity + 6
         if combined_obs.size < obs_dim:
             combined_obs = np.pad(combined_obs, (0, obs_dim - combined_obs.size), 'constant', constant_values=-1)
             

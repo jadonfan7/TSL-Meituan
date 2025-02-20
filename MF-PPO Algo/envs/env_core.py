@@ -20,7 +20,7 @@ class EnvCore(object):
         self.num_speeds = 7 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 1,3,5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
         
         self.action_space = []
-        self.obs_dim = self.map.couriers[0].capacity * 6 + 5 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position
+        self.obs_dim = self.map.couriers[0].capacity * 6 + 6 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position; env: time
         
         self.observation_space = []
         self.epsilon = 0.05
@@ -94,9 +94,14 @@ class EnvCore(object):
                 total_length = waybill_length + wait_to_pick_length
                 index = self.map.couriers[0].capacity
 
+                order_index = 0
                 if np.argmax(action[:index]) > total_length - 1:
                     reward -= 200
-                    order_index = agent.order_sequence[0]
+                    order = (agent.waybill + agent.wait_to_pick).copy()
+                    for idx, o in enumerate(order):
+                        if o.orderid == agent.order_sequence[0][3]:
+                            order_index = idx
+                            break
                 else:
                     order_index = np.argmax(action[:index])
                 
@@ -140,24 +145,6 @@ class EnvCore(object):
                         agent.is_target_locked = True
                     # agent.move(self.map.interval) 
                 
-                # all_orders = agent.waybill + agent.wait_to_pick
-                
-                # if policy == 0:
-                #     def calculate_distance(courier_position, order):
-                #         if order.status == 'picked_up':
-                #             return geodesic(courier_position, order.drop_off_point).meters
-                #         elif order.status == 'wait_pick':
-                #             return geodesic(courier_position, order.pick_up_point).meters
-
-                #     sorted_orders = sorted(all_orders, key=lambda order: calculate_distance(agent.position, order))
-                # else:
-                #     sorted_orders = sorted(all_orders, key=lambda order: order.ETA)
-                    
-                # if sorted_orders[0].status == 'wait_pick':
-                #     agent.target_location = sorted_orders[0].pick_up_point
-                # elif sorted_orders[0].status == 'picked_up':
-                #     agent.target_location = sorted_orders[0].drop_off_point
-                    
                 agent.move(self.map, current_map)  
                 agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
                 
@@ -213,7 +200,7 @@ class EnvCore(object):
         agents_nearby = self.map.get_couriers_in_adjacent_grids(agent.position[0], agent.position[1])
         local_share_obs = []
         if agents_nearby == []:
-            local_share_obs = np.full((10, 65), -1)
+            local_share_obs = np.full((10, 66), -1)
         elif len(agents_nearby) < k:
             for agent in agents_nearby:
                 local_share_obs.append(self._get_obs(agent))
