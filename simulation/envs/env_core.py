@@ -41,8 +41,6 @@ class EnvCore(object):
                     agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
                     
                     self._pick_or_drop(agent)
-                else:
-                    agent.speed = 0
                                             
                 if agent.waybill == [] and agent.wait_to_pick == []:
                     agent.is_leisure = 1

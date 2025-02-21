@@ -31,55 +31,14 @@ class Map:
         
         # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
         order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
-
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
-        #     1: {'date': 20221017, 'start_time': 1665997200, 'end_time': 1666004400},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
-        #     3: {'date': 20221018, 'start_time': 1666083600, 'end_time': 1666090800},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
-        #     5: {'date': 20221019, 'start_time': 1666170000, 'end_time': 1666177200},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
-        #     7: {'date': 20221020, 'start_time': 1666256400, 'end_time': 1666263600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
-        #     9: {'date': 20221021, 'start_time': 1666342800, 'end_time': 1666350000},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666414800},
-        # } # 11:00-13:00, 17:00-19:00
         
         # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665975600 + 3600},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666000800 + 3600},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062000 + 3600},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666087200 + 3600},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666148400 + 3600},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666173600 + 3600},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666234800 + 3600},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666260000 + 3600},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321200 + 3600},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666346400 + 3600},
-        # } # 1h
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
-        #     1: {'date': 20221017, 'start_time': 1666000800, 'end_time': 1666002600},
-        #     2: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666063800},
-        #     3: {'date': 20221018, 'start_time': 1666087200, 'end_time': 1666089000},
-        #     4: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666150200},
-        #     5: {'date': 20221019, 'start_time': 1666173600, 'end_time': 1666175400},
-        #     6: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666236600},
-        #     7: {'date': 20221020, 'start_time': 1666260000, 'end_time': 1666261800},
-        #     8: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
-        #     9: {'date': 20221021, 'start_time': 1666346400, 'end_time': 1666348200},
-        #     10: {'date': 20221022, 'start_time': 1666407600, 'end_time': 1666409400},
-        # } # half an hour
-                        
-        config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
-            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
-            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
-            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
-        } # 10 min
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
+        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
+        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
+        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
+        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
+        # } # 10 min
         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
@@ -89,13 +48,13 @@ class Map:
         #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
         # } # half an hour
         
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
-        # } # 11:00-13:00
+        config_mapping = {
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
+            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
+            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
+            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
+        } # 11:00-13:00
 
         Cluster_0_Lng_Range = (174414242, 174685447)
         Cluster_0_Lat_Range = (45744563, 45959787)
@@ -145,7 +104,7 @@ class Map:
 
         self.grid = [[[] for _ in range(self.grid_size)] for _ in range(self.grid_size)]
 
-        self.interval = 20 # allocation for every 20 seconds
+        self.interval = 30 # allocation for every 30 seconds
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
@@ -154,8 +113,8 @@ class Map:
         self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
         self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
         
-        # 2686, 2744, 2761, 2783, 2771
-        self.max_num_couriers = 2686
+        # 2621, 2682, 2687, 2737, 2704
+        self.max_num_couriers = 2621
         random.seed(42)
         for index, dt in self.order_data.iterrows():
             if len(self.couriers) >= self.max_num_couriers:

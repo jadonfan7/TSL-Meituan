@@ -112,13 +112,13 @@ class EnvRunner(Runner):
                 if c.travel_distance > 0:
                     stats[i][f"{category}_distance_per_episode"].append(c.travel_distance)
 
-                stats[i][f"{category}_finish_num"].append(c.finish_order_num)
-                stats[i][f"{category}_unfinish_num"].append(len(c.waybill) + len(c.wait_to_pick))
-                stats[i][f"{category}_reject_num"].append(c.reject_order_num)
-                stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
-                stats[i][f"{category}_running_time"].append(c.total_running_time)
-                stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
-                stats[i][f"{category}_waiting_time"].append(c.total_waiting_time)
+                    stats[i][f"{category}_finish_num"].append(c.finish_order_num)
+                    stats[i][f"{category}_unfinish_num"].append(len(c.waybill) + len(c.wait_to_pick))
+                    stats[i][f"{category}_reject_num"].append(c.reject_order_num)
+                    stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
+                    stats[i][f"{category}_running_time"].append(c.total_running_time)
+                    stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
+                    stats[i][f"{category}_waiting_time"].append(c.total_waiting_time)
 
                 if c.actual_speed > 0:
                     stats[i][f"{category}_actual_speed"].append(c.actual_speed)
@@ -134,35 +134,39 @@ class EnvRunner(Runner):
             stats[i]["courier_num"] = len(env.couriers)
 
             for o in env.orders:
-                if o.status == "dropped":
+                if o.status in {'wait_pair', 'wait_pick', 'picked_up'}:
+                    stats[i]["count_unfinished_orders"] += 1
+                    if o.ETA <= self.eval_envs.envs_map[0].clock:
+                        stats[i]["unfinished_late_orders"] += 1
+                        
+                    if o.status == 'wait_pair':
+                        stats[i]["order_wait_pair"] += 1
+                    elif o.status == 'picked_up':
+                        stats[i]["order_waiting_time"].append(o.wait_time)
+                        stats[i]["order_price"].append(o.price)
+                    else:
+                        stats[i]["order_price"].append(o.price)
+                        
+                else:
                     stats[i]["count_dropped_orders"] += 1
                     if o.is_late == 1:
                         stats[i]["late_orders"] += 1
                     else:
                         stats[i]["ETA_usage"].append(o.ETA_usage)
-                else:
-                    stats[i]["count_unfinished_orders"] += 1
-                    if o.ETA <= self.eval_envs.envs_map[0].clock:
-                        stats[i]["unfinished_late_orders"] += 1
-                        
+                    stats[i]["order_waiting_time"].append(o.wait_time)
+                    stats[i]["order_price"].append(o.price)
+                
                 if o.reject_count > 0:
                     stats[i]["count_reject_orders"] += 1
                     if stats[i]["max_reject_num"] <= o.reject_count:
                         stats[i]["max_reject_num"] = o.reject_count
-
-                if o.status == "wait_pair":
-                    stats[i]["order_wait"] += 1
-                else:
-                    if o.status == 'wait_pick':
-                        stats[i]["order_waiting_time"].append(o.wait_time)
-                    stats[i]["order_price"].append(o.price)
 
             stats[i]["order_num"] = len(env.orders)
             
         for algo_num in range(self.eval_envs.num_envs):
             data = stats[algo_num]
             
-            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished, {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired)")
+            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired")
 
             # -----------------------
             # Distance
@@ -175,7 +179,7 @@ class EnvRunner(Runner):
             total_courier_num = data['courier_num']
 
             print(f"In Algo{algo_num + 1}, Total couriers: {total_courier_num}")            
-            print(f"\nIn Algo{algo_num + 1}, Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})")
+            print(f"In Algo{algo_num + 1}, Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})")
             
             # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Hired', hired_distance, 1)
             # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Crowdsourced', crowdsourced_distance, 1)
@@ -414,9 +418,9 @@ class EnvRunner(Runner):
             
             # ---------------------
             # average waiting time for orders
-            waiting_time_per_order = np.mean(data['order_waiting_time'])
-            var_waiting_time = np.var(data['order_waiting_time'])
-            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})")
+            waiting_time_per_order = np.mean(data['order_waiting_time']) / 60
+            var_waiting_time = np.var(data['order_waiting_time']) / 60**2
+            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})")
             # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total', waiting_time_per_order, 1)
             # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total_Var', var_waiting_time, 1)
 
@@ -427,14 +431,13 @@ class EnvRunner(Runner):
             order_price_per_order = np.mean(order_price)
             order_price_var = np.var(order_price)
 
-            print(f"Average Price per Order for Algo{algo_num+1}:")
-            print(f"Total average is {order_price_per_order} dollars (Var: {order_price_var})")
+            print(f"Average Price per Order for Algo{algo_num+1} is {order_price_per_order} dollars (Var: {order_price_var})")
 
             # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Price/Total', order_price_per_order, 1)
             # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Price/Total Var', order_price_var, 1)
             
             message = (
-                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished, {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired)\n"
+                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired\n"
                                 
                 f"Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})\n"
                 
@@ -460,7 +463,7 @@ class EnvRunner(Runner):
                 
                 f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most\n"
                 
-                f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})\n"
+                f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})\n"
                            
                 f"Total average is {order_price_per_order} dollars (Var: {order_price_var})\n"
                                 
@@ -468,44 +471,42 @@ class EnvRunner(Runner):
                 
             )
 
-        if data['count_dropped_orders'] == 0:
-            print(f"No order is dropped in Algo{algo_num+1}")
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', -1, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', -1, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var/Crowdsourced Var', 0, 1)
-            
-            message += "No order is dropped in Algo1\n"
-        else:                
-            late_rate = data['late_orders'] / data['count_dropped_orders']     
-            ETA_usage_rate = np.mean(data['ETA_usage0'])
-            var_ETA = np.var(data['ETA_usage0'])
-            print(f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders")
-            print(f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})")
-            
-            message += f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders\n" + f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})\n"
+            if data['count_dropped_orders'] == 0:
+                print(f"No order is dropped in Algo{algo_num+1}")
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', -1, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', -1, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var/Crowdsourced Var', 0, 1)
+                
+                message += "No order is dropped in Algo1\n"
+            else:                
+                late_rate = data['late_orders'] / data['count_dropped_orders']     
+                ETA_usage_rate = np.mean(data['ETA_usage0'])
+                var_ETA = np.var(data['ETA_usage0'])
+                print(f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders")
+                print(f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})")
+                
+                message += f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders\n" + f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})\n"
 
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', late_rate, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', ETA_usage_rate, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var', var_ETA, 1)
-        
-        if data['count_unfinished_orders'] == 0:
-            print(f"No order is unfinished in Algo{algo_num+1}")
-            message += f"No order is unfinished in Algo{algo_num+1}\n"
-            logger.success(message)
-            # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', 0, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', 0, 1)
-        else:
-            unfinished = data['count_unfinished_orders'] / (data['order_num'] - data['order_wait'])
-            unfinished_late_rate = data['unfinished_late_orders'] / data['count_unfinished_orders']
-            print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late")
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', late_rate, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', ETA_usage_rate, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var', var_ETA, 1)
             
-            message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
-            logger.success(message)
-            # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', unfinished, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', unfinished_late_rate, 1)
-        
-        logger.success(message)
+            if data['count_unfinished_orders'] == 0:
+                print(f"No order is unfinished in Algo{algo_num+1}")
+                message += f"No order is unfinished in Algo{algo_num+1}\n"
+                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', 0, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', 0, 1)
+            else:
+                unfinished = data['count_unfinished_orders'] / data['order_num']
+                unfinished_late_rate = data['unfinished_late_orders'] / data['count_unfinished_orders']
+                print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late")
+                
+                message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
+                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', unfinished, 1)
+                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', unfinished_late_rate, 1)
             
-        print("\n")
+            logger.success(message)
+                
+            print("\n")
         
         self.eval_envs.close()

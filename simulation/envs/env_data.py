@@ -99,7 +99,7 @@ class Map:
 
         self.grid = [[[] for _ in range(self.grid_size)] for _ in range(self.grid_size)]
 
-        self.interval = 20 # allocation for every 20 seconds
+        self.interval = 30 # allocation for every 30 seconds
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         

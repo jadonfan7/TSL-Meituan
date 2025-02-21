@@ -23,7 +23,6 @@ def main():
     #     runner.run(i)
     print(f"This is DAY 5")
     runner.run(5)
-    runner.writter.close()
 
 
 if __name__ == "__main__":

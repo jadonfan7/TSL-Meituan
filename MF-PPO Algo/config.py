@@ -203,7 +203,7 @@ def get_config():
     parser.add_argument(
         "--num_env_steps",
         type=int,
-        default=10e6, #1e5 2e6
+        default=9e5, #1e5 2e6
         help="Number of environment steps to train (default: 10e6)",
     )
     # env parameters
@@ -454,7 +454,7 @@ def get_config():
     parser.add_argument(
         "--eval_episodes_length",
         type=int,
-        default=450,
+        default=30,
         help="number of episodes of a single evaluation.",
     )
 

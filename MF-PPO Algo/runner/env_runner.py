@@ -46,7 +46,7 @@ class EnvRunner(Runner):
             count_unfinished_orders = 0
             late_orders = 0
             unfinished_late_orders = 0
-            order_wait = 0
+            order_wait_pair = 0
             ETA_usage = []
             
             order_waiting_time = []
@@ -167,13 +167,13 @@ class EnvRunner(Runner):
                     Hired_num += 1
                     if c.travel_distance > 0:
                         Hired_distance_per_episode.append(c.travel_distance)
-                    Hired_finished_num.append(c.finish_order_num)
-                    Hired_unfinished_num.append(len(c.waybill)+len(c.wait_to_pick))
-                    Hired_reject_num.append(c.reject_order_num)
-                    Hired_leisure_time.append(c.total_leisure_time)
-                    Hired_running_time.append(c.total_running_time)
-                    Hired_congestion_time.append(c.total_congestion_time)
-                    Hired_waiting_time.append(c.total_waiting_time)
+                        Hired_finished_num.append(c.finish_order_num)
+                        Hired_unfinished_num.append(len(c.waybill)+len(c.wait_to_pick))
+                        Hired_reject_num.append(c.reject_order_num)
+                        Hired_leisure_time.append(c.total_leisure_time)
+                        Hired_running_time.append(c.total_running_time)
+                        Hired_congestion_time.append(c.total_congestion_time)
+                        Hired_waiting_time.append(c.total_waiting_time)
                     if c.actual_speed > 0:
                         Hired_actual_speed.append(c.actual_speed)
                     if c.income > 0:
@@ -182,13 +182,13 @@ class EnvRunner(Runner):
                     Crowdsourced_num += 1
                     if c.travel_distance > 0:
                         Crowdsourced_distance_per_episode.append(c.travel_distance)
-                    Crowdsourced_finished_num.append(c.finish_order_num)
-                    Crowdsourced_unfinished_num.append(len(c.waybill)+len(c.wait_to_pick))
-                    Crowdsourced_reject_num.append(c.reject_order_num)
-                    Crowdsourced_leisure_time.append(c.total_leisure_time)
-                    Crowdsourced_running_time.append(c.total_running_time)
-                    Crowdsourced_congestion_time.append(c.total_congestion_time)
-                    Crowdsourced_waiting_time.append(c.total_waiting_time)
+                        Crowdsourced_finished_num.append(c.finish_order_num)
+                        Crowdsourced_unfinished_num.append(len(c.waybill)+len(c.wait_to_pick))
+                        Crowdsourced_reject_num.append(c.reject_order_num)
+                        Crowdsourced_leisure_time.append(c.total_leisure_time)
+                        Crowdsourced_running_time.append(c.total_running_time)
+                        Crowdsourced_congestion_time.append(c.total_congestion_time)
+                        Crowdsourced_waiting_time.append(c.total_waiting_time)
                     if c.actual_speed > 0:
                         Crowdsourced_actual_speed.append(c.actual_speed)
                     if c.income > 0:
@@ -197,35 +197,39 @@ class EnvRunner(Runner):
                         Crowdsourced_on += 1
             
             courier_num = len(self.envs.envs_map[0].couriers)
-            
+                                
             for o in self.envs.envs_map[0].orders:
-                if o.status == 'dropped':
-                    count_dropped_orders += 1
-                    if o.is_late == 1:
-                        late_orders += 1
-                    else:
-                        ETA_usage.append(o.ETA_usage)
-                else:
+                if o.status in {'wait_pair', 'wait_pick', 'picked_up'}:
                     count_unfinished_orders += 1
                     if o.ETA <= self.envs.envs_map[0].clock:
                         unfinished_late_orders += 1
+                        
+                    if o.status == 'wait_pair':
+                        order_wait_pair += 1
+                    elif o.status == 'picked_up':
+                        order_waiting_time.append(o.wait_time)
+                        order_price.append(o.price)
+                    else:
+                        order_price.append(o.price)
+                        
+                else:
+                    count_dropped_orders += 1
+                    if o.is_late:
+                        late_orders += 1
+                    else:
+                        ETA_usage.append(o.ETA_usage)
+                    order_waiting_time.append(o.wait_time)
+                    order_price.append(o.price)
                 
                 if o.reject_count > 0:
                     count_reject_orders += 1
                     if max_reject_num <= o.reject_count:
                         max_reject_num = o.reject_count
-                    
-                if o.status == 'wait_pair':
-                    order_wait += 1
-                else:
-                    if o.status == 'wait_pick':
-                        order_waiting_time.append(o.wait_time)
-                    order_price.append(o.price)
-                    
+                                        
             order_num = len(self.envs.envs_map[0].orders)
                             
             print(f"\nThis is Episode {episode+1}")                
-            print(f"There are {courier_num} couriers ({Hired_num} Hired, {Crowdsourced_num} Crowdsourced with {Crowdsourced_on} ({round(100 * Crowdsourced_on / Crowdsourced_num, 2)}%) on), and {order_num} Orders ({count_dropped_orders} dropped, {count_unfinished_orders} unfinished, {order_wait} ({round(100 * order_wait / order_num, 2)}%) waiting to be paired)")     
+            print(f"There are {courier_num} couriers ({Hired_num} Hired, {Crowdsourced_num} Crowdsourced with {Crowdsourced_on} ({round(100 * Crowdsourced_on / Crowdsourced_num, 2)}%) on), and {order_num} Orders ({count_dropped_orders} dropped, {count_unfinished_orders} unfinished), {order_wait_pair} ({round(100 * order_wait_pair / order_num, 2)}%) waiting to be paired")     
             
             print(f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}")
             self.writter.add_scalar('Total Reward', episode_reward_sum, episode + 1)
@@ -435,9 +439,9 @@ class EnvRunner(Runner):
             
             # ---------------------
             # average waiting time for orders
-            waiting_time_per_order = np.mean(order_waiting_time)
-            var_waiting_time = np.var(order_waiting_time)
-            print(f"The average waiting time for orders ({order_num - order_wait}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})")
+            waiting_time_per_order = np.mean(order_waiting_time) / 60
+            var_waiting_time = np.var(order_waiting_time) / 60**2
+            print(f"The average waiting time for orders ({order_num - order_wait_pair}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})")
             self.writter.add_scalar('Train/Average Order Waiting Time/Total', waiting_time_per_order, episode + 1)
             self.writter.add_scalar('Train/Average Order Waiting Time/Total_Var', var_waiting_time, episode + 1)
 
@@ -452,7 +456,7 @@ class EnvRunner(Runner):
             message = (
                 f"\nThis is Train Episode {episode+1}\n"
                 
-                f"There are {courier_num} couriers ({Hired_num} Hired, {Crowdsourced_num} Crowdsourced with {Crowdsourced_on} ({round(100 * Crowdsourced_on / Crowdsourced_num, 2)}%) on), and {order_num} Orders ({count_dropped_orders} dropped, {count_unfinished_orders} unfinished, {order_wait} ({round(100 * order_wait / order_num, 2)}%) waiting to be paired\n"
+                f"There are {courier_num} couriers ({Hired_num} Hired, {Crowdsourced_num} Crowdsourced with {Crowdsourced_on} ({round(100 * Crowdsourced_on / Crowdsourced_num, 2)}%) on), and {order_num} Orders ({count_dropped_orders} dropped, {count_unfinished_orders} unfinished), {order_wait_pair} ({round(100 * order_wait_pair / order_num, 2)}%) waiting to be paired\n"
                 
                 f"Total Reward for Episode {episode+1}: {int(episode_reward_sum)}\n"
                  
@@ -480,7 +484,7 @@ class EnvRunner(Runner):
                                 
                 f"Order rejection rate for Episode {episode+1}: {reject_rate_per_episode} and the order is rejected by {max_reject_num} times at most\n"
                 
-                f"The average waiting time for orders ({order_num - order_wait}) is {waiting_time_per_order} dollar (Var: {var_price})\n"
+                f"The average waiting time for orders ({order_num - order_wait_pair}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})\n"
                 
                 f"The average price for Episode {episode+1}: Total ({len(order_price)}) - {price_per_order} dollar (Var: {var_price})\n"
                 
@@ -512,11 +516,11 @@ class EnvRunner(Runner):
                 self.writter.add_scalar('Train/Unfinished Orders Rate', 0, episode + 1)
                 self.writter.add_scalar('Train/Unfinished Late Rate', 0, episode + 1)
             else:
-                unfinished = count_unfinished_orders / (order_num - order_wait)
+                unfinished = count_unfinished_orders / order_num
                 unfinished_late_rate = unfinished_late_orders / count_unfinished_orders
-                print(f"Unfinished Orders for Episode {episode+1} is {count_unfinished_orders} out of {order_num - order_wait} orders ({unfinished}), with {unfinished_late_rate} being late")
+                print(f"Unfinished Orders for Episode {episode+1} is {count_unfinished_orders} out of {order_num} orders ({unfinished}), with {unfinished_late_rate} being late")
                 
-                message += f"Unfinished Orders for Episode {episode+1} is {count_unfinished_orders} out of {order_num - order_wait} orders ({unfinished}), with {unfinished_late_rate} being late\n"
+                message += f"Unfinished Orders for Episode {episode+1} is {count_unfinished_orders} out of {order_num} orders ({unfinished}), with {unfinished_late_rate} being late\n"
                 logger.success(message)
                 self.writter.add_scalar('Train/Unfinished Orders Rate', unfinished, episode + 1)
                 self.writter.add_scalar('Train/Unfinished Late Rate', unfinished_late_rate, episode + 1)
@@ -817,7 +821,7 @@ class EnvRunner(Runner):
             "late_orders": 0,
             "ETA_usage": [],
             "order_price": [],
-            "order_wait": 0,
+            "order_wait_pair": 0,
             "order_waiting_time": [],
         } for i in range(self.eval_envs.num_envs)}
 
@@ -969,13 +973,13 @@ class EnvRunner(Runner):
                 if c.travel_distance > 0:
                     stats[i][f"{category}_distance_per_episode"].append(c.travel_distance)
 
-                stats[i][f"{category}_finish_num"].append(c.finish_order_num)
-                stats[i][f"{category}_unfinish_num"].append(len(c.waybill) + len(c.wait_to_pick))
-                stats[i][f"{category}_reject_num"].append(c.reject_order_num)
-                stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
-                stats[i][f"{category}_running_time"].append(c.total_running_time)
-                stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
-                stats[i][f"{category}_waiting_time"].append(c.total_waiting_time)
+                    stats[i][f"{category}_finish_num"].append(c.finish_order_num)
+                    stats[i][f"{category}_unfinish_num"].append(len(c.waybill) + len(c.wait_to_pick))
+                    stats[i][f"{category}_reject_num"].append(c.reject_order_num)
+                    stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
+                    stats[i][f"{category}_running_time"].append(c.total_running_time)
+                    stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
+                    stats[i][f"{category}_waiting_time"].append(c.total_waiting_time)
 
                 if c.actual_speed > 0:
                     stats[i][f"{category}_actual_speed"].append(c.actual_speed)
@@ -991,35 +995,39 @@ class EnvRunner(Runner):
             stats[i]["courier_num"] = len(env.couriers)
 
             for o in env.orders:
-                if o.status == "dropped":
+                if o.status in {'wait_pair', 'wait_pick', 'picked_up'}:
+                    stats[i]["count_unfinished_orders"] += 1
+                    if o.ETA <= self.eval_envs.envs_map[0].clock:
+                        stats[i]["unfinished_late_orders"] += 1
+                        
+                    if o.status == 'wait_pair':
+                        stats[i]["order_wait_pair"] += 1
+                    elif o.status == 'picked_up':
+                        stats[i]["order_waiting_time"].append(o.wait_time)
+                        stats[i]["order_price"].append(o.price)
+                    else:
+                        stats[i]["order_price"].append(o.price)
+                        
+                else:
                     stats[i]["count_dropped_orders"] += 1
                     if o.is_late == 1:
                         stats[i]["late_orders"] += 1
                     else:
                         stats[i]["ETA_usage"].append(o.ETA_usage)
-                else:
-                    stats[i]["count_unfinished_orders"] += 1
-                    if o.ETA <= self.envs.envs_map[0].clock:
-                        stats[i]["unfinished_late_orders"] += 1
-                        
+                    stats[i]["order_waiting_time"].append(o.wait_time)
+                    stats[i]["order_price"].append(o.price)
+                
                 if o.reject_count > 0:
                     stats[i]["count_reject_orders"] += 1
                     if stats[i]["max_reject_num"] <= o.reject_count:
                         stats[i]["max_reject_num"] = o.reject_count
-
-                if o.status == "wait_pair":
-                    stats[i]["order_wait"] += 1
-                else:
-                    if o.status == 'wait_pick':
-                        stats[i]["order_waiting_time"].append(o.wait_time)
-                    stats[i]["order_price"].append(o.price)
 
             stats[i]["order_num"] = len(env.orders)
             
         for algo_num in range(self.eval_envs.num_envs):
             data = stats[algo_num]
             
-            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished, {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired)")
+            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait_pair']} ({round(100 * data['order_wait_pair'] / data['order_num'], 2)}%) Orders waiting to be paired")
 
             # -----------------------
             # Distance
@@ -1271,9 +1279,9 @@ class EnvRunner(Runner):
             
             # ---------------------
             # average waiting time for orders
-            waiting_time_per_order = np.mean(data['order_waiting_time'])
-            var_waiting_time = np.var(data['order_waiting_time'])
-            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})")
+            waiting_time_per_order = np.mean(data['order_waiting_time']) / 60
+            var_waiting_time = np.var(data['order_waiting_time']) / 60**2
+            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait_pair']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})")
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total', waiting_time_per_order, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total_Var', var_waiting_time, self.eval_num)
 
@@ -1291,7 +1299,7 @@ class EnvRunner(Runner):
             self.writter.add_scalar(f'Algo{algo_num+1}/Eval Average Price/Total Var', order_price_var, self.eval_num)
             
             message = (
-                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished, {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired)\n"
+                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait_pair']} ({round(100 * data['order_wait_pair'] / data['order_num'], 2)}%) Orders waiting to be paired\n"
                                 
                 f"Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})\n"
                 
@@ -1317,7 +1325,7 @@ class EnvRunner(Runner):
                 
                 f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most\n"
                 
-                f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} dollar (Var: {var_waiting_time})\n"
+                f"The average waiting time for orders ({data['order_num'] - data['order_wait_pair']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})\n"
                            
                 f"Total average is {order_price_per_order} dollars (Var: {order_price_var})\n"
                                 
@@ -1351,17 +1359,15 @@ class EnvRunner(Runner):
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Orders Rate', 0, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Late Rate', 0, self.eval_num)
         else:
-            unfinished = data['count_unfinished_orders'] / (data['order_num'] - data['order_wait'])
+            unfinished = data['count_unfinished_orders'] / data['order_num']
             unfinished_late_rate = data['unfinished_late_orders'] / data['count_unfinished_orders']
-            print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late")
+            print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num']} orders ({unfinished}), with {unfinished_late_rate} being late")
             
-            message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
+            message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Orders Rate', unfinished, self.eval_num)
             self.writter.add_scalar(f'Algo{algo_num+1}/Unfinished Late Rate', unfinished_late_rate, self.eval_num)
            
            
-        
-
         # algo1_social_welfare = sum(algo1_Hired_distance_per_episode + algo1_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
         # algo2_social_welfare = sum(algo2_Hired_distance_per_episode + algo2_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
         # algo3_social_welfare = sum(algo3_Hired_distance_per_episode + algo3_Crowdsourced_distance_per_episode) / 1000 * 0.6214 * 404 / 1e6 * 105
