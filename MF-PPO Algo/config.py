@@ -182,14 +182,14 @@ def get_config():
     parser.add_argument(
         "--n_training_threads",
         type=int,
-        default=12,
+        default=1,
         help="Number of torch threads for training",
     )
     # *************
     parser.add_argument(
         "--n_rollout_threads",
         type=int,
-        default=5, #5
+        default=1, #5
         help="Number of parallel envs for training rollouts",
     )
     # *************

@@ -92,8 +92,8 @@ class EnvRunner(Runner):
             for step in range(self.episode_length):
                 # print("-"*25)
                 print(f"THIS IS STEP {step}")
-                # dead_count = 0 # end the code
 
+                time1 = time.time()
                 for i in range(self.envs.num_envs):
                     # print(f"ENVIRONMENT {i+1}")
 
@@ -106,8 +106,9 @@ class EnvRunner(Runner):
                     #     print(o)  
                     # print("\n")
                     self.log_env(episode, step, i)
-
-                # available_actions = self.envs.get_available_actions()
+                    
+                time2 = time.time()
+                logger.success(f'time2-time1: {time2-time1}')
                 # Sample actions
                 (
                     values,
@@ -117,9 +118,15 @@ class EnvRunner(Runner):
                     rnn_states_critic,
                     actions_env,
                 ) = self.collect(step)
+                
+                time3 = time.time()
+                logger.success(f'time3-time2: {time3-time2}')
 
                 # Obser reward and next obs
-                obs, rewards, dones, infos, share_obs = self.envs.step(actions_env)
+                obs, rewards, dones, share_obs = self.envs.step(actions_env)
+
+                time4 = time.time()
+                logger.success(f'time4-time3: {time4-time3}')
 
                 episode_reward_sum += rewards.sum() / self.envs.num_envs
 
@@ -145,20 +152,25 @@ class EnvRunner(Runner):
                     share_obs,
                     rewards,
                     dones,
-                    infos,
                     values,
                     actions,
                     action_log_probs,
                     rnn_states,
                     rnn_states_critic,
                 )
-
+                
                 # insert data into buffer
                 self.insert(data)
-
+                
+                time5 = time.time()
+                logger.success(f'time5-time4: {time5-time4}')
+             
                 if episode != self.episode_length - 1:
                     self.envs.env_step()
-            
+
+                    time6 = time.time()
+                    logger.success(f'time6-time5: {time6-time5}')
+                    
             # Train over periods
             platform_cost = self.envs.envs_map[0].platform_cost
             
@@ -673,7 +685,6 @@ class EnvRunner(Runner):
             share_obs,
             rewards,
             dones,
-            infos,
             values,
             actions,
             action_log_probs,
@@ -928,7 +939,7 @@ class EnvRunner(Runner):
                 eval_actions_env.append(eval_one_hot_action_env)
 
             # Obser reward and next obs
-            eval_obs, eval_rewards, eval_dones, eval_infos, eval_share_obs = self.eval_envs.step(eval_actions_env)
+            eval_obs, eval_rewards, eval_dones, eval_share_obs = self.eval_envs.step(eval_actions_env)
             
             eval_rnn_states[eval_dones == True] = np.zeros(
                 ((eval_dones == True).sum(), self.recurrent_N, self.hidden_size),

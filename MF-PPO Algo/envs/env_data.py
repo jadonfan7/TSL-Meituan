@@ -26,28 +26,12 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_num_estimation.csv')
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666062600},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666149000},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666235400},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666321800},
-        # } # 10 min
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666063800},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666150200},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666236600},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
-        # } # half an hour
-        
+        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/MF_PPO/order_prediction/order_num_estimation.csv')
+
         config_mapping = {
             0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
             1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
@@ -108,10 +92,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/test/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/MF_PPO/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/MF_PPO/order_prediction/noon_peak_hour_data.csv')
         
         # 2621, 2682, 2687, 2737, 2704
         self.max_num_couriers = 2621
@@ -413,11 +397,8 @@ class Map:
             self.grid[lat_index][lng_index].remove(courier)
     
     def update_courier_position(self, old_lat, old_lng, new_lat, new_lng, courier):
-        old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
-        new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
-        if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
-            self.grid[old_lat_index][old_lng_index].remove(courier)
-            self.grid[new_lat_index][new_lng_index].append(courier)
+        self.remove_courier(old_lat, old_lng, courier)
+        self.add_courier(new_lat, new_lng, courier)
              
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)

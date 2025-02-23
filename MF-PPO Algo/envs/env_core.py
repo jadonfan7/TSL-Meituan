@@ -8,6 +8,10 @@ from gym.spaces import Box, Discrete
 from geopy.distance import geodesic
 import random
 from scipy.spatial import KDTree
+import copy
+from loguru import logger
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 class EnvCore(object):
     
@@ -41,7 +45,6 @@ class EnvCore(object):
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
             self.share_observation_space.append(Box(low=0.0, high=1.0, shape=(self.shared_obs_dim,), dtype=np.float32))
-        # self.share_observation_space = Box(low=0.0, high=1.0, shape=(shared_obs_dim,), dtype=np.float32)
                  
     def reset(self, env_index, eval=False):
         self.map.reset(env_index, eval)
@@ -54,29 +57,56 @@ class EnvCore(object):
         info_n = []
         
         share_obs = []
-
-        # set action for each agent
-        for i, agent in enumerate(self.map.couriers):
-
-            reward = 0
-            reward = self._set_action(action_n[i], agent)
-
-            reward_n.append(reward)
-                
-        for i, agent in enumerate(self.map.couriers):
-            obs_n.append(self._get_obs(agent))
-            done_n.append(self._get_done(agent))
-            info_n.append(self._get_info(agent))
         
-        for i, agent in enumerate(self.map.couriers):
-            share_obs.append(self._get_local_share_obs(agent, k=10))
-                
-        # return obs_n, reward_n, done_n, info_n, share_obs
-        return np.stack(obs_n), np.array(reward_n), np.array(done_n), info_n, np.stack(share_obs)
+        # set action for each agent
+        # for i, agent in enumerate(self.map.couriers):
+
+        #     reward = 0
+        #     reward = self._set_action(action_n[i], agent)
+
+        #     reward_n.append(reward)
+
+        with ThreadPoolExecutor() as executor:
+            reward_n = list(executor.map(self._set_action, action_n, self.map.couriers))
+        
+        self.map.grid = [[[] for _ in range(self.map.grid_size)] for _ in range(self.map.grid_size)]
+        
+        add_tasks = [
+            (courier.position[0], courier.position[1], courier)
+            for courier in self.map.active_couriers
+        ]
+
+        with ThreadPoolExecutor() as executor:
+            list(executor.map(lambda args: self.map.add_courier(*args), add_tasks))
+            
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(lambda agent: (
+                self._get_obs(agent), 
+                self._get_done(agent), 
+            ), self.map.couriers))
+    
+        for obs, done in results:
+            obs_n.append(obs)
+            done_n.append(done)
+            
+        # for i, agent in enumerate(self.map.couriers):
+        #     obs_n.append(self._get_obs(agent))
+        #     done_n.append(self._get_done(agent))
+        
+        with ThreadPoolExecutor() as executor:
+            share_obs = list(executor.map(lambda agent: self._get_local_share_obs(agent, k=10), self.map.couriers))
+        
+        # for i, agent in enumerate(self.map.couriers):
+        #     share_obs.append(self._get_local_share_obs(agent, k=10))
+            
+        return np.stack(obs_n), np.array(reward_n), np.array(done_n), np.stack(share_obs)
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
-        current_map = self.map
+        if agent.state != 'active':
+            return 0
+        
+        current_map = copy.copy(self.map)
         reward = 0
         
         if agent.current_waiting_time > 0:
@@ -86,72 +116,61 @@ class EnvCore(object):
                 agent.is_waiting = 0
                 reward += self._pick_or_drop(agent)
                
-        if agent.state == 'active':
-            if (agent.waybill != [] or agent.wait_to_pick != []) and agent.is_waiting == 0:
+        
+        if (agent.waybill != [] or agent.wait_to_pick != []) and agent.is_waiting == 0:
 
-                waybill_length = len(agent.waybill)
-                wait_to_pick_length = len(agent.wait_to_pick)
-                total_length = waybill_length + wait_to_pick_length
-                index = self.map.couriers[0].capacity
+            waybill_length = len(agent.waybill)
+            wait_to_pick_length = len(agent.wait_to_pick)
+            total_length = waybill_length + wait_to_pick_length
+            index = self.map.couriers[0].capacity
 
-                order_index = 0
-                if np.argmax(action[:index]) > total_length - 1:
-                    reward -= 200
-                    order = (agent.waybill + agent.wait_to_pick).copy()
-                    for idx, o in enumerate(order):
-                        if o.orderid == agent.order_sequence[0][3]:
-                            order_index = idx
-                            break
-                else:
-                    order_index = np.argmax(action[:index])
-                
-                agent.speed =  np.argmax(action[index:]) + 1
-
-                # speed_index = np.argmax(action[index:])
-                # if speed_index == 0:
-                #     agent.speed = np.random.uniform(1, 2.5)
-                # elif speed_index == 1:
-                #     agent.speed = np.random.uniform(2.5, 4)
-                # else:
-                #     agent.speed = np.random.uniform(4, 7)            
-
-                if agent.speed > 4:
-                    if agent.courier_type == 0:
-                        reward -= (agent.speed - 4) ** 2 * 10
-                    else:
-                        reward -= (agent.speed - 4) ** 2 * 5
-                else:
-                    if agent.courier_type == 0:
-                        reward -= (agent.speed - 4) ** 2 * 5
-                    else:
-                        reward -= (agent.speed - 4) ** 2 * 2
-
-                if order_index < waybill_length:
-                    if agent.target_location == None:
-                        agent.target_location = agent.waybill[order_index].drop_off_point
-                        agent.is_target_locked = True
-                    # elif not agent.is_target_locked and random.random() < self.epsilon:
-                    elif not agent.is_target_locked:
-                        agent.target_location = agent.waybill[order_index].drop_off_point
-                        agent.is_target_locked = True
-                    # agent.move(self.map.interval)
-                elif order_index >= waybill_length and order_index < wait_to_pick_length + waybill_length:
-                    if agent.target_location == None:
-                        agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
-                        agent.is_target_locked = True
-                    # elif not agent.is_target_locked and random.random() < self.epsilon:
-                    elif not agent.is_target_locked:
-                        agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
-                        agent.is_target_locked = True
-                    # agent.move(self.map.interval) 
-                
-                agent.move(self.map, current_map)  
-                agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
-                
-                reward += self._pick_or_drop(agent)
-                
+            order_index = 0
+            if np.argmax(action[:index]) > total_length - 1:
+                reward -= 200
+                order = (agent.waybill + agent.wait_to_pick).copy()
+                for idx, o in enumerate(order):
+                    if o.orderid == agent.order_sequence[0][3]:
+                        order_index = idx
+                        break
             else:
-                agent.speed = 0
+                order_index = np.argmax(action[:index])
+            
+            agent.speed =  np.argmax(action[index:]) + 1
+
+            if agent.speed > 4:
+                if agent.courier_type == 0:
+                    reward -= (agent.speed - 4) ** 2 * 10
+                else:
+                    reward -= (agent.speed - 4) ** 2 * 5
+            else:
+                if agent.courier_type == 0:
+                    reward -= (agent.speed - 4) ** 2 * 5
+                else:
+                    reward -= (agent.speed - 4) ** 2 * 2
+
+            if order_index < waybill_length:
+                if agent.target_location == None:
+                    agent.target_location = agent.waybill[order_index].drop_off_point
+                    agent.is_target_locked = True
+                # elif not agent.is_target_locked and random.random() < self.epsilon:
+                elif not agent.is_target_locked:
+                    agent.target_location = agent.waybill[order_index].drop_off_point
+                    agent.is_target_locked = True
+                # agent.move(self.map.interval)
+            elif order_index >= waybill_length and order_index < wait_to_pick_length + waybill_length:
+                if agent.target_location == None:
+                    agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
+                    agent.is_target_locked = True
+                # elif not agent.is_target_locked and random.random() < self.epsilon:
+                elif not agent.is_target_locked:
+                    agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
+                    agent.is_target_locked = True
+                # agent.move(self.map.interval) 
+            
+            agent.move(current_map)  
+            agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
+            
+            reward += self._pick_or_drop(agent)
                                         
             if agent.waybill == [] and agent.wait_to_pick == []:
                 agent.is_leisure = 1
@@ -164,20 +183,16 @@ class EnvCore(object):
         return reward
     
     def _get_obs(self, agent):
+        if agent.state == 'inactive':
+            return np.full((66,), -1)
         return ObservationSpace(self.map, agent).get_obs()
     
     def _get_done(self, agent):
-        if agent.waybill == [] and agent.wait_to_pick == []:
+        if agent.state == 'inactive':
             return True
         else:
             return False
-                
-    def _get_info(self, agent):
-        return {
-            'courier': agent,
-            'order': self.map.orders
-        }
-        
+                        
     def seed(self, seed):
         if seed is None:
             np.random.seed(1)
@@ -185,12 +200,17 @@ class EnvCore(object):
             np.random.seed(seed)
     
     def get_map(self):
-        return self.map
+        return copy.copy(self.map)
+    
+    # def get_env_obs(self):
+    #     obs = []
+    #     for i, agent in enumerate(self.map.couriers):
+    #         obs.append(self._get_obs(agent))
+    #     return obs
     
     def get_env_obs(self):
-        obs = []
-        for i, agent in enumerate(self.map.couriers):
-            obs.append(self._get_obs(agent))
+        with ThreadPoolExecutor() as executor:
+            obs = list(executor.map(self._get_obs, self.map.couriers))
         return obs
 
     def get_env_space(self):

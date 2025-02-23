@@ -107,10 +107,10 @@ def worker(remote, parent_remote, env_fn_wrapper):
         cmd, data = remote.recv()
         
         if cmd == 'step':
-            ob, reward, done, info, share_obs = env.step(data)
+            ob, reward, done, share_obs = env.step(data)
             env_map = env.get_map()
             
-            remote.send((ob, reward, done, info, share_obs, env_map))
+            remote.send((ob, reward, done, share_obs, env_map))
             
         elif cmd == 'reset':
             index, eval = data
@@ -187,8 +187,8 @@ class SubprocVecEnv(ShareVecEnv):
     def step_wait(self):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
-        obs, rews, dones, infos, share_obs, self.envs_map = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos, np.stack(share_obs)
+        obs, rews, dones, share_obs, self.envs_map = zip(*results)
+        return np.stack(obs), np.stack(rews), np.stack(dones), np.stack(share_obs)
 
     def reset(self, index, eval=False):
         for remote in self.remotes:

@@ -26,11 +26,11 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
-        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
                         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -76,6 +76,7 @@ class Map:
             df = df[(df['sender_lat'] >= Cluster_0_Lat_Range[0]) & (df['sender_lat'] <= Cluster_0_Lat_Range[1])]
             df = df[(df['sender_lng'] >= Cluster_0_Lng_Range[0]) & (df['sender_lng'] <= Cluster_0_Lng_Range[1])]
             
+            df = df.sort_values(by=['platform_order_time'], ascending=True)
             self.order_data = df.reset_index(drop=True)
             
             self.predicted_count = order_num_estimate[order_num_estimate['dt'] == date_value]['predicted_count']
@@ -103,17 +104,14 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
         
         # # 2686, 2744, 2761, 2783, 2771
         # self.max_num_couriers = 2686
         for index, dt in self.order_data.iterrows():
-            # if len(self.couriers) >= self.max_num_couriers:
-            #     break
-            
             courier_id = dt['courier_id']
             if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                 self.couriers_id.add(courier_id)
@@ -275,7 +273,7 @@ class Map:
                             self.active_couriers.append(courier)
                             courier.start_time = self.clock
                             courier.leisure_time = self.clock
-                            self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
+                            self.add_courier(courier.position[0],  courier.position[1], courier)
                             break
 
                 self.current_index += 1
@@ -323,11 +321,14 @@ class Map:
             self.grid[lat_index][lng_index].remove(courier)
     
     def update_courier_position(self, old_lat, old_lng, new_lat, new_lng, courier):
-        old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
-        new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
-        if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
-            self.grid[old_lat_index][old_lng_index].remove(courier)
-            self.grid[new_lat_index][new_lng_index].append(courier)
+        self.remove_courier(old_lat, old_lng, courier)
+        self.add_courier(new_lat, new_lng, courier)
+        
+        # old_lat_index, old_lng_index = self.get_grid_index(old_lat, old_lng)
+        # new_lat_index, new_lng_index = self.get_grid_index(new_lat, new_lng)
+        # if old_lat_index != new_lat_index or old_lng_index != new_lng_index:
+        #     self.grid[old_lat_index][old_lng_index].remove(courier)
+        #     self.grid[new_lat_index][new_lng_index].append(courier)
                 
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)  # 获取当前格子的索引
@@ -345,7 +346,6 @@ class Map:
             if lat >= 0 and lat < self.grid_size and lng >= 0 and lng < self.grid_size
         ]
 
-        # 返回所有有效的相邻格子
         return valid_adjacent_grids
 
     def get_couriers_in_adjacent_grids(self, lat, lng):

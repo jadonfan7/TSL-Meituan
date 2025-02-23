@@ -63,8 +63,6 @@ class ObservationSpace:
             target_y = -1
         clock = self.normalize(self.clock, self.time_min, self.time_max)
         courier_obs.append([courier_pos_x, courier_pos_y, target_x, target_y, speed, clock])
-        
-        
    
         couriers_array = np.array(courier_obs).flatten()
 

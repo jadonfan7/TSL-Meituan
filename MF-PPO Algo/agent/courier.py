@@ -93,17 +93,17 @@ class Courier:
         order.status = 'dropped'
         self.finish_order_num += 1
 
-    def move(self, map, current_map):
+    def move(self, current_map):
         
-        if self.speed != 0 and self.current_waiting_time < map.interval:
+        if self.speed != 0 and self.current_waiting_time < current_map.interval:
             # default_congestion_rate = 0.8
             # speed = self.speed * congestion_rate
             
             if self.current_waiting_time > 0:
-                time = map.interval - self.current_waiting_time
+                time = current_map.interval - self.current_waiting_time
                 self.current_waiting_time = 0
             else:
-                time = map.interval
+                time = current_map.interval
             
             travel_distance = time * self.speed
             distance_to_target = geodesic(self.target_location, self.position).meters
@@ -130,7 +130,6 @@ class Courier:
             travel_distance = time * speed
             
             if travel_distance >= distance_to_target:
-                map.update_courier_position(self.position[0], self.position[1], self.target_location[0], self.target_location[1], self)
                 self.position = self.target_location
                 self.is_target_locked = False
                 self.travel_distance += distance_to_target
@@ -140,13 +139,10 @@ class Courier:
                 
                 new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
                 new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
-                
-                map.update_courier_position(self.position[0], self.position[1], new_latitude, new_longitude, self)
-                
+                                
                 self.position = (new_latitude, new_longitude)
 
                 self.travel_distance += travel_distance
-            
             
                 
     def get_congestion_rate(self, map, latitude, longitude, travel_distance, radius=30):
