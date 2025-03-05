@@ -19,32 +19,71 @@ class EnvCore(object):
     def reset(self, env_index):
         self.map.reset(env_index)
     
+    # def step(self):
+    #     current_map = copy.copy(self.map)
+        
+    #     for agent in self.map.active_couriers:
+            
+    #         if agent.state == 'active':   
+    #             if agent.current_waiting_time > 0:
+    #                 if agent.current_waiting_time > self.map.interval:
+    #                     agent.current_waiting_time -= self.map.interval
+    #                 else:
+    #                     agent.is_waiting = 0
+    #                     self._pick_or_drop(agent)
+                        
+    #             if (agent.waybill != [] or agent.wait_to_pick != []) and agent.is_waiting == 0:
+                    
+    #                 agent.move(self.map, current_map)  
+    #                 agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
+                    
+    #                 self._pick_or_drop(agent)
+                                            
+    #             if agent.waybill == [] and agent.wait_to_pick == []:
+    #                 agent.is_leisure = 1
+    #             else:
+    #                 agent.is_leisure = 0
+    #                 agent.leisure_time = self.map.clock
+
+    def process_agent(self, agent, current_map):
+        if agent.state == 'active':   
+            if agent.current_waiting_time > 0:
+                if agent.current_waiting_time > current_map.interval:
+                    agent.current_waiting_time -= current_map.interval
+                else:
+                    agent.is_waiting = 0
+                    self._pick_or_drop(agent)
+
+            if (agent.waybill or agent.wait_to_pick) and agent.is_waiting == 0:
+                agent.move(current_map)
+                agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
+                self._pick_or_drop(agent)
+
+            if not agent.waybill and not agent.wait_to_pick:
+                agent.is_leisure = 1
+            else:
+                agent.is_leisure = 0
+                agent.leisure_time = current_map.clock
+        
+        return agent
+
     def step(self):
         current_map = copy.deepcopy(self.map)
         
-        for agent in self.map.active_couriers:
-            
-            if agent.state == 'active':   
-                if agent.current_waiting_time > 0:
-                    if agent.current_waiting_time > self.map.interval:
-                        agent.current_waiting_time -= self.map.interval
-                    else:
-                        agent.is_waiting = 0
-                        self._pick_or_drop(agent)
-                        
-                if (agent.waybill != [] or agent.wait_to_pick != []) and agent.is_waiting == 0:
-                    
-                    agent.move(self.map, current_map)  
-                    agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
-                    
-                    self._pick_or_drop(agent)
-                                            
-                if agent.waybill == [] and agent.wait_to_pick == []:
-                    agent.is_leisure = 1
-                else:
-                    agent.is_leisure = 0
-                    agent.leisure_time = self.map.clock
-                
+        with ThreadPoolExecutor() as executor:
+            list(executor.map(lambda agent: self.process_agent(agent, current_map), 
+                        self.map.active_couriers))
+
+        self.map.grid = [[[] for _ in range(self.map.grid_size)] for _ in range(self.map.grid_size)]
+        
+        add_tasks = [
+            (courier.position[0], courier.position[1], courier)
+            for courier in self.map.active_couriers
+        ]
+
+        with ThreadPoolExecutor() as executor:
+            list(executor.map(lambda args: self.map.add_courier(*args), add_tasks))
+
     def get_map(self):
         return self.map
     

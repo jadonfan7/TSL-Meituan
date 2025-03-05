@@ -6,8 +6,9 @@ import pandas as pd
 import random
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-import joblib
-from sklearn.cluster import DBSCAN
+import hdbscan
+from collections import defaultdict
+from joblib import Parallel, delayed
 
 class Map:
     def __init__(self, env_index=0, algo_index=0, eval=False):
@@ -438,65 +439,96 @@ class Map:
     def _get_predicted_orders(self):
             
         index = (self.clock - self.start_time) // self.interval - 1
-        predicted_count = int(self.predicted_count.iloc[index])
-
+        da_ids = self.location_estimation_data['da_id'].unique()
         predicted_orders = []
-        da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
-        
-        da_ids = da_frequency_row.index[1:]
-        frequencies = da_frequency_row.values[1:]
 
-        frequencies_normalized = frequencies / np.sum(frequencies)
-
-        from collections import Counter
-        assigned_da_ids = np.random.choice(
-            da_ids,
-            size=predicted_count,
-            p=frequencies_normalized
-        )
-
-        
-        da_order_count = dict(Counter(assigned_da_ids))
-
-        for da_id, num in da_order_count.items():
+        for da_id in da_ids:
             da_id = int(da_id)
-            model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
             
-            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
-            mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
+            max_time_interval = self.location_estimation_data['time_interval'].max()
+
+            next_index = min(index + 1, max_time_interval)
             
-            from sklearn.cluster import KMeans
+            model_data = self.location_estimation_data[
+                (self.location_estimation_data['time_interval'].isin([index, next_index])) & 
+                (self.location_estimation_data['da_id'] == da_id) &
+                (self.location_estimation_data['is_courier_grabbed'] == 1) &
+                (self.location_estimation_data['dt'] != 20221021)
+            ].reset_index(drop=True)
+            
+            poi_order_counts = model_data['poi_id'].value_counts().reset_index()
+            poi_order_counts.columns = ['poi_id', 'order_count']
+            
+            high_freq_pois = poi_order_counts[poi_order_counts['order_count'] >= 4]['poi_id']
+            
+            high_freq_data = model_data[model_data['poi_id'].isin(high_freq_pois)]
+            
+            for poi_id in high_freq_pois:
+                poi_data = high_freq_data[high_freq_data['poi_id'] == poi_id]
+                mean_eta = int(np.mean(poi_data['estimate_arrived_time'] - poi_data['platform_order_time'])) + self.clock
+                mean_mpt = int(np.mean(poi_data['estimate_meal_prepare_time'] - poi_data['platform_order_time'])) + self.clock
+                order_create_time = self.clock 
+                dropoff_point = (poi_data['recipient_lat'].mean() / 1e6, poi_data['recipient_lng'].mean() / 1e6)
+                pickup_point = (poi_data['sender_lat'].values[0] / 1e6, poi_data['sender_lat'].values[0] / 1e6)
+                order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+                predicted_orders.append(order)               
+                                            
+        # predicted_count = int(self.predicted_count.iloc[index])
 
-            coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
-            if len(coordinates) > num:
-                kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
-                kmeans.fit(coordinates)
+        # predicted_orders = []
+        # da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+        
+        # da_ids = da_frequency_row.index[1:]
+        # frequencies = da_frequency_row.values[1:]
 
-                predicted_coords = kmeans.cluster_centers_
+        # frequencies_normalized = frequencies / np.sum(frequencies)
 
-                labels = kmeans.labels_
+        # from collections import Counter
+        # assigned_da_ids = np.random.choice(
+        #     da_ids,
+        #     size=predicted_count,
+        #     p=frequencies_normalized
+        # )
 
-                for label in np.unique(labels):
+        
+        # da_order_count = dict(Counter(assigned_da_ids))
+
+        # for da_id, num in da_order_count.items():
+        #     da_id = int(da_id)
+        #     model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
+            
+        #     mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
+        #     mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
+            
+        #     from sklearn.cluster import KMeans
+
+        #     coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
+        #     if len(coordinates) > num:
+        #         kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
+        #         kmeans.fit(coordinates)
+
+        #         predicted_coords = kmeans.cluster_centers_
+
+        #         labels = kmeans.labels_
+
+        #         for label in np.unique(labels):
                     
-                    cluster_center = predicted_coords[label]
+        #             cluster_center = predicted_coords[label]
                     
-                    pickup_point = (cluster_center[0], cluster_center[1])
-                    dropoff_point = (cluster_center[2], cluster_center[3])
+        #             pickup_point = (cluster_center[0], cluster_center[1])
+        #             dropoff_point = (cluster_center[2], cluster_center[3])
                     
-                    eta = mean_eta + self.clock
+        #             order_create_time = self.clock            
+        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+        #             predicted_orders.append(order)
+        #     else:
+        #         for i in range(len(coordinates)):
+        #             pickup_point = (coordinates[i][0], coordinates[i][1])
+        #             dropoff_point = (coordinates[i][2], coordinates[i][3])
 
-                    order_create_time = self.clock            
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
-                    predicted_orders.append(order)
-            else:
-                for i in range(len(coordinates)):
-                    pickup_point = (coordinates[i][0], coordinates[i][1])
-                    dropoff_point = (coordinates[i][2], coordinates[i][3])
-
-                    eta = mean_eta + self.clock
-                    order_create_time = self.clock
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
-                    predicted_orders.append(order)
+        #             order_create_time = self.clock
+        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+        #             predicted_orders.append(order)
                                 
         return predicted_orders
         
@@ -569,10 +601,51 @@ class Map:
             return False
         
         return True
+        
+    def process_order(self, order, couriers, predicted_orders):
+        M = 1e9
+        row = []
+        is_predicted = 0
+        for courier in couriers:
+            unmatch = False
+            if isinstance(order, list):
+                if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
+                    unmatch = True
+                for o in order:
+                    if geodesic(o.pick_up_point, courier.position).meters > 1500:
+                        unmatch = True
+            else:
+                if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or geodesic(order.pick_up_point, courier.position).meters > 1500:
+                    unmatch = True   
+
+            if unmatch:
+                row.append(float(M))
+                continue
+            
+            sequence, dist, risk = self._cal_wave_info(order, courier)
+            if not risk:
+                if isinstance(order, list):
+                    price = 0
+                    if order[0] in predicted_orders:
+                        is_predicted = 1
+                    for task in order:
+                        price += self._wage_response_model(task, courier)
+                else:
+                    if order in predicted_orders:
+                        is_predicted = 1
+                    price = self._wage_response_model(order, courier)
+                
+                detour = dist - courier.current_wave_dist
+                
+                cost =  detour / price if is_predicted == 0 else detour / price / 0.9
+                row.append(cost)
+            else:
+                row.append(float(M))
+        return row
     
     # Bipartitie matching with estimation
     def _Delay_allocation(self, orders):
-        
+
         couriers = set()
         for order in orders:
             nearby_couriers = self._get_nearby_couriers(order)
@@ -580,62 +653,62 @@ class Map:
             
         couriers = list(couriers)
         clustered_orders = self._cluster_orders(orders)
-        
         predicted_orders = self._get_predicted_orders()
         clustered_predicted_orders = self._cluster_orders(predicted_orders)        
-
+ 
+        # all_orders = orders+predicted_orders
         clustered_new_orders = clustered_orders + clustered_predicted_orders
+        # from concurrent.futures import ThreadPoolExecutor
+        # from concurrent.futures import ProcessPoolExecutor
+        # import time
         
-        from concurrent.futures import ThreadPoolExecutor
+        # batch_size = 10  # 可以根据实际情况调整
+        # total_orders = len(clustered_new_orders)
+        
+        # time0 = time.time()
+        # cost_matrix_joblib = []
+        # for i in range(0, total_orders, batch_size):
+        #     batch_orders = clustered_new_orders[i:i+batch_size]
+        #     batch_result = Parallel(n_jobs=-1)(delayed(self.process_order)(order, couriers, predicted_orders) for order in batch_orders)
+        #     cost_matrix_joblib.extend(batch_result)
+        cost_matrix = Parallel(n_jobs=-1)(
+            delayed(self.process_order)(order, couriers, predicted_orders) 
+            for order in clustered_new_orders
+        )
+
+        # print("joblib并行执行时间:", time.time() - time0)
+
         M = 1e9
-        def process_order(order, couriers):
-            row = []
-            is_predicted = 0
-            for courier in couriers:
-                unmatch = False
-                if isinstance(order, list):
-                    if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
-                        unmatch = True
-                    for o in order:
-                        if geodesic(o.pick_up_point, courier.position).meters > 4000:
-                            unmatch = True
-                else:
-                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or geodesic(order.pick_up_point, courier.position).meters > 4000:
-                        unmatch = True   
+        
+        # time1 = time.time()
+        # with ThreadPoolExecutor() as executor:
+        #     # cost_matrix = list(executor.map(lambda order: process_order(order, couriers), clustered_new_orders))
+        #     cost_matrix = list(executor.map(lambda order: self.process_order(order, couriers, predicted_orders), clustered_new_orders))
+        # print("多线程执行时间:", time.time() - time1)
 
-                if unmatch:
-                    row.append(float(M))
-                    continue
-                
-                sequence, dist, risk = self._cal_wave_info(order, courier)
-                if not risk:
-                    if isinstance(order, list):
-                        price = 0
-                        if order[0] in predicted_orders:
-                            is_predicted = 1
-                        for task in order:
-                            price += self._wage_response_model(task, courier)
-                    else:
-                        if order in predicted_orders:
-                            is_predicted = 1
-                        price = self._wage_response_model(order, courier)
-                    
-                    detour = dist - courier.current_wave_dist
-                    
-                    cost =  detour / price if is_predicted == 0 else detour / price / 0.9
-                    row.append(cost)
-                else:
-                    row.append(float(M))
-            return row
-
-        with ThreadPoolExecutor() as executor:
-            cost_matrix = list(executor.map(lambda order: process_order(order, couriers), clustered_new_orders))
+        # 单进程执行时间
+        # time2 = time.time()
+        # cost_matrix = [self.process_order(order, couriers, predicted_orders) for order in clustered_new_orders]
+        # print("单进程执行时间:", time.time() - time2)
+        
+        # cost_matrix = [self.process_order(order, couriers, predicted_orders) for order in clustered_new_orders]
+        # 多进程执行时间
+        # time3 = time.time()
+        # import os
+        # with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+        #     cost_matrix = list(executor.map(
+        #         self.process_order_for_executor, 
+        #         clustered_new_orders, 
+        #         [couriers] * len(clustered_new_orders), 
+        #         [predicted_orders] * len(clustered_new_orders)
+        #     ))
         
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
         for order_index, courier_index in zip(row_ind, col_ind):
             order = clustered_new_orders[order_index]
+            # order = all_orders[order_index]
             assigned_courier = couriers[courier_index]
-
+            
             if cost_matrix[order_index][courier_index] == float(M):
                 if isinstance(order, list):
                     for o in order:
@@ -666,28 +739,25 @@ class Map:
         
         order_features = []
         for order in orders:
-            order_features.append([order.pick_up_point[0], order.pick_up_point[1], order.drop_off_point[0], order.drop_off_point[1], order.ETA])
+            order_features.append([order.pick_up_point[0], order.pick_up_point[1], order.drop_off_point[0], order.drop_off_point[1]])
         
         order_features = np.array(order_features)
         
-        db = DBSCAN(eps=1000, min_samples=2, metric=geodesic_distance).fit(order_features)
-        
-        labels = db.labels_
-        
-        from collections import defaultdict
-        clusters = defaultdict(list)
-        
-        clustered_orders = []
-        for i, label in enumerate(labels):
+        hdb = hdbscan.HDBSCAN(min_cluster_size=2, metric=geodesic_distance)
+        hdb_labels = hdb.fit_predict(order_features)  # 只传递经纬度数据
+                    
+        hdb_clusters = defaultdict(list)
+        hdb_clustered_orders = []
+        for i, label in enumerate(hdb_labels):
             if label != -1:  # 忽略噪声点
-                clusters[label].append(orders[i])
+                hdb_clusters[label].append(orders[i])
             else:
-                clustered_orders.append(orders[i])
+                hdb_clustered_orders.append(orders[i])
 
-        for label, orders in clusters.items():
-            clustered_orders.append(orders)
+        for label, order in hdb_clusters.items():
+            hdb_clustered_orders.append(order)
             
-        return clustered_orders
+        return hdb_clustered_orders
             
     def _courier_order_matching(self, orders, assigned_courier):
         if orders is not None:

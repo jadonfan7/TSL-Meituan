@@ -22,7 +22,7 @@ def make_eval_env(n_eval_rollout_threads):
 
 class Runner(object):
     def __init__(self):
-        self.eval_episodes_length = 300
+        self.eval_episodes_length = 240
         self.num_algo = 4
         self.eval_envs = make_eval_env(self.num_algo)
         

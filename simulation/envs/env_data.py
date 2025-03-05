@@ -26,11 +26,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
-        # order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
-        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('MF-PPO Algo/order_prediction/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_num_estimation.csv')
                         
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665976200},
@@ -104,10 +104,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        # self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
-        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('MF-PPO Algo/order_prediction/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('MF-PPO Algo/order_prediction/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/simulation/order_prediction/noon_peak_hour_data.csv')
         
         # # 2686, 2744, 2761, 2783, 2771
         # self.max_num_couriers = 2686
@@ -370,65 +370,96 @@ class Map:
     def _get_predicted_orders(self):
             
         index = (self.clock - self.start_time) // self.interval - 1
-        predicted_count = int(self.predicted_count.iloc[index])
-
+        index = (self.clock - self.start_time) // self.interval - 1
+        da_ids = self.location_estimation_data['da_id'].unique()
         predicted_orders = []
-        da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
-        
-        da_ids = da_frequency_row.index[1:]
-        frequencies = da_frequency_row.values[1:]
 
-        frequencies_normalized = frequencies / np.sum(frequencies)
-
-        from collections import Counter
-        assigned_da_ids = np.random.choice(
-            da_ids,
-            size=predicted_count,
-            p=frequencies_normalized
-        )
-
-        
-        da_order_count = dict(Counter(assigned_da_ids))
-
-        for da_id, num in da_order_count.items():
+        for da_id in da_ids:
             da_id = int(da_id)
-            model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
             
-            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
-            mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
+            max_time_interval = self.location_estimation_data['time_interval'].max()
+
+            next_index = min(index + 1, max_time_interval)
             
-            from sklearn.cluster import KMeans
+            model_data = self.location_estimation_data[
+                (self.location_estimation_data['time_interval'].isin([index, next_index])) & 
+                (self.location_estimation_data['da_id'] == da_id) &
+                (self.location_estimation_data['is_courier_grabbed'] == 1) &
+                (self.location_estimation_data['dt'] != 20221021)
+            ].reset_index(drop=True)
+            
+            poi_order_counts = model_data['poi_id'].value_counts().reset_index()
+            poi_order_counts.columns = ['poi_id', 'order_count']
+            
+            high_freq_pois = poi_order_counts[poi_order_counts['order_count'] >= 4]['poi_id']
+            
+            high_freq_data = model_data[model_data['poi_id'].isin(high_freq_pois)]
+            
+            for poi_id in high_freq_pois:
+                poi_data = high_freq_data[high_freq_data['poi_id'] == poi_id]
+                mean_eta = int(np.mean(poi_data['estimate_arrived_time'] - poi_data['platform_order_time'])) + self.clock
+                mean_mpt = int(np.mean(poi_data['estimate_meal_prepare_time'] - poi_data['platform_order_time'])) + self.clock
+                order_create_time = self.clock 
+                dropoff_point = (poi_data['recipient_lat'].mean() / 1e6, poi_data['recipient_lng'].mean() / 1e6)
+                pickup_point = (poi_data['sender_lat'].values[0] / 1e6, poi_data['sender_lat'].values[0] / 1e6)
+                order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+                predicted_orders.append(order)               
+        # predicted_count = int(self.predicted_count.iloc[index])
 
-            coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
-            if len(coordinates) > num:
-                kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
-                kmeans.fit(coordinates)
+        # predicted_orders = []
+        # da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+        
+        # da_ids = da_frequency_row.index[1:]
+        # frequencies = da_frequency_row.values[1:]
 
-                predicted_coords = kmeans.cluster_centers_
+        # frequencies_normalized = frequencies / np.sum(frequencies)
 
-                labels = kmeans.labels_
+        # from collections import Counter
+        # assigned_da_ids = np.random.choice(
+        #     da_ids,
+        #     size=predicted_count,
+        #     p=frequencies_normalized
+        # )
 
-                for label in np.unique(labels):
+        
+        # da_order_count = dict(Counter(assigned_da_ids))
+
+        # for da_id, num in da_order_count.items():
+        #     da_id = int(da_id)
+        #     model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
+            
+        #     mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
+        #     mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
+            
+        #     from sklearn.cluster import KMeans
+
+        #     coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
+        #     if len(coordinates) > num:
+        #         kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
+        #         kmeans.fit(coordinates)
+
+        #         predicted_coords = kmeans.cluster_centers_
+
+        #         labels = kmeans.labels_
+
+        #         for label in np.unique(labels):
                     
-                    cluster_center = predicted_coords[label]
+        #             cluster_center = predicted_coords[label]
                     
-                    pickup_point = (cluster_center[0], cluster_center[1])
-                    dropoff_point = (cluster_center[2], cluster_center[3])
+        #             pickup_point = (cluster_center[0], cluster_center[1])
+        #             dropoff_point = (cluster_center[2], cluster_center[3])
                     
-                    eta = mean_eta + self.clock
+        #             order_create_time = self.clock            
+        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+        #             predicted_orders.append(order)
+        #     else:
+        #         for i in range(len(coordinates)):
+        #             pickup_point = (coordinates[i][0], coordinates[i][1])
+        #             dropoff_point = (coordinates[i][2], coordinates[i][3])
 
-                    order_create_time = self.clock            
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
-                    predicted_orders.append(order)
-            else:
-                for i in range(len(coordinates)):
-                    pickup_point = (coordinates[i][0], coordinates[i][1])
-                    dropoff_point = (coordinates[i][2], coordinates[i][3])
-
-                    eta = mean_eta + self.clock
-                    order_create_time = self.clock
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, eta)
-                    predicted_orders.append(order)
+        #             order_create_time = self.clock
+        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+        #             predicted_orders.append(order)
                                 
         return predicted_orders
         

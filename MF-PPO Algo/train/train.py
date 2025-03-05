@@ -123,7 +123,6 @@ def main(args):
     }
 
     from runner.env_runner import EnvRunner as Runner
-
     runner = Runner(config)
     runner.run()
 

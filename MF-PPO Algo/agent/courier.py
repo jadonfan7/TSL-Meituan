@@ -145,9 +145,9 @@ class Courier:
                 self.travel_distance += travel_distance
             
                 
-    def get_congestion_rate(self, map, latitude, longitude, travel_distance, radius=30):
+    def get_congestion_rate(self, map, latitude, longitude, travel_distance, radius=50):
         points_on_line = [(self.position[0], self.position[1])]
-        num_steps = int(travel_distance // 60) # 60m as a step
+        num_steps = int(travel_distance // 100) # 100m as a step
 
         for i in range(1, num_steps + 1):
             ratio = i / num_steps
@@ -168,6 +168,7 @@ class Courier:
                     nearby_couriers_count += 1
                     break
         
-        flow_capacity = 13 * travel_distance
-        congestion_rate =  nearby_couriers_count / flow_capacity if nearby_couriers_count > flow_capacity else 1
+        road_capacity = 2348 / 3600 * 30
+        congestion_rate =  nearby_couriers_count / road_capacity if nearby_couriers_count > road_capacity else 1
+        
         return congestion_rate

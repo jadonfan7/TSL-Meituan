@@ -879,6 +879,7 @@ class EnvRunner(Runner):
                 if agent.courier_type == 0:
                 
                     eval_action, eval_rnn_state = self.trainer1.policy.act(
+                        np.array(eval_share_obs),
                         np.array(list(eval_obs[:, agent_id])),
                         eval_rnn_states[:, agent_id],
                         eval_masks[:, agent_id],
