@@ -81,8 +81,8 @@ class EnvRunner(Runner):
                 self.trainer1.policy.lr_decay(episode, episodes)
                 self.trainer2.policy.lr_decay(episode, episodes)
             
-            # obs = self.envs.reset(episode % 4)
-            obs = self.envs.reset(0)
+            #obs = self.envs.reset(episode % 4)
+            obs = self.envs.reset(1)
             # self.reset_courier_num(self.envs.envs_map[0].num_couriers)
             self.num_agents = self.envs.envs_map[0].num_couriers
 
@@ -531,11 +531,11 @@ class EnvRunner(Runner):
             total_num_steps = (episode + 1) * self.episode_length * self.n_rollout_threads
 
             # save model
-            if episode % self.save_interval == 0 or episode == episodes - 1:
+            if (episode+1) % self.save_interval == 0 or episode == episodes - 1:
                 self.save()
 
             # log information
-            if episode % self.log_interval == 0:
+            if (episode+1) % self.log_interval == 0:
                 end = time.time()
                 info = "\n Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}.\n".format(
                         self.all_args.scenario_name,
@@ -553,7 +553,7 @@ class EnvRunner(Runner):
                 self.log_train(train_infos, total_num_steps)
 
             # eval
-            if episode % self.eval_interval == 0 and self.use_eval:
+            if (episode+1) % self.eval_interval == 0 and self.use_eval:
                 self.eval_num += 1
                                 
                 self.eval(total_num_steps)

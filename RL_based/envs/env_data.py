@@ -32,11 +32,11 @@ class Map:
     
         self.platform_cost = 0
         
-        # df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
-        df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/all_waybill_info_meituan_0322.csv')
+        # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
-        # order_num_estimate = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/test/order_prediction/order_num_estimation.csv')
-        order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/order_num_estimation.csv')
+        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_num_estimation.csv')
 
         # config_mapping = {
         #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -75,7 +75,7 @@ class Map:
             
             # 筛选和排序数据
             # df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)] # do not define in one area
-            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0)]
+            df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0) & (df['is_courier_grabbed'] == 1) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
             
@@ -115,10 +115,10 @@ class Map:
 
         self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
         
-        # self.da_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/test/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/test/order_prediction/noon_peak_hour_data.csv')
-        self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/noon_peak_hour_data.csv')
+        self.da_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/noon_peak_hour_data.csv')
+        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_da_frequency.csv')
+        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/noon_peak_hour_data.csv')
         
         # 2621, 2682, 2687, 2737, 2704
         # self.max_num_couriers = 2621
@@ -183,10 +183,10 @@ class Map:
             elif courier.is_leisure == 0 and courier.state == 'active':
                 courier.total_running_time += self.interval
 
-            if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
-                courier.state = 'inactive'
-                self.active_couriers.remove(courier)
-                self.remove_courier(courier.position[0], courier.position[1], courier)
+            # if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
+            #     courier.state = 'inactive'
+            #     self.active_couriers.remove(courier)
+            #     self.remove_courier(courier.position[0], courier.position[1], courier)
 
             if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                 salary_per_interval = 15 / 3600 * self.interval
@@ -255,10 +255,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
-                    courier.state = 'inactive'
-                    self.active_couriers.remove(courier)
-                    self.remove_courier(courier.position[0], courier.position[1], courier)
+                # if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
+                #     courier.state = 'inactive'
+                #     self.active_couriers.remove(courier)
+                #     self.remove_courier(courier.position[0], courier.position[1], courier)
 
                 if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
@@ -273,7 +273,7 @@ class Map:
                     self.current_index += 1
                     continue
             
-                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1 and self.existing_courier_algo < self.max_num_couriers:                        
+                if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0 and dt['is_courier_grabbed'] == 1:                        
                     order_create_time = dt['platform_order_time']
                     pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                     dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
@@ -336,10 +336,10 @@ class Map:
                 elif courier.is_leisure == 0 and courier.state == 'active':
                     courier.total_running_time += self.interval
 
-                if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
-                    courier.state = 'inactive'
-                    self.active_couriers.remove(courier)
-                    self.remove_courier(courier.position[0], courier.position[1], courier)
+                # if courier.state == 'active' and courier.is_leisure == 1 and self.clock - courier.leisure_time > 600: # 10 minutes
+                #     courier.state = 'inactive'
+                #     self.active_couriers.remove(courier)
+                #     self.remove_courier(courier.position[0], courier.position[1], courier)
 
                 if courier.state == 'active' and courier.start_time != self.clock and courier.courier_type == 0:
                     salary_per_interval = 15 / 3600 * self.interval
@@ -456,16 +456,17 @@ class Map:
     ##################
     # courier
     def _accept_or_reject(self, order, courier):
-        if isinstance(order, list):
-            for o in order:
-                if o.reject_count >= 4:
-                    return True
-        else:
-            if order.reject_count >= 4:
-                return True
+        return True
+        # if isinstance(order, list):
+        #     for o in order:
+        #         if o.reject_count >= 4:
+        #             return True
+        # else:
+        #     if order.reject_count >= 4:
+        #         return True
 
-        decision = True if np.random.rand() < 0.9 else False
-        return decision
+        # decision = True if np.random.rand() < 0.9 else False
+        # return decision
     
     ##################
     # platform
@@ -667,59 +668,54 @@ class Map:
             
     # Bipartitie matching with estimation
     def _Delay_allocation(self, orders):
-        couriers = set()
-        candidate = dict()
-        for order in orders:
-            nearby_couriers = self._get_nearby_couriers(order)
-            candidate[order.orderid] = nearby_couriers
-            couriers.update(nearby_couriers)
-            
-        couriers = list(couriers)
         clustered_orders = self._cluster_orders(orders)
+        batch_size = 50
+        total_cost = 0
+        count = 0
         
-        M = 1e9
-        cost_matrix = []
-        for order in clustered_orders:
-            if isinstance(order, list):
-                candidates = set()
-                for o in order:
-                    candidates.update(candidate[o.orderid])
-                if not candidates:
-                    k = min(5, len(couriers))
-                    candidates = set(sorted(couriers, key=lambda c: great_circle(order[0].pick_up_point, c.position).meters)[:k])
-
-            else:
-                candidates = candidate[order.orderid]
-                
-                if not candidates:
-                    k = min(5, len(couriers))
-                    candidates = set(sorted(couriers, key=lambda c: great_circle(order.pick_up_point, c.position).meters)[:k])
-
-            row = []
-            for courier in couriers:
-
-                if courier.save or courier not in candidates:
-                    row.append(float(M))
-                    continue
-                
-                unmatch = False
+        for i in range(0, len(clustered_orders), batch_size):
+            batch_orders = clustered_orders[i:i + batch_size]
+            couriers = set()
+            
+            for order in batch_orders:
                 if isinstance(order, list):
-                    if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
-                        unmatch = True
-                    # for o in order:
-                    #     if great_circle(o.pick_up_point, courier.position).meters > 1500:
-                    #         unmatch = True
+                    for o in order:
+                        nearby_couriers = self._get_nearby_couriers(o)
+                        couriers.update(nearby_couriers)
                 else:
-                    # if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or great_circle(order.pick_up_point, courier.position).meters > 1500:
-                    if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
-                        unmatch = True   
+                    nearby_couriers = self._get_nearby_couriers(order)
+                    couriers.update(nearby_couriers)
 
-                if unmatch:
-                    row.append(float(M))
-                    continue
-                
-                sequence, dist, risk = self.cal_wave_info(order, courier)
-                if not risk:
+            couriers = list(couriers)
+        
+            M = 1e9
+            cost_matrix = []
+            for order in batch_orders:           
+
+                row = []
+                for courier in couriers:
+
+                    if courier.save:
+                        row.append(float(M))
+                        continue
+                    
+                    unmatch = False
+                    if isinstance(order, list):
+                        if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
+                            unmatch = True
+                        for o in order:
+                            if great_circle(o.pick_up_point, courier.position).meters > 1500:
+                                unmatch = True
+                    else:
+                        if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or great_circle(order.pick_up_point, courier.position).meters > 1500:
+                        # if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
+                            unmatch = True   
+
+                    if unmatch:
+                        row.append(float(M))
+                        continue
+                    
+                    sequence, dist, risk = self.cal_wave_info(order, courier)
                     if isinstance(order, list):
                         price = 0
                         for task in order:
@@ -728,31 +724,38 @@ class Map:
                         price = self._wage_response_model(order, courier)
                     
                     detour = dist - courier.current_wave_dist
-                    cost =  detour / price
+                    cost =  detour / price * 2 if risk == 1 else detour / price
                     row.append(cost)
-                else:
-                    row.append(float(M))
-            cost_matrix.append(row)
+                    # if not risk:
+                    #     if isinstance(order, list):
+                    #         price = 0
+                    #         for task in order:
+                    #             price += self._wage_response_model(task, courier)
+                    #     else:
+                    #         price = self._wage_response_model(order, courier)
+                        
+                    #     detour = dist - courier.current_wave_dist
+                    #     cost =  detour / price
+                    #     row.append(cost)
+                    # else:
+                    #     row.append(float(M))
 
-        cost_matrix = np.array(cost_matrix) 
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+                cost_matrix.append(row)
 
-        total_cost = 0
-        count = 0
-        for order_index, courier_index in zip(row_ind, col_ind):
-            count += 1
-            order = clustered_orders[order_index]
-            # order = all_orders[order_index]
-            assigned_courier = couriers[courier_index]
-            
-            if cost_matrix[order_index][courier_index] == float(M):
-                total_cost += 20
-                continue
-            else:
-                total_cost += cost_matrix[order_index][courier_index] / 100
-            
-            self._courier_order_matching(order, assigned_courier)
-        total_cost -= 20 * (len(clustered_orders) - count)
+            cost_matrix = np.array(cost_matrix) 
+            row_ind, col_ind = linear_sum_assignment(cost_matrix)
+
+            for order_index, courier_index in zip(row_ind, col_ind):
+                order = batch_orders[order_index]
+                assigned_courier = couriers[courier_index]
+                
+                if cost_matrix[order_index][courier_index] != float(M):
+                    count += 1
+                    total_cost += cost_matrix[order_index][courier_index] / 100
+                
+                    self._courier_order_matching(order, assigned_courier)
+                    
+        total_cost += 20 * (len(clustered_orders) - count)
         if count > 0:
             return total_cost / count
         else:
@@ -1175,16 +1178,18 @@ class Map:
             else:
                 points.append((o.pick_up_point, 'pick_up', o.meal_prepare_time, o.orderid))
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-            
+        
         # ETA reveals the sequence of the appearance of orders on the platform
-        orders = sorted(orders, key=lambda o: o.ETA)
+        points = sorted(points, key=lambda o: o[2])
         order_sequence = []
-        if orders[0] in courier.waybill:
-            order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
-            points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
-        else:
-            order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
-            points.remove((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
+        order_sequence.append(points[0])
+        points.pop(0)
+        # if orders[0] in courier.waybill:
+        #     order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
+        #     points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
+        # else:
+        #     order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
+        #     points.remove((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
             
         while points:
             last_point = order_sequence[-1][0]
@@ -1207,10 +1212,15 @@ class Map:
                             points.remove(closest_point)
                             flag = False
                             break
-                else:
+                elif closest_point[1] == 'dropped' and closest_point in waybill_points:
                     order_sequence.append(closest_point)
                     points.remove(closest_point)
-                    break        
+                    break
+                else:
+                    if all(closest_point[2] <= p[2] for dist, p in closest_points):
+                        order_sequence.append(closest_point)
+                        points.remove(closest_point)
+                        break
                 
         #################
         # second stage
@@ -1231,18 +1241,18 @@ class Map:
                 dist += great_circle(last_location, point[0]).meters
                 if point[1] == 'dropped':
                     dist_between_grab_time += great_circle(last_location, point[0]).meters
-                    if 3.2 * (point[2] - time) < dist_between_grab_time and i != 0 and order_sequence[i-1][3] != point[3] and order_sequence[i-1][2] > point[2]:
+                    if 4 * (point[2] - time) < dist_between_grab_time and i != 0 and order_sequence[i-1][3] != point[3] and order_sequence[i-1][2] > point[2]:
                         order_sequence[i], order_sequence[i-1] = order_sequence[i-1], order_sequence[i]
                         re = 1
                         break
                     else:
-                        if 3.2 * (point[2] - time) < dist_between_grab_time:
+                        if 4 * (point[2] - time) < dist_between_grab_time:
                             risk = 1
                         last_location = point[0]
                         i += 1
                 else:
                     grab_dist = great_circle(last_location, point[0]).meters + dist_between_grab_time
-                    grab_time = grab_dist / 3.2 + time
+                    grab_time = int(grab_dist / 4 + time)
                     if grab_time < point[2]:
                         time = point[2]
                     else:
@@ -1265,7 +1275,7 @@ class Map:
             return 10 # as a incentive for a new courier, also 10 is the average price of an order
         else:
             wm = 15 / 3600
-            v = 3.2 # 4 m/s
+            v = 4 # 4 m/s
             r = great_circle(order.pick_up_point, courier.position).meters
             d = great_circle(order.pick_up_point, order.drop_off_point).meters
             wage = wm * (r + d) / v

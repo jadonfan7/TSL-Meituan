@@ -98,12 +98,12 @@ class Courier:
                 time -= self.current_waiting_time
                 self.current_waiting_time = 0
             
-            travel_distance = time * self.speed * 0.8 # congestion rate
+            travel_distance = time * self.speed
             distance_to_target = great_circle(self.target_location, self.position).meters
             
             if travel_distance > distance_to_target:
                 self.travel_distance += distance_to_target   
-                self.total_riding_time += distance_to_target / (self.speed * 0.8)
+                self.total_riding_time += distance_to_target / self.speed
                 self.position = self.target_location
                 reward += self._pick_or_drop(map)
                 if self.speed > 4:
@@ -164,7 +164,6 @@ class Courier:
         for order in self.wait_to_pick:
             if self.position == order.pick_up_point and map.clock >= order.meal_prepare_time: # picking up
                 order.wait_time = map.clock - order.meal_prepare_time if order.meal_prepare_time > 0 else 0
-                reward -= int(order.wait_time / 60)
                 self.pick_order(order)
                 self.order_sequence, self.current_wave_dist, self.current_risk = map.cal_wave_info(None, self)
                 

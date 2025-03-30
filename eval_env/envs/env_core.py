@@ -17,7 +17,6 @@ class EnvCore(object):
         self.map_algo_index = map_algo_index
         self.map = Map(algo_index=map_algo_index)
         self.num_agent = self.map.num_couriers
-        self.num_speeds = 7 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 1,3,5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
         
         self.action_space = []
         # self.obs_dim = self.map.couriers[0].capacity * 6 + 6 + 10 * 6 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position; env: time
@@ -112,6 +111,10 @@ class EnvCore(object):
                 agent.target_location = agent.order_sequence[0][0]
             else:
                 reward += 10
+                # if order_index < waybill_length:
+                #     agent.target_location = agent.waybill[order_index].drop_off_point
+                # else:
+                #     agent.target_location = agent.wait_to_pick[order_index - waybill_length].pick_up_point
                 if order_index < waybill_length:
                     target_loc = agent.waybill[order_index].drop_off_point
                 else:

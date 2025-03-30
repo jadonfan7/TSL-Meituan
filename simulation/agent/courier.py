@@ -1,4 +1,4 @@
-from geopy.distance import geodesic
+from geopy.distance import great_circle
 import numpy as np
 import random
 
@@ -34,15 +34,11 @@ class Courier:
         self.current_wave_dist = 0
         self.current_risk = 0
         
-        self.speed = 3
+        self.speed = 4
         self.actual_speed = 0
-        self.congestion_rate = 0
         
         self.capacity = 10
         self.reward = 0
-        
-        self.da_count = dict()
-        self.poi_count = dict()
         
         self.income = 0
                 
@@ -91,81 +87,66 @@ class Courier:
         order.status = 'dropped'
         self.finish_order_num += 1
 
-    def move(self, current_map):
-        
-        if self.speed != 0 and self.current_waiting_time < current_map.interval:
-            # default_congestion_rate = 0.8
-            # speed = self.speed * congestion_rate
-            
+    def move(self, map):
+        time = map.interval
+        old_lat, old_lng = self.position
+        if self.speed != 0 and self.current_waiting_time < time and self.order_sequence != []:
+
             if self.current_waiting_time > 0:
-                time = current_map.interval - self.current_waiting_time
+                time -= self.current_waiting_time
                 self.current_waiting_time = 0
-            else:
-                time = current_map.interval
-                
-            self.target_location = self.order_sequence[0][0]
-            travel_distance = time * self.speed
-            distance_to_target = geodesic(self.target_location, self.position).meters
-
-            if travel_distance >= distance_to_target:
-                new_latitude, new_longitude = self.target_location
-                
-            else:
-                ratio = travel_distance / distance_to_target
-                
-                new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
-                new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
             
-            self.congestion_rate = self.get_congestion_rate(current_map, new_latitude, new_longitude, travel_distance)
+            travel_distance = time * self.speed # congestion rate
+            distance_to_target = great_circle(self.target_location, self.position).meters
             
-            if self.congestion_rate != 1:
-                speed = self.speed / (1 + self.congestion_rate ** 4)
-                self.total_congestion_time += time * (self.congestion_rate ** 4)
-            else:
-                speed = self.speed
-            
-            self.total_riding_time += time # congestion has showed on speed
-            travel_distance = time * speed
-            
-            if travel_distance >= distance_to_target:
+            if travel_distance > distance_to_target:
+                self.travel_distance += distance_to_target   
+                self.total_riding_time += distance_to_target / (self.speed)
                 self.position = self.target_location
-                self.is_target_locked = False
-                self.travel_distance += distance_to_target
-                
+                self._pick_or_drop(map)
             else:
                 ratio = travel_distance / distance_to_target
-                
                 new_latitude = self.position[0] + ratio * (self.target_location[0] - self.position[0])
                 new_longitude = self.position[1] + ratio * (self.target_location[1] - self.position[1])
-                                
                 self.position = (new_latitude, new_longitude)
-
-                self.travel_distance += travel_distance
-            
                 
-    def get_congestion_rate(self, map, latitude, longitude, travel_distance, radius=50):
-        points_on_line = [(self.position[0], self.position[1])]
-        num_steps = int(travel_distance // 100)
-
-        for i in range(1, num_steps + 1):
-            ratio = i / num_steps
-            new_latitude = self.position[0] + ratio * (latitude - self.position[0])
-            new_longitude = self.position[1] + ratio * (longitude - self.position[1])
-            points_on_line.append((new_latitude, new_longitude))
-
-        nearby_couriers_count = 0
-        nearby_couriers = set()
+                self.travel_distance += travel_distance       
+                self.total_riding_time += time
         
-        nearby_couriers.update(map.get_couriers_in_adjacent_grids(self.position[0], self.position[1]))
-        nearby_couriers.update(map.get_couriers_in_adjacent_grids(latitude, longitude))
-        
-        for courier in nearby_couriers:
-            for point in points_on_line:
-                distance_to_point = geodesic(courier.position, point).meters
-                if distance_to_point <= radius:
-                    nearby_couriers_count += 1
-                    break
-        
-        road_capacity = int(2348 / 3600 * 30)
-        congestion_rate =  nearby_couriers_count / road_capacity if nearby_couriers_count > road_capacity else 1
-        return congestion_rate
+        map.update_courier_position(old_lat, old_lng, self.position[0], self.position[1], self)
+    def _pick_or_drop(self, map):
+        for order in self.wait_to_pick:
+            if self.position == order.pick_up_point and map.clock >= order.meal_prepare_time: # picking up
+                order.wait_time = map.clock - order.meal_prepare_time if order.meal_prepare_time > 0 else 0
+                self.pick_order(order)
+                self.order_sequence, self.current_wave_dist, self.current_risk = map.cal_wave_info(None, self)
+                    
+            elif self.position == order.pick_up_point and map.clock < order.meal_prepare_time and self.is_waiting == 0:
+                waiting_time = order.meal_prepare_time - map.clock
+                self.current_waiting_time = waiting_time
+                self.total_waiting_time += waiting_time
+                self.is_waiting == 1
+                
+                self.pick_order(order)
+                self.order_sequence, self.current_wave_dist, self.current_risk = map.cal_wave_info(None, self)
+                
+        for order in self.waybill:
+            if self.position == order.drop_off_point:  # dropping off
+                self.drop_order(order)
+                if len(self.waybill + self.wait_to_pick) > 0:
+                    self.order_sequence, self.current_wave_dist, self.current_risk = map.cal_wave_info(None, self)
+                else:
+                    self.order_sequence = []
+                    self.current_wave_dist = 0
+                    self.current_risk = 0
+                                    
+                if map.clock > order.ETA:
+                        
+                    self.income += order.price * 0.7
+                    order.is_late = 1
+                    order.arrive_time = map.clock
+                                            
+                else:
+                    order.ETA_usage = (map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
+                        
+                    self.income += order.price    

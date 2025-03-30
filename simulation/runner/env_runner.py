@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from loguru import logger
 import numpy as np
+import pandas as pd
 
 def _t2n(x):
     return x.detach().cpu().numpy()
@@ -28,14 +29,12 @@ class EnvRunner(Runner):
             "Hired_reject_num": [],
             "Hired_leisure_time": [],
             "Hired_running_time": [],
-            "Hired_congestion_time": [],
             "Hired_waiting_time": [],
             "Crowdsourced_finish_num": [],
             "Crowdsourced_unfinish_num": [],
             "Crowdsourced_reject_num": [],
             "Crowdsourced_leisure_time": [],
             "Crowdsourced_running_time": [],
-            "Crowdsourced_congestion_time": [],
             "Crowdsourced_waiting_time": [],
 
             # courier side
@@ -49,7 +48,6 @@ class EnvRunner(Runner):
             "Hired_income": [],
             "Crowdsourced_actual_speed": [],
             "Crowdsourced_income": [],
-            "overspeed_step": {"ratio0": [], "ratio1": []}, 
             
             # order side
             "order_num": 0,
@@ -61,7 +59,7 @@ class EnvRunner(Runner):
             "late_orders": 0,
             "ETA_usage": [],
             "order_price": [],
-            "order_wait": 0,
+            "order_wait_pair": 0,
             "order_waiting_time": [],
         } for i in range(self.eval_envs.num_envs)}
 
@@ -73,37 +71,64 @@ class EnvRunner(Runner):
             for i in range(self.eval_envs.num_envs):
                 
                 self.log_env(eval_step, i)
-                            
+                
             self.eval_envs.step()
-                        
-            algo_stats = {i: {"num0": 0, "num1": 0, "count0": 0, "count1": 0} for i in range(self.eval_envs.num_envs)}
-
-            for i in range(self.eval_envs.num_envs):
-                for c in self.eval_envs.envs_map[i].active_couriers:
-                    if c.state == 'active':
-                        if c.courier_type == 0:
-                            algo_stats[i]["num0"] += 1
-                            if c.speed > 4:
-                                algo_stats[i]["count0"] += 1
-                        else:
-                            algo_stats[i]["num1"] += 1
-                            if c.speed > 4:
-                                algo_stats[i]["count1"] += 1
-
-            for i in range(self.eval_envs.num_envs):
-                overspeed_ratio0 = algo_stats[i]["count0"] / algo_stats[i]["num0"] if algo_stats[i]["num0"] > 0 else 0
-                overspeed_ratio1 = algo_stats[i]["count1"] / algo_stats[i]["num1"] if algo_stats[i]["num1"] > 0 else 0
-
-                stats[i]["overspeed_step"]["ratio0"].append(overspeed_ratio0)
-                stats[i]["overspeed_step"]["ratio1"].append(overspeed_ratio1) 
-            
-            if eval_step != self.eval_episodes_length - 1:               
-                self.eval_envs.eval_env_step()
-            
+        
         # Evaluation over periods
         for i in range(self.eval_envs.num_envs):
             env = self.eval_envs.envs_map[i]
             stats[i]["platform_cost"] += env.platform_cost
+            
+            order_data = [{
+                'orderid': order.orderid,
+                'status': order.status,
+                'distance_cluster': order.distance_cluster,
+                'time_cluster': order.time_cluster,
+                'order_create_time': order.order_create_time,
+                'meal_prepare_time': order.meal_prepare_time,
+                'pick_up_point': order.pick_up_point,
+                'drop_off_point': order.drop_off_point,
+                'ETA': order.ETA,
+                'wait_time': order.wait_time,
+                'price': order.price,
+                'reject_count': order.reject_count,
+                'pair_time': order.pair_time,
+                'pair_courier': order.pair_courier.courier_id if order.pair_courier else None,
+                'is_late': order.is_late,
+                'ETA_usage': order.ETA_usage,
+                'arrive_time': order.arrive_time,
+                'type': order.pair_courier.courier_type if order.pair_courier else None
+            } for order in env.orders]
+            
+            courier_data = [{
+                'courier_id': courier.courier_id,
+                'courier_type': courier.courier_type,
+                'start_time': courier.start_time,
+                'state': courier.state,
+                
+                'total_leisure_time': courier.total_leisure_time,
+                'total_riding_time': courier.total_riding_time,
+                'total_congestion_time': courier.total_congestion_time,
+                'total_running_time': courier.total_running_time,
+                
+                'total_waiting_time': courier.total_waiting_time,
+                
+                'reject_order_num': courier.reject_order_num,
+                'finish_order_num': courier.finish_order_num,
+                
+                'position': courier.position,
+                'travel_distance': courier.travel_distance,
+                
+                'income': courier.income
+            } for courier in env.couriers]
+
+
+            df1 = pd.DataFrame(order_data)
+            df1.to_csv(f'order_info{i}.csv', index=False)
+
+            df2 = pd.DataFrame(courier_data)
+            df2.to_csv(f'courier_info{i}.csv', index=False)
+
 
             for c in env.couriers:
                 category = "Hired" if c.courier_type == 0 else "Crowdsourced"
@@ -117,7 +142,6 @@ class EnvRunner(Runner):
                     stats[i][f"{category}_reject_num"].append(c.reject_order_num)
                     stats[i][f"{category}_leisure_time"].append(c.total_leisure_time)
                     stats[i][f"{category}_running_time"].append(c.total_running_time)
-                    stats[i][f"{category}_congestion_time"].append(c.total_congestion_time)
                     stats[i][f"{category}_waiting_time"].append(c.total_waiting_time)
 
                 if c.actual_speed > 0:
@@ -162,11 +186,12 @@ class EnvRunner(Runner):
                         stats[i]["max_reject_num"] = o.reject_count
 
             stats[i]["order_num"] = len(env.orders)
-            
+        
+        message = ''
         for algo_num in range(self.eval_envs.num_envs):
             data = stats[algo_num]
             
-            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired")
+            print(f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait_pair']} ({round(100 * data['order_wait_pair'] / data['order_num'], 2)}%) Orders waiting to be paired")
 
             # -----------------------
             # Distance
@@ -179,15 +204,7 @@ class EnvRunner(Runner):
             total_courier_num = data['courier_num']
 
             print(f"In Algo{algo_num + 1}, Total couriers: {total_courier_num}")            
-            print(f"In Algo{algo_num + 1}, Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})")
-            
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Hired', hired_distance, 1)
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Crowdsourced', crowdsourced_distance, 1)
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Total', total_distance, 1)
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Hired Var', var_hired_distance, 1)
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Crowdsourced Var', var_crowdsourced_distance, 1)
-            # self.writter.add_text(f'Algo{algo_num + 1}/Eval Travel Distance/Total Var', var_total_distance, 1)
-            
+            print(f"\nIn Algo{algo_num + 1}, Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})")
             # -----------------------
             # Average Courier Finishing Number
             hired_finish_num = data["Hired_finish_num"]
@@ -203,12 +220,6 @@ class EnvRunner(Runner):
             print(f"Average Finished Orders per Courier for Algo{algo_num + 1}:")
             print(f"Hired finishes average {finish0} orders (Var: {var0_finish}), Crowdsourced finishes average {finish1} orders (Var: {var1_finish}), Total finish number per courier is {total_finish} orders (Var: {var_finish})")
 
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Total', total_finish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Hired', finish0, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Crowdsourced', finish1, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Total Var', var_finish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Hired Var', var0_finish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Finish/Crowdsourced Var', var1_finish, 1)
                     
             # -----------------------
             # Average Courier unfinished Number
@@ -225,12 +236,6 @@ class EnvRunner(Runner):
             print(f"Average unfinished Orders per Courier for Algo{algo_num+1}:")
             print(f"Hired unfinishes average {unfinish0} orders (Var: {var0_unfinish}), Crowdsourced unfinishes average {unfinish1} orders (Var: {var1_unfinish}), Total unfinish number per courier is {total_unfinish} orders (Var: {var_unfinish})")
 
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Total', total_unfinish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Hired', unfinish0, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Crowdsourced', unfinish1, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Total Var', var_unfinish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Hired Var', var0_unfinish, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average unfinish/Crowdsourced Var', var1_unfinish, 1)
 
             # ---------------------
             # courier reject number
@@ -247,12 +252,6 @@ class EnvRunner(Runner):
                 f"Crowdsourced - {avg_reject1} (Var: {var_reject1}), "
                 f"Total - {avg_reject} (Var: {var_reject})"
             )
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Total', avg_reject, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Total_Var', var_reject, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Hired', avg_reject0, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Hired_Var', var_reject0, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Crowdsourced', avg_reject1, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject Rate/Crowdsourced_Var', var_reject1, 1)
 
             # -----------------------
             # Average Courier Leisure Time
@@ -270,12 +269,6 @@ class EnvRunner(Runner):
             print(f"Average leisure time per courier for Algo {algo_num+1}:")
             print(f"Hired leisure time is {hired_leisure} minutes (Var: {hired_leisure_var}), Crowdsourced leisure time is {Crowdsourced_leisure} minutes (Var: {Crowdsourced_leisure_var}), Total leisure time per courier is {avg_leisure} minutes (Var: {avg_leisure_var})")
 
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Total', avg_leisure, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Hired', hired_leisure, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Crowdsourced', Crowdsourced_leisure, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Total Var', avg_leisure_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Hired Var', hired_leisure_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Leisure Time/Crowdsourced Var', Crowdsourced_leisure_var, 1)
 
             # -----------------------
             # Average Courier running Time
@@ -292,36 +285,6 @@ class EnvRunner(Runner):
 
             print(f"Average running time per courier for Algo {algo_num+1}:")
             print(f"Hired running time is {hired_running} minutes (Var: {hired_running_var}), Crowdsourced running time is {Crowdsourced_running} minutes (Var: {Crowdsourced_running_var}), Total running time per courier is {avg_running} minutes (Var: {avg_running_var})")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Total', avg_running, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Hired', hired_running, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Crowdsourced', Crowdsourced_running, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Total Var', avg_running_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Hired Var', hired_running_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average running Time/Crowdsourced Var', Crowdsourced_running_var, 1)
-
-            # -----------------------
-            # Average Courier congestion Time
-            Hired_congestion_time = data['Hired_congestion_time']
-            Crowdsourced_congestion_time = data['Crowdsourced_congestion_time']
-            
-            hired_congestion = np.mean(Hired_congestion_time) / 60
-            hired_congestion_var = np.var(Hired_congestion_time) / 60**2
-            Crowdsourced_congestion = np.mean(Crowdsourced_congestion_time) / 60
-            Crowdsourced_congestion_var = np.var(Crowdsourced_congestion_time) / 60**2
-            
-            avg_congestion = np.mean(Hired_congestion_time + Crowdsourced_congestion_time) / 60
-            avg_congestion_var = np.var(Hired_congestion_time + Crowdsourced_congestion_time) / 60**2
-
-            print(f"Average congestion time per courier for Algo {algo_num+1}:")
-            print(f"Hired congestion time is {hired_congestion} minutes (Var: {hired_congestion_var}), Crowdsourced congestion time is {Crowdsourced_congestion} minutes (Var: {Crowdsourced_congestion_var}), Total congestion time per courier is {avg_congestion} minutes (Var: {avg_congestion_var})")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Total', avg_congestion, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Hired', hired_congestion, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Crowdsourced', Crowdsourced_congestion, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Total Var', avg_congestion_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Hired Var', hired_congestion_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average congestion Time/Crowdsourced Var', Crowdsourced_congestion_var, 1)
         
             # -----------------------
             # Average Courier waiting Time
@@ -338,13 +301,6 @@ class EnvRunner(Runner):
 
             print(f"Average waiting time per courier for Algo {algo_num+1}:")
             print(f"Hired waiting time is {hired_waiting} minutes (Var: {hired_waiting_var}), Crowdsourced waiting time is {Crowdsourced_waiting} minutes (Var: {Crowdsourced_waiting_var}), Total waiting time per courier is {avg_waiting} minutes (Var: {avg_waiting_var})")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Total', avg_waiting, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Hired', hired_waiting, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Crowdsourced', Crowdsourced_waiting, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Total Var', avg_waiting_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Hired Var', hired_waiting_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average waiting Time/Crowdsourced Var', Crowdsourced_waiting_var, 1)
             
             # -----------------------
             # Actual Speed
@@ -360,29 +316,6 @@ class EnvRunner(Runner):
 
             print(f"Average speed per courier for Algo{algo_num+1}:")
             print(f"Hired average speed is {hired_speed} m/s (Var: {hired_speed_var}), Crowdsourced average speed is {crowdsourced_speed} m/s (Var: {crowdsourced_speed_var}), Total average speed per courier is {avg_speed} m/s (Var: {avg_speed_var})")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Total', avg_speed, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Hired', hired_speed, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Crowdsourced', crowdsourced_speed, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Total Var', avg_speed_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Hired Var', hired_speed_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Speed/Crowdsourced Var', crowdsourced_speed_var, 1)
-            
-            # -----------------------
-            # Overspeed
-            Hired_overspeed = data['overspeed_step']['ratio0']
-            Crowdsourced_overspeed = data['overspeed_step']['ratio1']
-            hired_overspeed = np.mean(Hired_overspeed)
-            crowdsourced_overspeed = np.mean(Crowdsourced_overspeed)
-            total_overspeed = np.mean(Hired_overspeed + Crowdsourced_overspeed)
-
-            print(f"Rate of Overspeed for Evaluation for Algo{algo_num+1}:")
-            print(f"Hired overspeed rate is {hired_overspeed}, Crowdsourced overspeed rate is {crowdsourced_overspeed}, Total overspeed rate is {total_overspeed}")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Overspeed Rate/Total', total_overspeed, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Overspeed Rate/Hired', hired_overspeed, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Overspeed Rate/Crowdsourced', crowdsourced_overspeed, 1)
-
             # -----------------------
             # Average Courier Income
             hired_income = data['Hired_income']
@@ -396,33 +329,22 @@ class EnvRunner(Runner):
 
             print(f"Average Income per Courier for Algo{algo_num+1}:")
             print(f"Total: Hired's average income is {hired_income} dollars (Var: {hired_income_var}), Crowdsourced's average income is {crowdsourced_income} dollars (Var: {crowdsourced_income_var}), Total income per courier is {total_income} dollars (Var: {total_income_var})")
-
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Total', total_income, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Hired', hired_income, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Crowdsourced', crowdsourced_income, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Total Var', total_income_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Hired Var', hired_income_var, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Income/Crowdsourced Var', crowdsourced_income_var, 1)
             
             # -----------------------
             # Platform cost
             platform_cost = data['platform_cost']
             print(f"The platform cost for Algo{algo_num+1} is {platform_cost} dollars.")
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Platform Cost', platform_cost, 1)
             
             # ---------------------
             # order reject rate
             reject_rate_per_episode = data['count_reject_orders'] / data['order_num'] # reject once or twice or more
             print(f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most")
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Reject rate', reject_rate_per_episode, 1)
             
             # ---------------------
             # average waiting time for orders
             waiting_time_per_order = np.mean(data['order_waiting_time']) / 60
             var_waiting_time = np.var(data['order_waiting_time']) / 60**2
-            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})")
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total', waiting_time_per_order, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Order Waiting Time/Total_Var', var_waiting_time, 1)
+            print(f"The average waiting time for orders ({data['order_num'] - data['order_wait_pair']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})")
 
             # -----------------------
             # Average Order Price
@@ -431,13 +353,11 @@ class EnvRunner(Runner):
             order_price_per_order = np.mean(order_price)
             order_price_var = np.var(order_price)
 
-            print(f"Average Price per Order for Algo{algo_num+1} is {order_price_per_order} dollars (Var: {order_price_var})")
+            print(f"Average Price per Order for Algo{algo_num+1}:")
+            print(f"Total average is {order_price_per_order} dollars (Var: {order_price_var})")
 
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Price/Total', order_price_per_order, 1)
-            # self.writter.add_text(f'Algo{algo_num+1}/Eval Average Price/Total Var', order_price_var, 1)
-            
-            message = (
-                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait']} ({round(100 * data['order_wait'] / data['order_num'], 2)}%) Orders waiting to be paired\n"
+            message += (
+                f"\nIn Algo{algo_num + 1} there are {data['Hired_num']} Hired, {data['Crowdsourced_num']} Crowdsourced with {data['Crowdsourced_on']} ({round(100 * data['Crowdsourced_on'] / data['Crowdsourced_num'], 2)}%) on, and {data['order_num']} Orders, ({data['count_dropped_orders']} dropped, {data['count_unfinished_orders']} unfinished), {data['order_wait_pair']} ({round(100 * data['order_wait_pair'] / data['order_num'], 2)}%) Orders waiting to be paired\n"
                                 
                 f"Hired total distance: {hired_distance} km (Var: {var_hired_distance}), Crowdsourced total distance: {crowdsourced_distance} km (Var: {var_crowdsourced_distance}), Total distance: {total_distance} km (Var: {var_total_distance})\n"
                 
@@ -450,63 +370,47 @@ class EnvRunner(Runner):
                 f"Hired leisure time is {hired_leisure} minutes (Var: {hired_leisure_var}), Crowdsourced leisure time is {Crowdsourced_leisure} minutes (Var: {Crowdsourced_leisure_var}), Total leisure time per courier is {avg_leisure} minutes (Var: {avg_leisure_var})\n"
                 
                 f"Hired running time is {hired_running} minutes (Var: {hired_running_var}), Crowdsourced running time is {Crowdsourced_running} minutes (Var: {Crowdsourced_running_var}), Total running time per courier is {avg_running} minutes (Var: {avg_running_var})\n"
-
-                f"Hired congestion time is {hired_congestion} minutes (Var: {hired_congestion_var}), Crowdsourced congestion time is {Crowdsourced_congestion} minutes (Var: {Crowdsourced_congestion_var}), Total congestion time per courier is {avg_congestion} minutes (Var: {avg_congestion_var})\n"
                 
                 f"Hired waiting time is {hired_waiting} minutes (Var: {hired_waiting_var}), Crowdsourced waiting time is {Crowdsourced_waiting} minutes (Var: {Crowdsourced_waiting_var}), Total waiting time per courier is {avg_waiting} minutes (Var: {avg_waiting_var})\n"
                 
                 f"Hired average speed is {hired_speed} m/s (Var: {hired_speed_var}), Crowdsourced average speed is {crowdsourced_speed} m/s (Var: {crowdsourced_speed_var}), Total average speed per courier is {avg_speed} m/s (Var: {avg_speed_var})\n"
-
-                f"Hired overspeed rate is {hired_overspeed}, Crowdsourced overspeed rate is {crowdsourced_overspeed}, Total overspeed rate is {total_overspeed}\n"     
                 
                 f"Total: Hired's average income is {hired_income} dollars (Var: {hired_income_var}), Crowdsourced's average income is {crowdsourced_income} dollars (Var: {crowdsourced_income_var}), Total income per courier is {total_income} dollars (Var: {total_income_var})\n"
                 
                 f"The rejection rate is {reject_rate_per_episode} and the order is rejected by {data['max_reject_num']} times at most\n"
                 
-                f"The average waiting time for orders ({data['order_num'] - data['order_wait']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})\n"
-                           
-                f"Total average is {order_price_per_order} dollars (Var: {order_price_var})\n"
+                f"The average waiting time for orders ({data['order_num'] - data['order_wait_pair']}) is {waiting_time_per_order} minutes (Var: {var_waiting_time})\n"
+                        
+                f"Total average price per order is {order_price_per_order} dollars (Var: {order_price_var})\n"
                                 
-                f"The platform1 total cost is {platform_cost} dollar\n"
+                f"The platform total cost is {platform_cost} dollar\n"
                 
             )
 
             if data['count_dropped_orders'] == 0:
                 print(f"No order is dropped in Algo{algo_num+1}")
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', -1, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', -1, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var/Crowdsourced Var', 0, 1)
                 
-                message += "No order is dropped in Algo1\n"
+                message += f"No order is dropped in Algo{algo_num+1}\n"
             else:                
                 late_rate = data['late_orders'] / data['count_dropped_orders']     
-                ETA_usage_rate = np.mean(data['ETA_usage0'])
-                var_ETA = np.var(data['ETA_usage0'])
+                ETA_usage_rate = np.mean(data['ETA_usage'])
+                var_ETA = np.var(data['ETA_usage'])
                 print(f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders")
                 print(f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})")
                 
                 message += f"Rate of Late Orders is {late_rate} out of {data['count_dropped_orders']} orders\n" + f"Rate of ETA Usage is {ETA_usage_rate} (Var: {var_ETA})\n"
-
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval Late Order Rate', late_rate, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate', ETA_usage_rate, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Eval ETA Usage Rate Var', var_ETA, 1)
             
             if data['count_unfinished_orders'] == 0:
                 print(f"No order is unfinished in Algo{algo_num+1}")
                 message += f"No order is unfinished in Algo{algo_num+1}\n"
-                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', 0, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', 0, 1)
             else:
                 unfinished = data['count_unfinished_orders'] / data['order_num']
                 unfinished_late_rate = data['unfinished_late_orders'] / data['count_unfinished_orders']
-                print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num'] - data['order_wait']} orders ({unfinished}), with {unfinished_late_rate} being late")
+                print(f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num']} orders ({unfinished}), with {unfinished_late_rate} being late")
                 
                 message += f"Unfinished Orders in Algo{algo_num+1} is {data['count_unfinished_orders']} out of {data['order_num']} orders ({unfinished}), with {unfinished_late_rate} being late\n"
-                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Orders Rate', unfinished, 1)
-                # self.writter.add_text(f'Algo{algo_num+1}/Unfinished Late Rate', unfinished_late_rate, 1)
-            
-            logger.success(message)
-                
+  
             print("\n")
-        
+            
+        logger.success(message)
         self.eval_envs.close()

@@ -18,6 +18,7 @@ class Order:
         self.pair_time = None
         
         self.is_late = 0
+        self.arrive_time = 0
         self.ETA_usage = 0
         self.reject_count = 0
         self.price = 0

@@ -8,12 +8,13 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 import hdbscan
 from collections import defaultdict
+from joblib import Parallel, delayed
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import DBSCAN
 from scipy.spatial import KDTree
 
 class Map:
-    def __init__(self, env_index=4, algo_index=0, eval=False):
+    def __init__(self, env_index=0, algo_index=0, eval=False):
         self.eval = eval
         
         self.orders_id = set()
@@ -31,7 +32,7 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('/Users/jadonfan/Documents/TSL/data/all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('../all_waybill_info_meituan_0322.csv')
         # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
         
         order_num_estimate = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/eval_env/order_prediction/order_num_estimation.csv')
@@ -63,13 +64,17 @@ class Map:
 
         Cluster_0_Lng_Range = (174414242, 174685447)
         Cluster_0_Lat_Range = (45744563, 45959787)
+        
+        # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
             config = config_mapping[self.env_index]
             date_value = config['date']
             self.start_time = config['start_time']
             self.end_time = config['end_time']
             
+            # 筛选和排序数据
             # df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])] # do not define in one area
+            # df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0) & (df['is_courier_grabbed'] == 1) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])]
             df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
@@ -117,13 +122,13 @@ class Map:
         
         # 2621, 2682, 2687, 2737, 2704
         # self.max_num_couriers = 2621
-        # self.max_num_couriers = 906 # two hour da0
+        self.max_num_couriers = 906 # two hour da0
         # self.max_num_couriers = 704 # one hour da0
         
         random.seed(42)
         for index, dt in self.order_data.iterrows():
-            # if len(self.couriers) >= self.max_num_couriers:
-            #     break
+            if len(self.couriers) >= self.max_num_couriers:
+                break
             
             courier_id = dt['courier_id']
             if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
@@ -141,12 +146,6 @@ class Map:
         self.num_couriers = len(self.couriers)
         self.num_orders = 0
 
-        # if eval == False:
-        #     self.step(first_time=1)
-        # else:
-        #     self.eval_step(first_time=1)
-
-    
     def reset(self, env_index, eval=False):
         self.orders = []
         self.couriers = []
@@ -213,7 +212,7 @@ class Map:
                                 self.add_courier(dt['grab_lat'] / 1e6, dt['grab_lng'] / 1e6, courier)
                                 break
                         
-                    if len(courier.waybill) + len(courier.wait_to_pick) == courier.capacity or courier == None:
+                    if len(courier.waybill) + len(courier.wait_to_pick) >= courier.capacity or courier == None:
                         self.current_index += 1
                         self.orders_id.add(order_id)
                         self.orders.append(order)
@@ -507,7 +506,31 @@ class Map:
             
     ##################
     # courier
-    def _accept_or_reject(self, order, courier):
+    def _accept_or_reject(self, order, courier, dist):
+        if len(courier.waybill) + len(courier.wait_to_pick) == 0:
+            return True
+        
+        order_sequence, current_dist, risk = self.cal_wave_info(None, courier)
+        
+        if isinstance(order, list):
+            fee = order[0].price
+            reject_num = order[0].reject_count
+        else:
+            fee = order.price
+            reject_num = order.reject_count
+        
+        detour = dist - current_dist if dist - current_dist > 0 else 4
+        
+        fee = fee / (detour / 4)
+            
+        expectation_fee = courier.income / (self.clock - courier.start_time) if self.clock - courier.start_time > 0 else 0
+        if expectation_fee <= fee:
+            return True
+        else:
+            if reject_num < 4:
+                return False
+            else:
+                return True
         # return True
         # if isinstance(order, list):
         #     for o in order:
@@ -517,76 +540,82 @@ class Map:
         #     if order.reject_count >= 4:
         #         return True
 
-        decision = True if np.random.rand() < 0.9 else False
-        return decision
+        # decision = True if np.random.rand() < 0.9 else False
+        # return decision
     
     ##################
     # platform
-    def _get_predicted_orders(self):
+    def get_predicted_orders(self):
             
         index = (self.clock - self.start_time) // self.interval - 1
+        max_time_interval = self.location_estimation_data['time_interval'].max()
+        next_index = min(index + 1, max_time_interval)
+                                            
         predicted_count = int(self.predicted_count.iloc[index])
 
         predicted_orders = []
         da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
         
+        predicted_count = int(self.predicted_count.iloc[index])
+        next_predicted_count = int(self.predicted_count.iloc[next_index])
+    
+        da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == index].iloc[0]
+        next_da_frequency_row = self.da_frequency[self.da_frequency['time_interval'] == next_index].iloc[0]
+
         da_ids = da_frequency_row.index[1:]
         frequencies = da_frequency_row.values[1:]
-
-        frequencies_normalized = frequencies / np.sum(frequencies)
-
-        from collections import Counter
-        assigned_da_ids = np.random.choice(
-            da_ids,
-            size=predicted_count,
-            p=frequencies_normalized
-        )
-
+        next_frequencies = next_da_frequency_row.values[1:]
         
-        da_order_count = dict(Counter(assigned_da_ids))
+        combined_frequencies = (frequencies + next_frequencies) / 2
+        frequencies_normalized = combined_frequencies / np.sum(combined_frequencies)
+        
+        ############
+        if '0' in da_ids:
+            da_id_0_index = da_ids.get_loc('0')
+            frequencies = frequencies_normalized[da_id_0_index]
+        else:
+            frequencies = 0
 
-        for da_id, num in da_order_count.items():
-            da_id = int(da_id)
-            model_data = self.location_estimation_data[(self.location_estimation_data['time_interval'] == index) & (self.location_estimation_data['da_id'] == da_id)].reset_index(drop=True)
-            
-            mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time']))
-            
-            from sklearn.cluster import KMeans
+        num = int((predicted_count + next_predicted_count) * frequencies)
+        da_id = 0
+        
+        model_data = self.location_estimation_data[
+            (self.location_estimation_data['time_interval'].isin([index, next_index])) &
+            (self.location_estimation_data['da_id'] == da_id) &
+            (self.location_estimation_data['is_courier_grabbed'] == 1)
+        ].reset_index(drop=True)
 
-            coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
-            if len(coordinates) > num:
-                kmeans = KMeans(n_clusters=num, random_state=42, n_init='auto')
-                kmeans.fit(coordinates)
+        poi_order_counts = model_data['poi_id'].value_counts().reset_index()
+        poi_order_counts.columns = ['poi_id', 'order_count']
+        
+        mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
+        mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
+        
+        coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
 
-                predicted_coords = kmeans.cluster_centers_
+        if len(coordinates) > num:
+            gmm = GaussianMixture(n_components=num, random_state=42)
+            gmm.fit(coordinates)
+            predicted_coords = gmm.sample(num)[0]
 
-                labels = kmeans.labels_
+            for coord in predicted_coords:
+                pickup_point = (coord[0], coord[1])
+                dropoff_point = (coord[2], coord[3])
 
-                for label in np.unique(labels):
-                    
-                    cluster_center = predicted_coords[label]
-                    
-                    pickup_point = (cluster_center[0], cluster_center[1])
-                    dropoff_point = (cluster_center[2], cluster_center[3])
-                    
-                    eta = mean_eta + self.clock
+                order_create_time = self.clock
+                order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+                predicted_orders.append(order)
+        else:
+            for i in range(len(coordinates)):
+                pickup_point = (coordinates[i][0], coordinates[i][1])
+                dropoff_point = (coordinates[i][2], coordinates[i][3])
 
-                    order_create_time = self.clock            
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
-                    predicted_orders.append(order)
-            else:
-                for i in range(len(coordinates)):
-                    pickup_point = (coordinates[i][0], coordinates[i][1])
-                    dropoff_point = (coordinates[i][2], coordinates[i][3])
-
-                    eta = mean_eta + self.clock
-                    order_create_time = self.clock
-                    order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, 0, eta)
-                    predicted_orders.append(order)
+                order_create_time = self.clock
+                order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
+                predicted_orders.append(order)
                                 
         return predicted_orders
-
-
+    
     # give order to the nearest guy                        
     def _Efficiency_allocation(self, orders):
         nearest_courier = None
@@ -594,15 +623,19 @@ class Map:
         tree = KDTree(courier_coords)
 
         for order in orders:
+            price_candidate = []
             indices = tree.query(order.pick_up_point, k=10)[1]
             nearest_courier = None
             for index in indices:
                 candidate_courier = self.active_couriers[index]
-                if len(candidate_courier.waybill) + len(candidate_courier.wait_to_pick) < candidate_courier.capacity:
+                price = self._wage_response_model(order, candidate_courier)
+                price_candidate.append(price)
+                if len(candidate_courier.waybill) + len(candidate_courier.wait_to_pick) < candidate_courier.capacity and nearest_courier is None:
                     nearest_courier = candidate_courier
-                    break
-            
+                            
             if nearest_courier is not None:
+                order.price = np.mean(price_candidate)
+                
                 self._courier_order_matching(order, nearest_courier)
 
     # give the order to the poorest guy                            
@@ -626,6 +659,7 @@ class Map:
     def _Greedy_allocation(self, orders):
         total_cost = 0
         for i, order in enumerate(orders):
+            price_candidate = []
             min_cost = math.inf
             assigned_courier = None
 
@@ -636,6 +670,7 @@ class Map:
                     detour = distance - courier.current_wave_dist
 
                     price = self._wage_response_model(order, courier)
+                    price_candidate.append(price)
                     
                     if len(courier.waybill) + len(courier.wait_to_pick) == 0:
                         cost = detour % 100 / price
@@ -647,7 +682,9 @@ class Map:
                         assigned_courier = courier
             
             if assigned_courier is not None:
+                order.price = np.mean(price_candidate)
                 self._courier_order_matching(order, assigned_courier)
+                    
         return total_cost
 
     def _is_bipartite_solvable(self, matrix):
@@ -691,7 +728,7 @@ class Map:
             M = 1e9
             cost_matrix = []
             for order in batch_orders:           
-
+                price_candidate = []
                 row = []
                 for courier in couriers:
 
@@ -719,7 +756,9 @@ class Map:
                     if isinstance(order, list):
                         price = 0
                         for task in order:
-                            price += self._wage_response_model(task, courier)
+                            price_temp = self._wage_response_model(task, courier)
+                            price += price_temp
+                            price_candidate.append(price_temp)
                         detour = dist - courier.current_wave_dist
                         
                         if len(courier.waybill) + len(courier.wait_to_pick) == 0:
@@ -737,6 +776,7 @@ class Map:
                                 row.append(float(M))
                     else:
                         price = self._wage_response_model(order, courier)
+                        price_candidate.append(price)
                         detour = dist - courier.current_wave_dist
                         if len(courier.waybill) + len(courier.wait_to_pick) == 0:
                             cost = detour % 1000 / price 
@@ -752,7 +792,6 @@ class Map:
                             else:
                                 row.append(float(M))
 
-
                     # if not risk:
                     #     if isinstance(order, list):
                     #         price = 0
@@ -766,7 +805,13 @@ class Map:
                     #     row.append(cost)
                     # else:
                     #     row.append(float(M))
-
+                if isinstance(order, list):
+                    avg_price = np.mean(price_candidate)
+                    for task in order:
+                        task.price = avg_price
+                else:
+                    order.price = np.mean(price_candidate)
+                    
                 cost_matrix.append(row)
 
             cost_matrix = np.array(cost_matrix) 
@@ -776,11 +821,14 @@ class Map:
                 order = batch_orders[order_index]
                 assigned_courier = couriers[courier_index]
                 
-                if cost_matrix[order_index][courier_index] != float(M):
+                if cost_matrix[order_index][courier_index] == float(M):
+                    total_cost += 20
+                    continue
+                else:
                     count += 1
                     total_cost += cost_matrix[order_index][courier_index] / 100
                 
-                    self._courier_order_matching(order, assigned_courier)
+                self._courier_order_matching(order, assigned_courier)
         
         total_cost += 20 * (len(clustered_orders) - count)
         if count > 0:
@@ -788,125 +836,6 @@ class Map:
         else:
             return total_cost
     
-    # def _Delay_allocation(self, orders):
-    #     clustered_orders = self._cluster_orders(orders)
-    #     total_cost = 0
-    #     count = 0
-        
-    #     couriers = set()
-        
-    #     for order in clustered_orders:
-    #         if isinstance(order, list):
-    #             for o in order:
-    #                 nearby_couriers = self._get_nearby_couriers(o)
-    #                 couriers.update(nearby_couriers)
-    #         else:
-    #             nearby_couriers = self._get_nearby_couriers(order)
-    #             couriers.update(nearby_couriers)
-
-    #     couriers = list(couriers)
-    
-    #     M = 1e9
-    #     cost_matrix = []
-    #     for order in clustered_orders:           
-
-    #         row = []
-    #         for courier in couriers:
-
-    #             if courier.save:
-    #                 row.append(float(M))
-    #                 continue
-                
-    #             unmatch = False
-    #             if isinstance(order, list):
-    #                 if len(courier.waybill) + len(courier.wait_to_pick) + len(order) > courier.capacity:
-    #                     unmatch = True
-    #                 for o in order:
-    #                     if great_circle(o.pick_up_point, courier.position).meters > 1500:
-    #                         unmatch = True
-    #             else:
-    #                 if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or great_circle(order.pick_up_point, courier.position).meters > 1500:
-    #                 # if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
-    #                     unmatch = True   
-
-    #             if unmatch:
-    #                 row.append(float(M))
-    #                 continue
-                
-    #             sequence, dist, risk = self.cal_wave_info(order, courier)
-    #             if isinstance(order, list):
-    #                 price = 0
-    #                 for task in order:
-    #                     price += self._wage_response_model(task, courier)
-    #                 detour = dist - courier.current_wave_dist
-                    
-    #                 if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-    #                     cost = detour % 1000 / price
-    #                     row.append(cost)
-    #                 else:
-                    
-    #                     if risk == 0:
-    #                         cost =  detour / price
-    #                         row.append(cost)
-    #                     elif risk == 1 and self.clock - order[0].order_create_time > self.interval * 3:
-    #                         cost =  detour / price * 2
-    #                         row.append(cost)
-    #                     else:
-    #                         row.append(float(M))
-    #             else:
-    #                 price = self._wage_response_model(order, courier)
-    #                 detour = dist - courier.current_wave_dist
-    #                 if len(courier.waybill) + len(courier.wait_to_pick) == 0:
-    #                     cost = detour % 1000 / price 
-    #                     row.append(cost)
-    #                 else:
-                        
-    #                     if risk == 0:
-    #                         cost =  detour / price
-    #                         row.append(cost)
-    #                     elif risk == 1 and self.clock - order.order_create_time > self.interval * 3:
-    #                         cost =  detour / price * 2
-    #                         row.append(cost)
-    #                     else:
-    #                         row.append(float(M))
-
-
-    #             # if not risk:
-    #             #     if isinstance(order, list):
-    #             #         price = 0
-    #             #         for task in order:
-    #             #             price += self._wage_response_model(task, courier)
-    #             #     else:
-    #             #         price = self._wage_response_model(order, courier)
-                    
-    #             #     detour = dist - courier.current_wave_dist
-    #             #     cost =  detour / price
-    #             #     row.append(cost)
-    #             # else:
-    #             #     row.append(float(M))
-
-    #         cost_matrix.append(row)
-
-    #     cost_matrix = np.array(cost_matrix) 
-    #     row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-    #     for order_index, courier_index in zip(row_ind, col_ind):
-    #         order = clustered_orders[order_index]
-    #         assigned_courier = couriers[courier_index]
-            
-    #         if cost_matrix[order_index][courier_index] != float(M):
-    #             count += 1
-    #             total_cost += cost_matrix[order_index][courier_index] / 100
-            
-    #             self._courier_order_matching(order, assigned_courier)
-        
-    #     total_cost += 20 * (len(clustered_orders) - count)
-    #     if count > 0:
-    #         return total_cost / count
-    #     else:
-    #         return total_cost
-    
-
     def _cluster_orders(self, orders):
         def great_circle_distance(point1, point2):
             sender1 = (point1[0], point1[1])
@@ -954,6 +883,66 @@ class Map:
         
         return dbscan_clustered_orders
             
+        # hdb = hdbscan.HDBSCAN(min_cluster_size=2, metric=great_circle_distance)
+        # hdb_labels = hdb.fit_predict(order_features)
+                    
+        # hdb_clusters = defaultdict(list)
+        # hdb_clustered_orders = []
+        # for i, label in enumerate(hdb_labels):
+        #     if label != -1:
+        #         hdb_clusters[label].append(orders[i])
+        #     else:
+        #         hdb_clustered_orders.append(orders[i])
+
+        # new_clusters = []
+        # capacity = self.couriers[0].capacity
+        # for label, order_list in hdb_clusters.items():
+        #     while len(order_list) > capacity:
+        #         new_clusters.append(order_list[:capacity])
+        #         order_list = order_list[capacity:]
+            
+        #     if order_list:
+        #         new_clusters.append(order_list)
+        
+        # for cluster in new_clusters:
+        #     hdb_clustered_orders.append(cluster)
+        
+        # import matplotlib.pyplot as plt
+        # plt.figure(figsize=(12, 6))
+
+        # # 聚类前：散点图
+        # plt.subplot(1, 2, 1)
+        # plt.title("Orders Before Clustering")
+        # for order in orders:
+        #     plt.scatter(order.pick_up_point[0], order.pick_up_point[1], c='blue', marker='o', label="Pick-up")
+        #     plt.scatter(order.drop_off_point[0], order.drop_off_point[1], c='red', marker='x', label="Drop-off")
+        # plt.xlabel("Longitude")
+        # plt.ylabel("Latitude")
+
+        # # 聚类后：按聚类标签分配颜色
+        # plt.subplot(1, 2, 2)
+        # plt.title("Orders After Clustering")
+        # unique_labels = set(hdb_labels)
+        # color_map = {label: plt.cm.get_cmap("tab10")(i) for i, label in enumerate(unique_labels)}
+
+        # for i, order in enumerate(orders):
+        #     label = hdb_labels[i]
+        #     if label != -1:  # 聚类标签不为-1（噪声）
+        #         color = color_map[label]
+        #     else:
+        #         color = 'gray'  # 噪声用灰色表示
+            
+        #     plt.scatter(order.pick_up_point[0], order.pick_up_point[1], c=color, marker='o', label="Pick-up")
+        #     plt.scatter(order.drop_off_point[0], order.drop_off_point[1], c=color, marker='x', label="Drop-off")
+
+        # plt.xlabel("Longitude")
+        # plt.ylabel("Latitude")
+
+        # plt.tight_layout()
+        # plt.show()
+        
+        # return hdb_clustered_orders
+            
     def _courier_order_matching(self, orders, assigned_courier):
         if orders is not None:
             if isinstance(orders, list):
@@ -963,7 +952,7 @@ class Map:
             
         if assigned_courier.courier_type == 0:
             for order in orders:
-                order.price = self._wage_response_model(order, assigned_courier)
+                # order.price = self._wage_response_model(order, assigned_courier)
                 self.platform_cost += order.price
                                     
                 assigned_courier.wait_to_pick.append(order)
@@ -989,11 +978,11 @@ class Map:
             assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self.cal_wave_info(None, assigned_courier)
                 
         else:
-            
-            decision = self._accept_or_reject(orders, assigned_courier)
+            order_sequence, current_wave_dist, current_risk = self.cal_wave_info(orders, assigned_courier)
+            decision = self._accept_or_reject(orders, assigned_courier, current_wave_dist)
             if decision == True:
                 for order in orders:
-                    order.price = self._wage_response_model(order, assigned_courier)     
+                    # order.price = self._wage_response_model(order, assigned_courier)     
                     self.platform_cost += order.price               
                     assigned_courier.wait_to_pick.append(order)
                 
@@ -1016,7 +1005,7 @@ class Map:
 
                         if assigned_courier.position == order.drop_off_point:  # dropping off
                             assigned_courier.drop_order(order)  
-                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = self.cal_wave_info(None, assigned_courier)
+                assigned_courier.order_sequence, assigned_courier.current_wave_dist, assigned_courier.current_risk = order_sequence, current_wave_dist, current_risk
                                                
             else:
                 for order in orders:
@@ -1278,9 +1267,8 @@ class Map:
             
         points = []
         waybill_points = []
-        order_sequence = []
-        
-        for o in orders:                
+
+        for o in orders:
             if o in courier.waybill:
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
                 waybill_points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
@@ -1288,31 +1276,17 @@ class Map:
                 points.append((o.pick_up_point, 'pick_up', o.meal_prepare_time, o.orderid))
                 points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
         
-        # nearest_point = min(points, key=lambda p: great_circle(p[0], courier.position))
-        # order_sequence.append(nearest_point)
-        # points.remove(nearest_point)
-
-        # first_order = sorted(orders, key=lambda o: o.ETA)[0]
-
-        # for o in orders:                
-        #     if o in courier.waybill:
-        #         if o == first_order:
-        #             order_sequence.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-        #         else:
-        #             points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-        #             waybill_points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-        #     else:
-        #         if o == first_order:
-        #             order_sequence.append((o.pick_up_point, 'pick_up', o.meal_prepare_time, o.orderid))
-        #             points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-        #         else:
-        #             points.append((o.pick_up_point, 'pick_up', o.meal_prepare_time, o.orderid))
-        #             points.append((o.drop_off_point, 'dropped', o.ETA, o.orderid))
-        
         # ETA reveals the sequence of the appearance of orders on the platform
         points = sorted(points, key=lambda o: o[2])
+        order_sequence = []
         order_sequence.append(points[0])
         points.pop(0)
+        # if orders[0] in courier.waybill:
+        #     order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
+        #     points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
+        # else:
+        #     order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
+        #     points.remove((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
             
         while points:
             last_point = order_sequence[-1][0]
@@ -1397,7 +1371,7 @@ class Map:
         if courier_total_time == 0 or (courier.income == 0 and len(courier.waybill) + len(courier.wait_to_pick) == 0):
             return 10 # as a incentive for a new courier, also 10 is the average price of an order
         else:
-            wm = 15 / 3600
+            wm = 15 / 3600 if 15 / 3600 > courier.income / courier_total_time else courier.income / courier_total_time
             v = 4 # 4 m/s
             r = great_circle(order.pick_up_point, courier.position).meters
             d = great_circle(order.pick_up_point, order.drop_off_point).meters

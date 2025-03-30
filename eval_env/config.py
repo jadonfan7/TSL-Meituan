@@ -454,7 +454,7 @@ def get_config():
     parser.add_argument(
         "--eval_episodes_length",
         type=int,
-        default=2,
+        default=120,
         help="number of episodes of a single evaluation.",
     )
 

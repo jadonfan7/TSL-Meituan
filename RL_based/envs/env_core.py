@@ -64,10 +64,7 @@ class EnvCore(object):
         for i, agent in enumerate(self.map.couriers):
             if reward_n[i] != 0:
                 reward_n[i] -= total_cost
-                
-            if agent.state == 'active' and agent.waybill == [] and agent.wait_to_pick == []:
-                reward_n[i] -= 10
-            
+                            
             obs_n.append(self._get_obs(agent, predicted_orders, tree))
             done_n.append(self._get_done(agent)) 
             
@@ -85,7 +82,6 @@ class EnvCore(object):
             else:
                 agent.is_waiting = 0
                    
-        
         if (agent.waybill != [] or agent.wait_to_pick != []) and agent.is_waiting == 0:
             
             agent.save = np.argmax(action[:2])
@@ -101,6 +97,12 @@ class EnvCore(object):
                     reward -= 20
                 else:
                     reward -= 15
+                    
+            # else:
+            #     if agent.courier_type == 0:
+            #         reward += 5
+            #     else:
+            #         reward += 5
                         
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
@@ -108,10 +110,10 @@ class EnvCore(object):
             
             order_index = np.argmax(action[5:])
             if order_index > total_length - 1:
-                reward -= 50
+                reward -= 10
                 agent.target_location = agent.order_sequence[0][0]
             else:
-                reward += 10
+                reward += 35
                 if order_index < waybill_length:
                     target_loc = agent.waybill[order_index].drop_off_point
                 else:
@@ -122,6 +124,7 @@ class EnvCore(object):
                     dist2 = great_circle(agent.position, agent.order_sequence[0][0]).meters
                     if dist1 - dist2 > 300:
                         agent.target_location = agent.order_sequence[0][0]
+                        reward -= 30
                     else:
                         agent.target_location = target_loc
                         reward += (dist2 - dist1) / 10

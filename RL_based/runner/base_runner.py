@@ -58,8 +58,8 @@ class Runner(object):
             os.makedirs(self.save_dir)
 
         logger.remove()
-        logger.add("MF_PPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
-        logger.add("MF_PPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
+        logger.add("GAPPO_logs/env_step_log.log", rotation="50 MB", level="INFO")
+        logger.add("GAPPO_logs/env_episode_log.log", rotation="500 MB", level="SUCCESS")
         
         share_observation_space = self.envs.share_observation_space if self.use_centralized_V else self.envs.observation_space[0]
         

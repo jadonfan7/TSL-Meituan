@@ -17,12 +17,8 @@ def main():
 
     runner = Runner()
     
-    # eval_num = 5
-    # for i in range(eval_num):
-    #     print(f"This is DAY {i}")
-    #     runner.run(i)
     print(f"This is DAY 5")
-    runner.run(5)
+    runner.run(4)
 
 
 if __name__ == "__main__":

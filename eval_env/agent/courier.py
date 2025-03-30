@@ -97,12 +97,12 @@ class Courier:
                 time -= self.current_waiting_time
                 self.current_waiting_time = 0
             
-            travel_distance = time * self.speed * 0.8 # congestion rate
+            travel_distance = time * self.speed # congestion rate
             distance_to_target = great_circle(self.target_location, self.position).meters
             
             if travel_distance > distance_to_target:
                 self.travel_distance += distance_to_target   
-                self.total_riding_time += distance_to_target / (self.speed * 0.8)
+                self.total_riding_time += distance_to_target / (self.speed)
                 self.position = self.target_location
                 reward += self._pick_or_drop(map)
                 if self.speed > 4:
@@ -205,6 +205,7 @@ class Courier:
                         
                     self.income += order.price * 0.7
                     order.is_late = 1
+                    order.arrive_time = map.clock
                                             
                 else:
                     order.ETA_usage = (map.clock - order.order_create_time) / (order.ETA - order.order_create_time)
