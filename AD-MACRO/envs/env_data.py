@@ -38,42 +38,32 @@ class Map:
         order_num_estimate = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/order_num_estimation.csv')
         # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_num_estimation.csv')
 
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
-        # } # 11:00-13:00
-        
         config_mapping = {
-            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665979200},
-            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666065600},
-            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666152000},
-            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666238400},
-            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666324800},
-        } # an hour
+            0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
+            1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666069200},
+            2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666155600},
+            3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
+            4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
+        } # 11:00-13:00
         
         # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665977400},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666063800},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666150200},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666236600},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666323000},
-        # } # half an hour
-
+        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665979200},
+        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666065600},
+        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666152000},
+        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666238400},
+        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666324800},
+        # } # an hour
+        
         Cluster_0_Lng_Range = (174414242, 174685447)
         Cluster_0_Lat_Range = (45744563, 45959787)
         
         self.existing_courier_algo = 0
-        # 根据 env_index 获取相应的日期和时间范围
         if self.env_index in config_mapping:
             config = config_mapping[self.env_index]
             date_value = config['date']
             self.start_time = config['start_time']
             self.end_time = config['end_time']
             
-            # 筛选和排序数据
             # df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)] # do not define in one area
             df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0) & (df['is_courier_grabbed'] == 1) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
@@ -89,20 +79,20 @@ class Map:
         lat_values = self.order_data[['sender_lat', 'recipient_lat', 'grab_lat']]
         lat_values_non_zero = lat_values[lat_values > 0].dropna()
 
-        self.lat_min = lat_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        self.lat_max = lat_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+        self.lat_min = lat_values_non_zero.min().min() / 1e6
+        self.lat_max = lat_values_non_zero.max().max() / 1e6
 
         lng_values = self.order_data[['sender_lng', 'recipient_lng', 'grab_lng']]
         lng_values_non_zero = lng_values[lng_values > 0].dropna()
 
-        self.lng_min = lng_values_non_zero.min().min() / 1e6 # 取所有列的最小值
-        self.lng_max = lng_values_non_zero.max().max() / 1e6 # 取所有列的最大值
+        self.lng_min = lng_values_non_zero.min().min() / 1e6
+        self.lng_max = lng_values_non_zero.max().max() / 1e6
         
         order_time = self.order_data[['estimate_arrived_time', 'dispatch_time', 'fetch_time', 'arrive_time', 'estimate_meal_prepare_time', 'order_push_time', 'platform_order_time']]
         order_time_non_zero = order_time[order_time > 0].dropna()
 
-        self.time_min = order_time_non_zero.min().min() # 取所有列的最小值
-        self.time_max = order_time_non_zero.max().max() # 取所有列的最大值
+        self.time_min = order_time_non_zero.min().min()
+        self.time_max = order_time_non_zero.max().max()
 
         self.grid_size = 20
         
@@ -144,12 +134,6 @@ class Map:
                 
         self.num_couriers = len(self.couriers)
         self.num_orders = 0
-
-        # if eval == False:
-        #     self.step(first_time=1)
-        # else:
-        #     self.eval_step(first_time=1)
-
     
     def reset(self, env_index, eval=False):
         self.orders = []
@@ -203,7 +187,7 @@ class Map:
             if order_id not in self.orders_id and dt['estimate_arrived_time'] - dt['platform_order_time'] > 0:                
         
                 self.orders_id.add(order_id)
-                
+                                
                 order_create_time = dt['platform_order_time']
                 pickup_point = (dt['sender_lat'] / 1e6, dt['sender_lng'] / 1e6)
                 dropoff_point = (dt['recipient_lat'] / 1e6, dt['recipient_lng'] / 1e6)
@@ -234,7 +218,6 @@ class Map:
 
             if self.algo_index == 0:
                 total_cost = self._Delay_allocation(orders_pair)
-                # total_cost = self._Greedy_allocation(orders_pair)
         
         self.num_orders = len(self.orders)
         
@@ -496,8 +479,8 @@ class Map:
         
         ############
         if '0' in da_ids:
-            da_id_0_index = da_ids.get_loc('0')  # 找到 da_id == 0 的索引位置
-            frequencies = frequencies_normalized[da_id_0_index]  # 只选 da_id == 0 的频率
+            da_id_0_index = da_ids.get_loc('0')
+            frequencies = frequencies_normalized[da_id_0_index]
         else:
             frequencies = 0
 
@@ -540,55 +523,6 @@ class Map:
                 predicted_orders.append(order)
                                 
         return predicted_orders
-
-        # from collections import Counter
-        # assigned_da_ids = np.random.choice(
-        #     da_ids,
-        #     size=predicted_count + next_predicted_count,
-        #     p=frequencies_normalized
-        # )
-                
-        # da_order_count = dict(Counter(assigned_da_ids))
-
-        # for da_id, num in da_order_count.items():
-        #     da_id = int(da_id)
-            
-        #     model_data = self.location_estimation_data[
-        #         (self.location_estimation_data['time_interval'].isin([index, next_index])) &
-        #         (self.location_estimation_data['da_id'] == da_id) &
-        #         (self.location_estimation_data['is_courier_grabbed'] == 1)
-        #     ].reset_index(drop=True)
-
-        #     poi_order_counts = model_data['poi_id'].value_counts().reset_index()
-        #     poi_order_counts.columns = ['poi_id', 'order_count']
-            
-        #     mean_eta = int(np.mean(model_data['estimate_arrived_time'] - model_data['platform_order_time'])) + self.clock
-        #     mean_mpt = int(np.mean(model_data['estimate_meal_prepare_time'] - model_data['platform_order_time'])) + self.clock
-            
-        #     coordinates = model_data[['sender_lat', 'sender_lng', 'recipient_lat', 'recipient_lng']].values / 1e6
-
-        #     if len(coordinates) > num:
-        #         gmm = GaussianMixture(n_components=num, random_state=42)
-        #         gmm.fit(coordinates)
-        #         predicted_coords = gmm.sample(num)[0]
-
-        #         for coord in predicted_coords:
-        #             pickup_point = (coord[0], coord[1])
-        #             dropoff_point = (coord[2], coord[3])
-
-        #             order_create_time = self.clock
-        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
-        #             predicted_orders.append(order)
-        #     else:
-        #         for i in range(len(coordinates)):
-        #             pickup_point = (coordinates[i][0], coordinates[i][1])
-        #             dropoff_point = (coordinates[i][2], coordinates[i][3])
-
-        #             order_create_time = self.clock
-        #             order = Order(-1, da_id, -1, order_create_time, pickup_point, dropoff_point, mean_mpt, mean_eta)
-        #             predicted_orders.append(order)
-                                
-        # return predicted_orders
         
     # give order to the nearest guy                        
     def _Efficiency_allocation(self, orders):
@@ -807,66 +741,6 @@ class Map:
             dbscan_clustered_orders.append(cluster)
         
         return dbscan_clustered_orders
-            
-        # hdb = hdbscan.HDBSCAN(min_cluster_size=2, metric=great_circle_distance)
-        # hdb_labels = hdb.fit_predict(order_features)
-                    
-        # hdb_clusters = defaultdict(list)
-        # hdb_clustered_orders = []
-        # for i, label in enumerate(hdb_labels):
-        #     if label != -1:
-        #         hdb_clusters[label].append(orders[i])
-        #     else:
-        #         hdb_clustered_orders.append(orders[i])
-
-        # new_clusters = []
-        # capacity = self.couriers[0].capacity
-        # for label, order_list in hdb_clusters.items():
-        #     while len(order_list) > capacity:
-        #         new_clusters.append(order_list[:capacity])
-        #         order_list = order_list[capacity:]
-            
-        #     if order_list:
-        #         new_clusters.append(order_list)
-        
-        # for cluster in new_clusters:
-        #     hdb_clustered_orders.append(cluster)
-        
-        # import matplotlib.pyplot as plt
-        # plt.figure(figsize=(12, 6))
-
-        # # 聚类前：散点图
-        # plt.subplot(1, 2, 1)
-        # plt.title("Orders Before Clustering")
-        # for order in orders:
-        #     plt.scatter(order.pick_up_point[0], order.pick_up_point[1], c='blue', marker='o', label="Pick-up")
-        #     plt.scatter(order.drop_off_point[0], order.drop_off_point[1], c='red', marker='x', label="Drop-off")
-        # plt.xlabel("Longitude")
-        # plt.ylabel("Latitude")
-
-        # # 聚类后：按聚类标签分配颜色
-        # plt.subplot(1, 2, 2)
-        # plt.title("Orders After Clustering")
-        # unique_labels = set(hdb_labels)
-        # color_map = {label: plt.cm.get_cmap("tab10")(i) for i, label in enumerate(unique_labels)}
-
-        # for i, order in enumerate(orders):
-        #     label = hdb_labels[i]
-        #     if label != -1:  # 聚类标签不为-1（噪声）
-        #         color = color_map[label]
-        #     else:
-        #         color = 'gray'  # 噪声用灰色表示
-            
-        #     plt.scatter(order.pick_up_point[0], order.pick_up_point[1], c=color, marker='o', label="Pick-up")
-        #     plt.scatter(order.drop_off_point[0], order.drop_off_point[1], c=color, marker='x', label="Drop-off")
-
-        # plt.xlabel("Longitude")
-        # plt.ylabel("Latitude")
-
-        # plt.tight_layout()
-        # plt.show()
-        
-        # return hdb_clustered_orders
             
     def _courier_order_matching(self, orders, assigned_courier):
         if orders is not None:
