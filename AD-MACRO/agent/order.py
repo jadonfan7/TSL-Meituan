@@ -1,5 +1,5 @@
 class Order:
-    def __init__(self, OrderID, da, poi, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
+    def __init__(self, OrderID, order_create_time, pick_up_point, drop_off_point, meal_prepare_time, estimate_arrived_time):
         self.orderid = OrderID
         
         self.status = 'wait_pair' # wait_pair, wait_pick, picked_up, dropped

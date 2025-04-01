@@ -1,6 +1,5 @@
 import sys
 import os
-import socket
 # import setproctitle
 import numpy as np
 from pathlib import Path

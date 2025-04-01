@@ -1,6 +1,4 @@
 from geopy.distance import great_circle
-import numpy as np
-import random
 
 class Courier:
     def __init__(self, courier_type, CourierID, position, time, state='inactive'):

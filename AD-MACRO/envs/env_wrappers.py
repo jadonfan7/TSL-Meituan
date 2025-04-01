@@ -1,7 +1,5 @@
-from multiprocessing import Process, Pipe, Manager
+from multiprocessing import Process, Pipe
 import numpy as np
-import torch
-import socket
 from abc import ABC, abstractmethod
 
 class CloudpickleWrapper(object):
@@ -119,7 +117,6 @@ def worker(remote, parent_remote, env_fn_wrapper):
             obs = env.get_env_obs()
             action_space, observation_space = env.get_env_space()
             remote.send((env_map, obs, action_space, observation_space))
-            # remote.send((env_map, obs))
 
         elif cmd == 'close':
             remote.close()

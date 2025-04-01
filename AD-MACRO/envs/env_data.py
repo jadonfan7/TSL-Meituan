@@ -178,7 +178,7 @@ class Map:
                 meal_prepare_time = dt['estimate_meal_prepare_time']
                 estimate_arrived_time = dt['estimate_arrived_time']
                 
-                order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                order = Order(order_id, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                 orders_new.append(order)
 
             courier_id = dt['courier_id']
@@ -247,7 +247,7 @@ class Map:
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                 
-                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
 
                     courier_id = dt['courier_id']
                     courier = None
@@ -331,7 +331,7 @@ class Map:
                     meal_prepare_time = dt['estimate_meal_prepare_time']
                     estimate_arrived_time = dt['estimate_arrived_time']
                     
-                    order = Order(order_id, dt['da_id'], dt['poi_id'], order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
+                    order = Order(order_id, order_create_time, pickup_point, dropoff_point, meal_prepare_time, estimate_arrived_time)
                     orders_new.append(order)
 
                 courier_id = dt['courier_id']                        
@@ -743,12 +743,6 @@ class Map:
         order_sequence = []
         order_sequence.append(points[0])
         points.pop(0)
-        # if orders[0] in courier.waybill:
-        #     order_sequence.append((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
-        #     points.remove((orders[0].drop_off_point, 'dropped', orders[0].ETA, orders[0].orderid))
-        # else:
-        #     order_sequence.append((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
-        #     points.remove((orders[0].pick_up_point, 'pick_up', orders[0].meal_prepare_time, orders[0].orderid))
             
         while points:
             last_point = order_sequence[-1][0]

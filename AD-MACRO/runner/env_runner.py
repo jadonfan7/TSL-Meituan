@@ -3,7 +3,6 @@ import numpy as np
 import torch
 
 from runner.base_runner import Runner
-import matplotlib.pyplot as plt
 
 from loguru import logger
 import numpy as np

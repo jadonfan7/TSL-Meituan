@@ -3,10 +3,8 @@ from envs.env_data import Map
 from envs.observationspace import ObservationSpace
 
 from envs.multi_discrete import MultiDiscrete
-from gym.spaces import Box, Discrete
 
 from geopy.distance import great_circle
-import random
 from scipy.spatial import KDTree
 
 class EnvCore(object):
