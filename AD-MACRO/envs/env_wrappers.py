@@ -125,27 +125,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.close()
             break
         elif cmd == 'get_spaces':
-            remote.send((env.observation_space, env.action_space, env.share_observation_space))
-            
-        # elif cmd == 'env_step':
-        #     env.map.step()
-        #     action_space, observation_space = env.get_env_space()
-        #     env_map = env.get_map()
-            
-        #     remote.send((env_map, action_space, observation_space))
-            
-        # elif cmd == 'eval_env_step':
-        #     env.map.eval_step()
-        #     action_space, observation_space = env.get_env_space()
-        #     env_map = env.get_map()
-        #     obs = env.get_env_obs()
-            
-        #     remote.send((env_map, action_space, observation_space, obs))
-            
-        # elif cmd == 'get_available_actions':
-        #     available_actions = env.map.get_actions()
-        #     remote.send((available_actions))
-            
+            remote.send((env.observation_space, env.action_space, env.share_observation_space))            
         else:
             raise NotImplementedError
             
@@ -212,39 +192,3 @@ class SubprocVecEnv(ShareVecEnv):
         for p in self.ps:
             p.join()
         self.closed = True
-    
-    # def env_step(self):
-    #     for remote in self.remotes:
-    #         remote.send(('env_step', None))
-            
-    #     results = [remote.recv() for remote in self.remotes]
-    
-    #     self.envs_map = [result[0] for result in results]
-    
-    #     self.action_space, self.observation_space = results[0][1], results[0][2]
-        
-    # def eval_env_step(self, eval=False):
-    #     for remote in self.remotes:
-    #         remote.send(('eval_env_step', eval))
-            
-    #     results = [remote.recv() for remote in self.remotes]
-    
-    #     self.envs_map = [result[0] for result in results]
-    
-    #     self.action_space, self.observation_space = results[0][1], results[0][2]
-        
-    #     obs = [result[3] for result in results]
-        
-    #     return np.array(obs)
-        
-    # def get_available_actions(self):
-    #     for remote in self.remotes:
-    #         remote.send(('get_available_actions', None))
-        
-    #     available_actions = [remote.recv() for remote in self.remotes]
-        
-    #     available_actions = np.array(available_actions)
-    
-    #     available_actions = np.transpose(available_actions, (1, 0, 2))
-    
-    #     return available_actions.tolist()

@@ -17,11 +17,10 @@ class EnvCore(object):
         self.map_algo_index = map_algo_index
         self.map = Map(algo_index=map_algo_index)
         self.num_agent = self.map.num_couriers
-        self.num_speeds = 7 # 1-7 m/s, 1-4 normal, 0 stay put, in the model the multidiscrete is set [0, 7], but later I want to set it to four choice: 1,3,5,7, later I use 1, 2, 3 to represent low(1-3), normal(3-4) and high(4-7) speed range
+        self.num_speeds = 2
         
         self.action_space = []
         # self.obs_dim = self.map.couriers[0].capacity * 6 + 6 + 10 * 6 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position; env: time
-        # self.obs_dim = self.map.couriers[0].capacity * 2 + 2 + 10 * 2
         self.obs_dim = self.map.couriers[0].capacity * 5 + 4 + 10 * 5
 
         self.observation_space = []
@@ -33,7 +32,6 @@ class EnvCore(object):
             capacity = self.map.couriers[0].capacity
 
             action_space = MultiDiscrete([[0, 1], [0, 1], [0, capacity-1]])
-            # action_space = MultiDiscrete([[0, 1], [0, speed_dim-1]])
             self.action_space.append(action_space)
 
             self.observation_space.append(Box(low=0.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32))
@@ -98,12 +96,6 @@ class EnvCore(object):
                 else:
                     reward -= 15
                     
-            # else:
-            #     if agent.courier_type == 0:
-            #         reward += 5
-            #     else:
-            #         reward += 5
-                        
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
             total_length = waybill_length + wait_to_pick_length

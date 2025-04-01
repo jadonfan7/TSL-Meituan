@@ -32,11 +32,9 @@ class Map:
     
         self.platform_cost = 0
         
-        df = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/all_waybill_info_meituan_0322.csv')
-        # df = pd.read_csv('/share/home/tj23028/TSL/data/all_waybill_info_meituan_0322.csv')
+        df = pd.read_csv('all_waybill_info_meituan_0322.csv')
         
-        order_num_estimate = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/order_num_estimation.csv')
-        # order_num_estimate = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_num_estimation.csv')
+        order_num_estimate = pd.read_csv('order_num_estimation.csv')
 
         config_mapping = {
             0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665982800},
@@ -45,14 +43,6 @@ class Map:
             3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666242000},
             4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666328400},
         } # 11:00-13:00
-        
-        # config_mapping = {
-        #     0: {'date': 20221017, 'start_time': 1665975600, 'end_time': 1665979200},
-        #     1: {'date': 20221018, 'start_time': 1666062000, 'end_time': 1666065600},
-        #     2: {'date': 20221019, 'start_time': 1666148400, 'end_time': 1666152000},
-        #     3: {'date': 20221020, 'start_time': 1666234800, 'end_time': 1666238400},
-        #     4: {'date': 20221021, 'start_time': 1666321200, 'end_time': 1666324800},
-        # } # an hour
         
         Cluster_0_Lng_Range = (174414242, 174685447)
         Cluster_0_Lat_Range = (45744563, 45959787)
@@ -64,7 +54,6 @@ class Map:
             self.start_time = config['start_time']
             self.end_time = config['end_time']
             
-            # df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value)] # do not define in one area
             df = df[(df['dispatch_time'] > 0) & (df['dt'] == date_value) & (df['da_id'] == 0) & (df['is_courier_grabbed'] == 1) & (df['estimate_arrived_time'] > df['estimate_meal_prepare_time'])]
             df = df.sort_values(by=['platform_order_time'], ascending=True)
             df = df[(df['platform_order_time'] >= self.start_time) & (df['platform_order_time'] < self.end_time)]
@@ -101,19 +90,14 @@ class Map:
 
         self.grid = [[[] for _ in range(self.grid_size)] for _ in range(self.grid_size)]
 
-        self.interval = 30 # allocation for every 30 seconds
+        self.interval = 30 # matching for every 30 seconds
 
-        self.clock = self.start_time + self.interval # self.order_data['platform_order_time'][0]
+        self.clock = self.start_time + self.interval
         
-        self.da_frequency = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/order_da_frequency.csv')
-        self.location_estimation_data = pd.read_csv('/Users/jadonfan/Documents/TSL/git-ippo/TSL-data-driven-competition/30s/noon_peak_hour_data.csv')
-        # self.da_frequency = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/order_da_frequency.csv')
-        # self.location_estimation_data = pd.read_csv('/share/home/tj23028/TSL/One_hour/order_prediction/noon_peak_hour_data.csv')
-        
-        # 2621, 2682, 2687, 2737, 2704
-        # self.max_num_couriers = 2621
-        # self.max_num_couriers = 520
-        self.max_num_couriers = 704
+        self.da_frequency = pd.read_csv('order_da_frequency.csv')
+        self.location_estimation_data = pd.read_csv('noon_peak_hour_data.csv')
+
+        self.max_num_couriers = 906
         random.seed(42)
         for index, dt in self.order_data.iterrows():
             if len(self.couriers) >= self.max_num_couriers:
@@ -122,7 +106,7 @@ class Map:
             courier_id = dt['courier_id']
             if courier_id not in self.couriers_id and dt['grab_lat'] != 0 and dt['grab_lng'] != 0:
                 self.couriers_id.add(courier_id)
-                courier_type = 1 if random.random() > 0.7 else 0 # 0.3众包, 0.7专送
+                courier_type = 1 if random.random() > 0.7 else 0 # 0.3 for crowdsourced, 0.7 for company-hired
                 if courier_type == 0:
                     self.num_couriers1 += 1
                 else:
@@ -373,8 +357,6 @@ class Map:
                     total_cost = self._Delay_allocation(orders_pair)
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
-                # elif self.algo_index == 2:
-                #     self._MaxMin_fairness_allocation(orders_pair)   
                 elif self.algo_index == 2:
                     self._Greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset  
@@ -414,9 +396,9 @@ class Map:
     def get_adjacent_grids(self, lat, lng):
         lat_index, lng_index = self.get_grid_index(lat, lng)
 
-        adjacent_offsets = [(-1, 0), (1, 0), (0, 0), (0, -1), (0, 1),  # 上, 下, 左, 右
-                            (-1, -1), (-1, 1), (1, -1), (1, 1)]  # 左上, 右上, 左下, 右下
-
+        adjacent_offsets = [(-1, 0), (1, 0), (0, 0), (0, -1), (0, 1),
+                            (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
         adjacent_grids = [(lat_index + offset[0], lng_index + offset[1]) for offset in adjacent_offsets]
 
         valid_adjacent_grids = [
@@ -542,64 +524,6 @@ class Map:
             if nearest_courier is not None:
                 self._courier_order_matching(order, nearest_courier)
 
-    # give the order to the poorest guy                            
-    def _fair_allocation(self, orders):
-        for i, order in enumerate(orders):
-            min_income = math.inf
-            assigned_courier = None
-
-            nearby_couriers = self._get_nearby_couriers(order)
-            for courier in nearby_couriers:
-                sequence, dist, risk = self.cal_wave_info(order, courier)
-                avg_income = courier.income / (self.clock - courier.start_time) if (self.clock - courier.start_time) != 0 else courier.income
-                if min_income > avg_income and risk:
-                    min_income = avg_income
-                    assigned_courier = courier
-            
-            if assigned_courier is not None:
-                self._courier_order_matching(order, assigned_courier)
-    
-    # consider the matching degree but match one by one           
-    def _Greedy_allocation(self, orders):
-        total_cost = 0
-        for i, order in enumerate(orders):
-            min_cost = math.inf
-            assigned_courier = None
-
-            nearby_couriers = self._get_nearby_couriers(order)
-            for courier in nearby_couriers:
-                if len(courier.waybill) + len(courier.wait_to_pick) < courier.capacity:
-                    order_sequence, distance, risk = self.cal_wave_info(order, courier)
-                    detour = distance - courier.current_wave_dist
-
-                    price = self._wage_response_model(order, courier)
-                    
-                    cost = detour / price
-                    
-                    if min_cost > cost and not risk:
-                        min_cost = cost
-                        assigned_courier = courier
-            
-            if assigned_courier is not None:
-                self._courier_order_matching(order, assigned_courier)
-        return total_cost
-
-    def _is_bipartite_solvable(self, matrix):
-        has_isolated_row = np.any(np.all(np.isinf(matrix), axis=1))
-        has_isolated_col = np.any(np.all(np.isinf(matrix), axis=0))
-
-        if has_isolated_row or has_isolated_col:
-            return False
-        
-        finite_matrix = np.where(np.isinf(matrix), 1e9, matrix)
-        rank = np.linalg.matrix_rank(finite_matrix)
-        rows, cols = matrix.shape
-        
-        if rank < min(rows, cols):
-            return False
-        
-        return True
-            
     # Bipartitie matching with estimation
     def _Delay_allocation(self, orders):
         clustered_orders = self._cluster_orders(orders)
@@ -789,245 +713,6 @@ class Map:
                     order.reject_count += 1
                 assigned_courier.reject_order_num += 1
         
-    # matching with a fairness threshold: first match, then set a threshold and first match the "valuable" courier without cost exceeding the threshold
-    def _fairness_threshold_allocation(self, orders):
-        # Create a cost matrix
-        cost_matrix = []
-        couriers = set()
-        
-        predicted_orders = self.get_predicted_orders()
-        all_orders = orders + predicted_orders
-
-        for order in orders:
-            nearby_couriers = self._get_nearby_couriers(order)
-            couriers.update(nearby_couriers)
-        
-        couriers = list(couriers)
-        
-        M = 1e9
-        min_cost = 0
-        for order in all_orders:
-            row = []
-            for courier in couriers:
-                sequence, dist, risk = self.cal_wave_info(order, courier)
-                if not risk:
-                    price = self._wage_response_model(order, courier)
-                    detour = dist - courier.current_wave_dist
-                    
-                    cost =  detour / price
-                    if cost < min_cost:
-                        min_cost = cost
-                    row.append(cost)
-                else:
-                    row.append(float(M))  # Set an infinite cost if the assignment is unreasonable
-            cost_matrix.append(row)
-
-        cost_matrix = np.array(cost_matrix)
-        cost_matrix += abs(min_cost)
-
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)   
-        
-        fairness_factor = 1.5
-        filtered_costs = cost_matrix[row_ind, col_ind]
-        filtered_costs = filtered_costs[filtered_costs != M]
-        initial_max_cost = np.max(filtered_costs) if len(filtered_costs) > 0 else M
-        
-        matched_orders = set()
-        courier_avg_costs = []
-        
-        if initial_max_cost != M: 
-            row_ind = []
-            col_ind = []
-         
-            threshold = fairness_factor * initial_max_cost  
-        
-            for col in range(cost_matrix.shape[1]):
-                courier_costs = cost_matrix[:, col]
-                courier_costs = courier_costs[courier_costs != M]
-                if len(courier_costs) > 0:
-                    courier_avg_cost = np.mean(courier_costs)
-                    courier_avg_costs.append((couriers[col], courier_avg_cost))
-
-            sorted_courier_list = sorted(courier_avg_costs, key=lambda x: x[1], reverse=True)
-            sorted_couriers = [courier for courier, _ in sorted_courier_list]
-
-            for courier in sorted_couriers:
-                courier_index = couriers.index(courier)
-                courier_costs = cost_matrix[:, courier_index]
-                valid_costs = courier_costs[~np.isin(np.arange(cost_matrix.shape[0]), list(matched_orders))]
-                
-                if len(valid_costs) == 0:
-                    continue
-                
-                min_cost = np.min(valid_costs)
-                best_order_index_in_valid = np.argmin(valid_costs)
-                best_order_index = np.where(courier_costs == valid_costs[best_order_index_in_valid])[0][0]
-                
-                if min_cost < threshold: 
-                    matched_orders.add(best_order_index)
-                    row_ind.append(best_order_index)
-                    col_ind.append(courier_index)
-                    
-        # Assign orders to couriers based on the optimal matching
-        for order_index, courier_index in zip(row_ind, col_ind):
-            order = all_orders[order_index]
-            assigned_courier = couriers[courier_index]
-            
-            if cost_matrix[order_index][courier_index] == float(M):
-                order.reject_count += 1
-                continue  # Skip infeasible matches
-                        
-            self._courier_order_matching(order, assigned_courier)
-
-    # Maxmin the cost
-    def _MaxMin_fairness_allocation(self, orders):
-        # Create a cost matrix
-        cost_matrix = []
-        couriers = set()
-        
-        for order in orders:
-            nearby_couriers = self._get_nearby_couriers(order)
-            couriers.update(nearby_couriers)
-        
-        couriers = list(couriers)
-        
-        M = 1e9
-        min_cost = 0
-        for order in orders:
-            row = []
-            for courier in couriers:
-                sequence, dist, risk = self.cal_wave_info(order, courier)
-                if not risk:
-                    price = self._wage_response_model(order, courier)
-                    detour = dist - courier.current_wave_dist
-                    
-                    cost =  detour / price
-                    if cost < min_cost:
-                        min_cost = cost
-                    row.append(cost)
-                else:
-                    row.append(float('inf'))  # Set an infinite cost if the assignment is unreasonable
-            cost_matrix.append(row)
-
-        cost_matrix = np.array(cost_matrix)
-        if self._is_bipartite_solvable(cost_matrix):
-            cost_matrix += abs(min_cost)
-            filtered_elements = cost_matrix[~np.isinf(cost_matrix)]
-            sorted_elements = np.sort(filtered_elements)[::-1]
-            sorted_list = sorted_elements.tolist()
-            for element in sorted_list:
-                cost_matrix_copy = cost_matrix.copy()
-                cost_matrix_copy[cost_matrix_copy >= element] = np.inf
-                if self._is_bipartite_solvable(cost_matrix_copy):
-                    continue
-                else:
-                    cost_matrix[cost_matrix > element] = M
-                    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-                    break
-        else:
-            cost_matrix[cost_matrix == np.inf] = M
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)
-            
-        for order_index, courier_index in zip(row_ind, col_ind):
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
-            
-            if cost_matrix[order_index][courier_index] == float(M):
-                order.reject_count += 1
-                continue  # Skip infeasible matches
-                        
-            self._courier_order_matching(order, assigned_courier)
-                    
-    # minimize the bound between the worst and the best
-    def _Pairwise_fairness_allocation(self, orders):
-        # Create a cost matrix
-        cost_matrix = []
-        couriers = set()
-        
-        for order in orders:
-            nearby_couriers = self._get_nearby_couriers(order)
-            couriers.update(nearby_couriers)
-        
-        couriers = list(couriers)
-        
-        M = 1e9
-        min_cost = 0
-        for order in orders:
-            row = []
-            for courier in couriers:
-                sequence, dist, risk = self.cal_wave_info(order, courier)
-                if not risk:
-                    price = self._wage_response_model(order, courier)
-                    detour = dist - courier.current_wave_dist
-                    
-                    cost =  detour / price
-                    if cost < min_cost:
-                        min_cost = cost
-                    row.append(cost)
-                else:
-                    row.append(float('inf'))  # Set an infinite cost if the assignment is unreasonable
-            cost_matrix.append(row)
-
-        cost_matrix = np.array(cost_matrix)
-        if not self._is_bipartite_solvable(cost_matrix):
-            cost_matrix[cost_matrix == np.inf] = M
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)   
-        else:            
-            cost_matrix += abs(min_cost)
-            filtered_elements = cost_matrix[~np.isinf(cost_matrix)]
-            sorted_elements = np.sort(filtered_elements)
-            sorted_list = sorted_elements.tolist()
-            
-            previous_lower_bound = sorted_list[0]
-            previous_upper_bound = sorted_list[-1]
-            origin_list = sorted_list.copy()
-            
-            while len(sorted_list) > 1:
-                first_diff = sorted_list[1] - sorted_list[0]
-                last_diff = sorted_list[-1] - sorted_list[-2]
-                if first_diff <= last_diff:
-                    cost_matrix_copy_first = cost_matrix.copy()
-                    cost_matrix_copy_first[cost_matrix_copy_first <= sorted_list[0]] = np.inf
-                    if not self._is_bipartite_solvable(cost_matrix_copy_first):
-                        cost_matrix_copy_last = cost_matrix.copy()
-                        cost_matrix_copy_last[cost_matrix_copy_last >= sorted_list[-1]] = np.inf
-                        if not self._is_bipartite_solvable(cost_matrix_copy_last):
-                            break
-                        else:
-                            previous_upper_bound = sorted_list[-1]
-                            sorted_list = sorted_list[:-1]
-                    else:
-                        sorted_list = sorted_list[1:]
-                else:
-                    cost_matrix_copy_last = cost_matrix.copy()
-                    cost_matrix_copy_last[cost_matrix_copy_last >= sorted_list[-1]] = np.inf
-                    if not self._is_bipartite_solvable(cost_matrix_copy_last):
-                        cost_matrix_copy_first = cost_matrix.copy()
-                        cost_matrix_copy_first[cost_matrix_copy_first <= sorted_list[0]] = np.inf
-                        if not self._is_bipartite_solvable(cost_matrix_copy_first):
-                            break
-                        else:
-                            previous_lower_bound = sorted_list[0]
-                            sorted_list = sorted_list[1:]
-                    else:
-                        sorted_list = sorted_list[:-1]
-            if previous_lower_bound != origin_list[0] or previous_upper_bound != origin_list[-1]:            
-                cost_matrix[(cost_matrix <= previous_lower_bound) | (cost_matrix >= previous_upper_bound)] = np.inf
-            
-            cost_matrix[cost_matrix == np.inf] = M
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)   
-
-        # Assign orders to couriers based on the optimal matching
-        for order_index, courier_index in zip(row_ind, col_ind):
-            order = orders[order_index]
-            assigned_courier = couriers[courier_index]
-
-            if cost_matrix[order_index][courier_index] == float(M):
-                order.reject_count += 1
-                continue  # Skip infeasible matches
-                                
-            self._courier_order_matching(order, assigned_courier)
-                        
     def _get_nearby_couriers(self, order):
         nearby_couriers = self.get_couriers_in_adjacent_grids(order.pick_up_point[0], order.pick_up_point[1])
         return nearby_couriers
