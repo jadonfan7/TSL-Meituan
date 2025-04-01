@@ -19,7 +19,6 @@ class EnvCore(object):
         self.num_speeds = 2
         
         self.action_space = []
-        # self.obs_dim = self.map.couriers[0].capacity * 6 + 6 + 10 * 6 # orders: pick_up_point, drop_off_point, prepare_time, estimate_arrive_time; couriers: position, speed, target_position; env: time
         self.obs_dim = self.map.couriers[0].capacity * 5 + 4 + 10 * 5
 
         self.observation_space = []

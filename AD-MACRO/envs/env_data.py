@@ -566,7 +566,6 @@ class Map:
                                 unmatch = True
                     else:
                         if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity or great_circle(order.pick_up_point, courier.position).meters > 1500:
-                        # if len(courier.waybill) + len(courier.wait_to_pick) + 1 > courier.capacity:
                             unmatch = True   
 
                     if unmatch:
@@ -584,19 +583,6 @@ class Map:
                     detour = dist - courier.current_wave_dist
                     cost =  detour / price * 2 if risk == 1 else detour / price
                     row.append(cost)
-                    # if not risk:
-                    #     if isinstance(order, list):
-                    #         price = 0
-                    #         for task in order:
-                    #             price += self._wage_response_model(task, courier)
-                    #     else:
-                    #         price = self._wage_response_model(order, courier)
-                        
-                    #     detour = dist - courier.current_wave_dist
-                    #     cost =  detour / price
-                    #     row.append(cost)
-                    # else:
-                    #     row.append(float(M))
 
                 cost_matrix.append(row)
 
