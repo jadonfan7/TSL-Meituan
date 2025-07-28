@@ -357,8 +357,8 @@ class Map:
                     total_cost = self._Delay_allocation(orders_pair)
                 elif self.algo_index == 1:
                     self._Efficiency_allocation(orders_pair)     
-                elif self.algo_index == 2:
-                    self._Greedy_allocation(orders_pair)
+                # elif self.algo_index == 2:
+                #     self._Greedy_allocation(orders_pair)
                 # self.algo_index == 4 is the origin allocation in the dataset  
             
         self.num_orders = len(self.orders)
