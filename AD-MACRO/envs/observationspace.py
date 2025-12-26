@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn.decomposition import PCA
+
 
 class ObservationSpace:
     def __init__(self, map, courier=None):
@@ -6,6 +8,7 @@ class ObservationSpace:
         self.orders = map.orders
         self.clock = map.clock
         self.num_orders = len(self.orders)
+        # self.share = share
         if courier is not None:
             self.courier = courier
 

@@ -52,15 +52,12 @@ class EnvCore(object):
                 reward = 0
             reward_n.append(reward)
         
-        total_cost = self.map.step()
+        self.map.step()
 
         predicted_orders = self.map.get_predicted_orders()
         tree = self._build_tree(predicted_orders)
         
-        for i, agent in enumerate(self.map.couriers):
-            if reward_n[i] != 0:
-                reward_n[i] -= total_cost
-                            
+        for i, agent in enumerate(self.map.couriers):                            
             obs_n.append(self._get_obs(agent, predicted_orders, tree))
             done_n.append(self._get_done(agent)) 
             
@@ -70,6 +67,7 @@ class EnvCore(object):
     
     # set env action for a particular agent
     def _set_action(self, action, agent):
+        # Base reward to avoid reward sparsity
         reward = 0
         
         if agent.current_waiting_time > 0:
@@ -82,28 +80,29 @@ class EnvCore(object):
             
             agent.save = np.argmax(action[:2])
             
-            speed_index = np.argmax(action[2:5])
+            speed_index = np.argmax(action[2:4])
             if speed_index == 0:
                 agent.speed = 4
             elif speed_index == 1:
                 agent.speed = 7
 
+            # Adjust speed penalty to be more gentle
             if agent.speed > 4:
-                if agent.courier_type == 0:
-                    reward -= 20
-                else:
-                    reward -= 15
+                speed_penalty = -8 if agent.courier_type == 0 else -6
+                reward += speed_penalty
                     
             waybill_length = len(agent.waybill)
             wait_to_pick_length = len(agent.wait_to_pick)
             total_length = waybill_length + wait_to_pick_length
             
-            order_index = np.argmax(action[5:])
+            order_index = np.argmax(action[4:])
             if order_index > total_length - 1:
-                reward -= 10
+                # Reduce penalty for incorrect choices
+                reward -= 8
                 agent.target_location = agent.order_sequence[0][0]
             else:
-                reward += 35
+                # Reduce reward for correct choices to make it more balanced
+                reward += 15
                 if order_index < waybill_length:
                     target_loc = agent.waybill[order_index].drop_off_point
                 else:
@@ -112,19 +111,27 @@ class EnvCore(object):
                 if target_loc != agent.order_sequence[0][0]:
                     dist1 = great_circle(agent.position, target_loc).meters
                     dist2 = great_circle(agent.position, agent.order_sequence[0][0]).meters
-                    if dist1 - dist2 > 300:
+                    deviation = dist1 - dist2
+                    
+                    if deviation > 300:
                         agent.target_location = agent.order_sequence[0][0]
-                        reward -= 30
+                        # Reduce path deviation penalty
+                        reward -= min(12, deviation / 100)
                     else:
                         agent.target_location = target_loc
-                        reward += (dist2 - dist1) / 10
+                        # Efficiency reward: choosing closer targets
+                        efficiency_reward = max(0, (dist2 - dist1) / 50)
+                        reward += efficiency_reward
                 else:
                     agent.target_location = agent.order_sequence[0][0]
 
             if agent.speed != 0:
-                reward += agent.move(self.map)  
+                move_reward = agent.move(self.map)
+                reward += move_reward
             
             agent.actual_speed = agent.travel_distance / agent.total_riding_time if agent.total_riding_time != 0 else 0
+                        
+            agent.last_position = agent.position
             
             agent.reward += reward
                                                     

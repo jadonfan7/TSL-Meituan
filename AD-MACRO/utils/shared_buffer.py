@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import torch.nn.functional as F
 from utils.util import get_shape_from_obs_space, get_shape_from_act_space
 
 
@@ -51,7 +52,7 @@ class SharedReplayBuffer(object):
             share_obs_shape = share_obs_shape[:1]
 
         self.share_obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *share_obs_shape),
-                                  dtype=np.float16)
+                                  dtype=np.float32)
         self.obs = np.zeros((self.episode_length + 1, self.n_rollout_threads, num_agents, *obs_shape), dtype=np.float32)
 
         self.rnn_states = np.zeros(

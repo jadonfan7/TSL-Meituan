@@ -117,6 +117,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             obs = env.get_env_obs()
             action_space, observation_space = env.get_env_space()
             remote.send((env_map, obs, action_space, observation_space))
+            # remote.send((env_map, obs))
 
         elif cmd == 'close':
             remote.close()
